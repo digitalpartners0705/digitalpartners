@@ -3,7 +3,28 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import api from '../services/api'
 
 const fieldClass =
-  'mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100'
+  'mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-brand-500'
+
+function Panel({ title, hint, children }) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white">
+      <div className="border-b border-slate-100 px-4 py-3">
+        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+        {hint ? <p className="mt-0.5 text-xs text-slate-500">{hint}</p> : null}
+      </div>
+      <div className="p-4">{children}</div>
+    </section>
+  )
+}
+
+function Field({ label, children, className = '' }) {
+  return (
+    <label className={`block text-xs font-semibold uppercase tracking-wide text-slate-500 ${className}`}>
+      {label}
+      {children}
+    </label>
+  )
+}
 
 const emptyForm = {
   title: '',
@@ -32,12 +53,8 @@ function CourseEditor() {
   const isNew = !id
   const [form, setForm] = useState(emptyForm)
   const [meta, setMeta] = useState({ categories: [], packages: [], accents: [], storageConfigured: false })
-  const [lessons, setLessons] = useState([])
   const [thumbnailUrl, setThumbnailUrl] = useState('')
   const [thumbnailFile, setThumbnailFile] = useState(null)
-  const [lessonTitle, setLessonTitle] = useState('')
-  const [lessonMinutes, setLessonMinutes] = useState(5)
-  const [lessonFile, setLessonFile] = useState(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(!isNew)
@@ -72,7 +89,6 @@ function CourseEditor() {
           status: course.status,
         })
         setThumbnailUrl(course.thumbnailUrl || '')
-        setLessons(response.data.lessons || [])
         setError('')
       })
       .catch((err) => setError(err.response?.data?.message || 'Could not load this course'))
@@ -107,12 +123,11 @@ function CourseEditor() {
         thumbnailKey = await uploadFile(id, 'thumbnail', thumbnailFile)
       }
 
-      const response = await api.patch(`/api/admin/courses/${id}`, {
+      await api.patch(`/api/admin/courses/${id}`, {
         ...payload(),
         ...(thumbnailKey ? { thumbnailKey } : {}),
       })
-      setThumbnailUrl(response.data.course.thumbnailUrl || '')
-      setThumbnailFile(null)
+      navigate(`/courses/${id}`)
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Could not save the course')
     } finally {
@@ -130,235 +145,183 @@ function CourseEditor() {
     }
   }
 
-  const addLesson = async (event) => {
-    event.preventDefault()
-    setError('')
-    try {
-      let storageKey = null
-      if (lessonFile) storageKey = await uploadFile(id, 'lesson', lessonFile)
-      const response = await api.post(`/api/admin/courses/${id}/lessons`, {
-        title: lessonTitle,
-        durationSeconds: Math.round(Number(lessonMinutes) * 60) || 0,
-        storageKey,
-      })
-      setLessons((current) => [...current, response.data.lesson])
-      setLessonTitle('')
-      setLessonFile(null)
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Could not add the lesson')
-    }
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-40 animate-pulse rounded bg-slate-200" />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="h-80 animate-pulse rounded-lg bg-white" />
+          <div className="h-80 animate-pulse rounded-lg bg-white" />
+        </div>
+      </div>
+    )
   }
 
-  const moveLesson = async (index, direction) => {
-    const next = [...lessons]
-    const target = index + direction
-    if (target < 0 || target >= next.length) return
-    const [item] = next.splice(index, 1)
-    next.splice(target, 0, item)
-    setLessons(next)
-    try {
-      const response = await api.post(`/api/admin/courses/${id}/lessons/reorder`, {
-        ids: next.map((lesson) => lesson.id),
-      })
-      setLessons(response.data.lessons)
-    } catch (err) {
-      setError(err.response?.data?.message || 'Could not reorder lessons')
-    }
-  }
-
-  const removeLesson = async (lesson) => {
-    if (!window.confirm(`Delete “${lesson.title}”?`)) return
-    try {
-      await api.delete(`/api/admin/lessons/${lesson.id}`)
-      setLessons((current) => current.filter((item) => item.id !== lesson.id))
-    } catch (err) {
-      setError(err.response?.data?.message || 'Could not delete the lesson')
-    }
-  }
-
-  const replaceVideo = async (lesson, file) => {
-    if (!file) return
-    try {
-      const storageKey = await uploadFile(id, 'lesson', file)
-      const response = await api.patch(`/api/admin/lessons/${lesson.id}`, { storageKey })
-      setLessons((current) => current.map((item) => (item.id === lesson.id ? response.data.lesson : item)))
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Could not replace the video')
-    }
-  }
-
-  if (loading) return <p className="text-sm text-slate-500">Loading course...</p>
+  const published = form.status === 'published'
 
   return (
     <div>
-      <Link to="/" className="text-sm font-semibold text-brand-600">
-        ← All courses
-      </Link>
-      <h1 className="mt-3 text-3xl font-extrabold tracking-tight">{isNew ? 'New course' : 'Edit course'}</h1>
-      {!meta.storageConfigured ? (
-        <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Lightsail storage is not connected yet. You can still edit course details. Video and thumbnail uploads will work after the bucket keys are added.
-        </p>
-      ) : null}
-      {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
-
-      <form onSubmit={save} className="mt-6 grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-2">
-        <label className="text-sm font-medium md:col-span-2">
-          Title
-          <input name="title" value={form.title} onChange={update} className={fieldClass} required />
-        </label>
-        <label className="text-sm font-medium">
-          Instructor
-          <input name="instructor" value={form.instructor} onChange={update} className={fieldClass} required />
-        </label>
-        <label className="text-sm font-medium">
-          Hours
-          <input name="hours" type="number" min="0" step="0.5" value={form.hours} onChange={update} className={fieldClass} />
-        </label>
-        <label className="text-sm font-medium md:col-span-2">
-          Description
-          <textarea name="description" value={form.description} onChange={update} rows={3} className={fieldClass} />
-        </label>
-        <label className="text-sm font-medium">
-          Category
-          <input name="category" value={form.category} onChange={update} list="category-options" className={fieldClass} required />
-          <datalist id="category-options">
-            {meta.categories.map((item) => (
-              <option key={item.id} value={item.name} />
-            ))}
-          </datalist>
-        </label>
-        <label className="text-sm font-medium">
-          Package
-          <select name="packageId" value={form.packageId} onChange={update} className={fieldClass}>
-            <option value="">None</option>
-            {meta.packages.map((item) => (
-              <option key={item.packageId} value={item.packageId}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm font-medium">
-          Card color
-          <select name="accent" value={form.accent} onChange={update} className={fieldClass}>
-            {meta.accents.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm font-medium">
-          Status
-          <select name="status" value={form.status} onChange={update} className={fieldClass}>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-sm font-medium md:col-span-2">
-          <input name="requiresUpgrade" type="checkbox" checked={form.requiresUpgrade} onChange={update} />
-          Requires upgrade (Pro)
-        </label>
-        {!isNew ? (
-          <div className="md:col-span-2">
-            <p className="text-sm font-medium">Thumbnail</p>
-            {thumbnailUrl ? <img src={thumbnailUrl} alt="" className="mt-2 h-auto w-full max-w-sm rounded-xl" /> : null}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
-              className="mt-2 block text-sm"
-            />
-            {thumbnailUrl ? (
-              <button type="button" onClick={clearThumbnail} className="mt-2 text-sm font-semibold text-red-600">
-                Remove thumbnail
-              </button>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link
+            to={isNew ? '/courses' : `/courses/${id}`}
+            className="text-sm font-semibold text-brand-600 hover:text-brand-700"
+          >
+            {isNew ? '← All courses' : '← Back to lessons'}
+          </Link>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">{isNew ? 'New course' : 'Edit course'}</h1>
+            <span
+              className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${
+                published ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'
+              }`}
+            >
+              {published ? 'Published' : 'Draft'}
+            </span>
+            {form.requiresUpgrade ? (
+              <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-semibold text-white">Pro</span>
             ) : null}
           </div>
-        ) : (
-          <p className="text-sm text-slate-500 md:col-span-2">Save the course first, then you can upload a thumbnail and lessons.</p>
-        )}
-        <div className="md:col-span-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-          >
-            {saving ? 'Saving...' : 'Save course'}
-          </button>
+          <p className="mt-1 text-sm text-slate-500">
+            {isNew ? 'Add the course details. Thumbnail and lessons come after the first save.' : form.title}
+          </p>
+        </div>
+        <button
+          type="submit"
+          form="course-form"
+          disabled={saving}
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+        >
+          {saving ? 'Saving...' : isNew ? 'Create course' : 'Save course'}
+        </button>
+      </div>
+
+      {!meta.storageConfigured ? (
+        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Storage is not connected yet. Course details can still be saved. Uploads work after the bucket keys are added.
+        </p>
+      ) : null}
+      {error ? <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+
+      <form id="course-form" onSubmit={save} className="mt-5 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <Panel title="Details" hint="What learners see on the course card.">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Title" className="md:col-span-2">
+              <input name="title" value={form.title} onChange={update} className={fieldClass} required />
+            </Field>
+            <Field label="Instructor">
+              <input name="instructor" value={form.instructor} onChange={update} className={fieldClass} required />
+            </Field>
+            <Field label="Hours">
+              <input name="hours" type="number" min="0" step="0.5" value={form.hours} onChange={update} className={fieldClass} />
+            </Field>
+            <Field label="Description" className="md:col-span-2">
+              <textarea name="description" value={form.description} onChange={update} rows={4} className={fieldClass} />
+            </Field>
+            <Field label="Category">
+              <input name="category" value={form.category} onChange={update} list="category-options" className={fieldClass} required />
+              <datalist id="category-options">
+                {meta.categories.map((item) => (
+                  <option key={item.id} value={item.name} />
+                ))}
+              </datalist>
+            </Field>
+            <Field label="Package">
+              <select name="packageId" value={form.packageId} onChange={update} className={fieldClass}>
+                <option value="">None</option>
+                {meta.packages.map((item) => (
+                  <option key={item.packageId} value={item.packageId}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </Panel>
+
+        <div className="space-y-4">
+          <Panel title="Thumbnail" hint="Shown on the course card.">
+            {isNew ? (
+              <p className="text-sm text-slate-500">Save the course first, then upload a thumbnail.</p>
+            ) : (
+              <>
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                  {thumbnailUrl ? (
+                    <img src={thumbnailUrl} alt="" className="h-36 w-full object-cover" />
+                  ) : (
+                    <div className={`flex h-36 items-end bg-gradient-to-br p-3 ${form.accent || 'from-indigo-500 to-violet-500'}`}>
+                      <p className="text-xs font-semibold text-white">{form.category || 'No thumbnail'}</p>
+                    </div>
+                  )}
+                </div>
+                <label className="mt-3 flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                  {thumbnailFile ? thumbnailFile.name : 'Choose image'}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
+                    className="sr-only"
+                  />
+                </label>
+                <p className="mt-1.5 text-xs text-slate-400">JPG, PNG, or WEBP. Save the course to apply it.</p>
+                {thumbnailUrl ? (
+                  <button type="button" onClick={clearThumbnail} className="mt-2 text-xs font-semibold text-red-600">
+                    Remove thumbnail
+                  </button>
+                ) : null}
+              </>
+            )}
+          </Panel>
+
+          <Panel title="Publishing" hint="Who can see this course.">
+            <div className="space-y-4">
+              <Field label="Status">
+                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'draft', label: 'Draft' },
+                    { value: 'published', label: 'Published' },
+                  ].map((item) => {
+                    const selected = form.status === item.value
+                    return (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => setForm((current) => ({ ...current, status: item.value }))}
+                        className={`rounded-lg border px-3 py-2 text-sm font-semibold ${
+                          selected
+                            ? 'border-brand-600 bg-brand-600 text-white'
+                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </Field>
+              <Field label="Card color">
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className={`h-9 w-9 shrink-0 rounded-md bg-gradient-to-br ${form.accent || 'from-indigo-500 to-violet-500'}`} />
+                  <select name="accent" value={form.accent} onChange={update} className={`${fieldClass} mt-0`}>
+                    {meta.accents.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </Field>
+              <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5">
+                <span>
+                  <span className="block text-sm font-medium text-slate-900">Requires upgrade</span>
+                  <span className="block text-xs text-slate-500">Mark this as a Pro course.</span>
+                </span>
+                <input name="requiresUpgrade" type="checkbox" checked={form.requiresUpgrade} onChange={update} className="h-4 w-4" />
+              </label>
+            </div>
+          </Panel>
         </div>
       </form>
-
-      {!isNew ? (
-        <section className="mt-8">
-          <h2 className="text-xl font-bold">Lessons</h2>
-          <form onSubmit={addLesson} className="mt-4 grid gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-[1fr_8rem_auto]">
-            <input
-              value={lessonTitle}
-              onChange={(event) => setLessonTitle(event.target.value)}
-              placeholder="Lesson title"
-              className={fieldClass}
-              required
-            />
-            <input
-              type="number"
-              min="0"
-              value={lessonMinutes}
-              onChange={(event) => setLessonMinutes(event.target.value)}
-              className={fieldClass}
-              title="Duration in minutes"
-            />
-            <button type="submit" className="rounded-xl bg-[#1b2140] px-4 py-2.5 text-sm font-semibold text-white">
-              Add lesson
-            </button>
-            <label className="text-sm text-slate-600 md:col-span-3">
-              Video file (mp4, webm, or mov)
-              <input
-                type="file"
-                accept="video/mp4,video/webm,video/quicktime"
-                onChange={(event) => setLessonFile(event.target.files?.[0] || null)}
-                className="mt-1 block"
-              />
-            </label>
-          </form>
-
-          <ol className="mt-4 space-y-2">
-            {lessons.map((lesson, index) => (
-              <li key={lesson.id} className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 sm:flex-row sm:items-center">
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold">
-                    {index + 1}. {lesson.title}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {lesson.duration} · {lesson.hasVideo ? 'Video ready' : 'No video'}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button type="button" onClick={() => moveLesson(index, -1)} className="rounded-lg px-2 py-1 text-sm ring-1 ring-slate-200">
-                    Up
-                  </button>
-                  <button type="button" onClick={() => moveLesson(index, 1)} className="rounded-lg px-2 py-1 text-sm ring-1 ring-slate-200">
-                    Down
-                  </button>
-                  <label className="cursor-pointer rounded-lg px-2 py-1 text-sm font-semibold text-brand-700 ring-1 ring-brand-100">
-                    Replace video
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm,video/quicktime"
-                      className="hidden"
-                      onChange={(event) => replaceVideo(lesson, event.target.files?.[0])}
-                    />
-                  </label>
-                  <button type="button" onClick={() => removeLesson(lesson)} className="text-sm font-semibold text-red-600">
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
     </div>
   )
 }
