@@ -15,6 +15,18 @@ const {
   deleteLesson,
   reorderLessons,
 } = require('../controllers/adminCourseController')
+const {
+  listDays,
+  getDay,
+  createDay,
+  updateDay,
+  deleteDay,
+  uploadTrainingVideo,
+  createVideo,
+  updateVideo,
+  deleteVideo,
+  reorderVideos,
+} = require('../controllers/adminTrainingController')
 const { requireAdmin } = require('../middleware/auth')
 
 const router = express.Router()
@@ -34,6 +46,16 @@ const receiveFile = (req, res, next) => {
 
 router.use(requireAdmin)
 router.get('/meta', getMeta)
+router.get('/trainings', listDays)
+router.post('/trainings', createDay)
+router.get('/trainings/:id', getDay)
+router.patch('/trainings/:id', updateDay)
+router.delete('/trainings/:id', deleteDay)
+router.post('/trainings/:id/upload', receiveFile, uploadTrainingVideo)
+router.post('/trainings/:id/videos', createVideo)
+router.post('/trainings/:id/videos/reorder', reorderVideos)
+router.patch('/training-videos/:id', updateVideo)
+router.delete('/training-videos/:id', deleteVideo)
 router.get('/courses', listCourses)
 router.post('/courses', createCourse)
 router.post('/uploads', receiveFile, uploadFile)

@@ -22,6 +22,15 @@ function NavIcon({ name }) {
     )
   }
 
+  if (name === 'trainings') {
+    return (
+      <svg {...common}>
+        <rect x="3.5" y="5" width="17" height="14" rx="2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="m10 9 5 3-5 3V9Z" />
+      </svg>
+    )
+  }
+
   return (
     <svg {...common}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10 7V5H5v14h5v-2" />
@@ -32,6 +41,11 @@ function NavIcon({ name }) {
 }
 
 function pageCrumb(pathname) {
+  if (pathname.startsWith('/trainings')) {
+    if (pathname.endsWith('/edit')) return 'Edit day'
+    if (pathname !== '/trainings') return 'Videos'
+    return 'Training'
+  }
   if (pathname === '/courses/new') return 'New course'
   if (pathname.endsWith('/edit')) return 'Edit course'
   if (pathname.startsWith('/courses/') && pathname !== '/courses') return 'Lessons'

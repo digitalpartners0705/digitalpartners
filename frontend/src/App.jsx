@@ -11,6 +11,7 @@ import AffiliateLeaderboard from './pages/affiliate/AffiliateLeaderboard'
 import AffiliateRefInfo from './pages/affiliate/AffiliateRefInfo'
 import AffiliateProfile from './pages/affiliate/AffiliateProfile'
 import AffiliateSection from './pages/affiliate/AffiliateSection'
+import AffiliateTrainings from './pages/affiliate/AffiliateTrainings'
 import BrowseCourses from './pages/dashboard/BrowseCourses'
 import Certificates from './pages/dashboard/Certificates'
 import CourseWatch from './pages/dashboard/CourseWatch'
@@ -53,6 +54,7 @@ function App() {
         <Route path="earnings" element={<AffiliateEarnings />} />
         <Route path="downloads" element={<AffiliateDownloads />} />
         <Route path="announcements" element={<AffiliateAnnouncements />} />
+        <Route path="trainings" element={<AffiliateTrainings />} />
         <Route path="leaderboard" element={<AffiliateLeaderboard />} />
         <Route path="kyc" element={<AffiliateSection />} />
         <Route path="links" element={<AffiliateSection />} />

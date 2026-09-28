@@ -7,6 +7,7 @@ const navItems = [
   { to: '/affiliate/earnings', label: 'Earnings', icon: 'earnings' },
   { to: '/affiliate/downloads', label: 'Downloads', icon: 'downloads' },
   { to: '/affiliate/announcements', label: 'Announcements', icon: 'announcements' },
+  { to: '/affiliate/trainings', label: 'Trainings', icon: 'trainings' },
   { to: '/affiliate/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
   { to: '/affiliate/kyc', label: 'KYC', icon: 'kyc' },
   { to: '/affiliate/links', label: 'Link Gen', icon: 'links' },
@@ -41,6 +42,14 @@ function NavIcon({ name }) {
       <svg {...common}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 10v4a1 1 0 0 0 1 1h2l4 3V6L7 9H5a1 1 0 0 0-1 1Z" />
         <path strokeLinecap="round" d="M15 9.5a3.5 3.5 0 0 1 0 5" />
+      </svg>
+    )
+  }
+  if (name === 'trainings') {
+    return (
+      <svg {...common}>
+        <rect x="3.5" y="5" width="17" height="14" rx="2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="m10 9 5 3-5 3V9Z" />
       </svg>
     )
   }

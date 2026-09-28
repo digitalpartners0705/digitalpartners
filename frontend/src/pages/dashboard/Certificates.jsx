@@ -1,40 +1,43 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import CourseCover from '../../components/CourseCover'
 import { useAuth } from '../../context/AuthContext'
 import { useCatalog } from '../../hooks/useCatalog'
 import { canViewCourse } from '../../utils/courses'
 
+const CATEGORIES = [
+  { id: 'free', label: 'Free' },
+  { id: 'pro', label: 'Pro' },
+]
+
 function Certificates() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
-  const { courses, packages, loading, error } = useCatalog()
+  const { courses, loading, error } = useCatalog()
   const [query, setQuery] = useState('')
-  const requestedCourseId = searchParams.get('course') || ''
-  const [activePackage, setActivePackage] = useState(searchParams.get('package') || '')
+  const [category, setCategory] = useState('free')
   const [claimed, setClaimed] = useState({})
-
+  const appliedCourse = useRef(false)
+  const requestedCourseId = searchParams.get('course') || ''
   const requestedCourse = courses.find((course) => course.id === requestedCourseId)
-  const selectedName = activePackage || requestedCourse?.packageName || packages[0]?.name || ''
-  const selected = packages.find((item) => item.name === selectedName) || packages[0]
+
+  useEffect(() => {
+    if (!requestedCourse || appliedCourse.current) return
+    appliedCourse.current = true
+    setCategory(requestedCourse.requiresUpgrade ? 'pro' : 'free')
+  }, [requestedCourse])
 
   const results = useMemo(() => {
-    if (!selected) return []
     const value = query.trim().toLowerCase()
-    const packageCourses = courses.filter((course) => course.packageName === selected.name)
-    const visible = requestedCourse && !packageCourses.some((course) => course.id === requestedCourse.id)
-      ? [requestedCourse, ...packageCourses]
-      : packageCourses
-    if (!value) return visible
-
-    return visible.filter(
-      (course) =>
-        course.title.toLowerCase().includes(value) ||
-        course.tag.toLowerCase().includes(value) ||
-        course.instructor.toLowerCase().includes(value) ||
-        course.description.toLowerCase().includes(value)
-    )
-  }, [courses, query, requestedCourse, selected])
+    return courses.filter((course) => {
+      const isPro = Boolean(course.requiresUpgrade)
+      if ((category === 'pro') !== isPro) return false
+      if (!value) return true
+      return [course.title, course.tag, course.instructor, course.description].some((part) =>
+        String(part || '').toLowerCase().includes(value),
+      )
+    })
+  }, [courses, query, category])
 
   const claimCertificate = (courseId) => {
     setClaimed((prev) => ({ ...prev, [courseId]: true }))
@@ -43,31 +46,31 @@ function Certificates() {
   return (
     <div>
       <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Certificates</h1>
-      <p className="mt-1 text-slate-500">Choose a package and collect a certificate for each course you can access.</p>
+      <p className="mt-1 text-slate-500">Choose Free or Pro and collect a certificate for each course you can access.</p>
 
       <input
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search courses in this package"
+        placeholder="Search courses"
         className="mt-6 w-full max-w-md rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       />
 
       <div className="mt-5 flex flex-wrap gap-2">
-        {packages.map((item) => {
-          const isActive = selected?.name === item.name
+        {CATEGORIES.map((item) => {
+          const isActive = category === item.id
           return (
             <button
               key={item.id}
               type="button"
-              onClick={() => setActivePackage(item.name)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+              onClick={() => setCategory(item.id)}
+              className={`cursor-pointer rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
                 isActive
-                  ? 'bg-brand-600 text-white shadow-sm'
+                  ? 'bg-brand-600 text-white'
                   : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-brand-700'
               }`}
             >
-              {item.name}
+              {item.label}
             </button>
           )
         })}
@@ -75,12 +78,11 @@ function Certificates() {
 
       {error ? <p className="mt-6 text-sm text-red-600">{error}</p> : null}
       {loading ? <p className="mt-6 text-sm text-slate-500">Loading courses...</p> : null}
-      {selected ? <p className="mt-6 text-sm text-slate-500">{selected.summary}</p> : null}
 
-      {!loading && selected && results.length === 0 ? (
+      {!loading && results.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-          <p className="text-lg font-semibold text-slate-900">No courses in this package match</p>
-          <p className="mt-2 text-sm text-slate-500">Try another package or clear the search.</p>
+          <p className="text-lg font-semibold text-slate-900">No courses in {category === 'pro' ? 'Pro' : 'Free'}</p>
+          <p className="mt-2 text-sm text-slate-500">Try the other category or clear the search.</p>
         </div>
       ) : null}
 
@@ -93,7 +95,7 @@ function Certificates() {
             return (
               <article
                 key={course.id}
-                className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
+                className="flex flex-col overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200"
               >
                 <CourseCover course={course} locked={!unlocked} />
                 <div className="flex flex-1 flex-col p-5">

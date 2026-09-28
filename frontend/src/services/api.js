@@ -87,4 +87,14 @@ export const getLeaderboard = async () => {
   return response.data
 }
 
+export const getTrainings = async () => {
+  const response = await api.get('/api/affiliate/trainings')
+  return response.data
+}
+
+export const getTrainingPlayUrl = async (dayId, videoId) => {
+  const response = await api.get(`/api/affiliate/trainings/${dayId}/videos/${videoId}/play`)
+  return response.data
+}
+
 export default api

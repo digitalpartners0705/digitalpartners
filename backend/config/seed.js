@@ -93,4 +93,40 @@ const ensureAdmin = async () => {
   console.log(`Admin account ready for ${email}`)
 }
 
-module.exports = { seedCatalog, ensureAdmin }
+const TRAINING_DAYS = [
+  { day: 1, title: 'Introduction', videos: [['What this work is', 6], ['Who you are talking to', 5], ['What a good week looks like', 4]] },
+  { day: 2, title: 'The packages', videos: [['Social Expert', 7], ['Ads Expert', 6], ['AI Premium Expert', 8]] },
+  { day: 3, title: 'Your link', videos: [['Where the link lives', 4], ['Send the link with the brochure', 5]] },
+  { day: 4, title: 'The first conversation', videos: [['How to open', 6], ['Match one package', 7], ['What to send after', 4]] },
+  { day: 5, title: 'The files', videos: [['Partner kit', 5], ['Which brochure to send', 6]] },
+  { day: 6, title: 'Community', videos: [['English and Hindi rooms', 4], ['What to tell them before a call', 5]] },
+  { day: 7, title: 'After they join', videos: [['A signup is not a sale', 4], ['What shows on Ref Info', 5]] },
+  { day: 8, title: 'Earnings', videos: [['When a commission appears', 6], ['What not to promise', 4]] },
+  { day: 9, title: 'Payouts', videos: [['Finish KYC first', 5], ['How a payout is sent', 4]] },
+  { day: 10, title: 'Your routine', videos: [['A simple weekly plan', 6], ['What to review before you share', 5]] },
+]
+
+const seedTrainingDays = async () => {
+  const existing = await query('SELECT COUNT(*)::int AS count FROM training_days')
+  if (existing.rows[0].count > 0) return
+
+  for (const day of TRAINING_DAYS) {
+    const inserted = await query(
+      `INSERT INTO training_days (day_number, title, status)
+       VALUES ($1, $2, 'published')
+       RETURNING id`,
+      [day.day, day.title]
+    )
+    const dayId = inserted.rows[0].id
+    for (let index = 0; index < day.videos.length; index += 1) {
+      const [title, minutes] = day.videos[index]
+      await query(
+        `INSERT INTO training_videos (day_id, title, position, duration_seconds)
+         VALUES ($1, $2, $3, $4)`,
+        [dayId, title, index, minutes * 60]
+      )
+    }
+  }
+}
+
+module.exports = { seedCatalog, ensureAdmin, seedTrainingDays }

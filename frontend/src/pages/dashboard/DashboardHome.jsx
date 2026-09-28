@@ -14,7 +14,7 @@ function DashboardHome() {
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 lg:grid lg:grid-cols-[1.4fr_1fr]">
+      <section className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-200 lg:grid lg:grid-cols-[1.4fr_1fr]">
         <div className="px-6 py-7 sm:px-8">
           <span className="inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
             Your learning space
@@ -28,13 +28,13 @@ function DashboardHome() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to="/dashboard/courses"
-              className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+              className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
             >
               Continue learning
             </Link>
             <Link
               to="/dashboard/browse"
-              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+              className="rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
             >
               Browse courses
             </Link>
@@ -61,7 +61,7 @@ function DashboardHome() {
           { label: 'Hours this week', value: '3.5', tint: 'bg-sky-50 text-sky-700' },
           { label: 'Certificates', value: '0', tint: 'bg-violet-50 text-violet-700' },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <div key={stat.label} className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
             <p className={`inline-flex rounded-lg px-2 py-1 text-xs font-semibold ${stat.tint}`}>{stat.label}</p>
             <p className="mt-3 text-3xl font-bold text-slate-900">{stat.value}</p>
           </div>
@@ -69,7 +69,7 @@ function DashboardHome() {
       </div>
 
       {continueCourse ? (
-        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:flex sm:items-center sm:justify-between">
+        <section className="rounded-lg bg-white p-6 ring-1 ring-slate-200 sm:flex sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-brand-600">Continue learning</p>
             <h2 className="mt-1 text-xl font-bold text-slate-900">{continueCourse.title}</h2>
@@ -80,7 +80,7 @@ function DashboardHome() {
           </div>
           <Link
             to="/dashboard/courses"
-            className="mt-5 inline-flex rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 sm:mt-0"
+            className="mt-5 inline-flex rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 sm:mt-0"
           >
             Resume
           </Link>
@@ -99,7 +99,7 @@ function DashboardHome() {
           {recommended.map((course) => (
             <article
               key={course.id}
-              className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
+              className="overflow-hidden rounded-lg bg-white ring-1 ring-slate-200"
             >
               <CourseCover course={course} locked={!canViewCourse(course, user)} />
               <div className="p-5">

@@ -131,4 +131,30 @@ const initAffiliateTables = async () => {
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_earned_at_idx ON affiliate_earnings (earned_at)`)
 }
 
-module.exports = { pool, query, initUsersTable, initCatalogTables, initAffiliateTables }
+const initTrainingTables = async () => {
+  await query(`
+    CREATE TABLE IF NOT EXISTS training_days (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      day_number INT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'published',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS training_videos (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      day_id UUID NOT NULL REFERENCES training_days(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      position INT NOT NULL DEFAULT 0,
+      duration_seconds INT NOT NULL DEFAULT 0,
+      storage_key TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+}
+
+module.exports = { pool, query, initUsersTable, initCatalogTables, initAffiliateTables, initTrainingTables }

@@ -2,8 +2,8 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
 
-const { initUsersTable, initCatalogTables, initAffiliateTables } = require('./config/db')
-const { seedCatalog, ensureAdmin } = require('./config/seed')
+const { initUsersTable, initCatalogTables, initAffiliateTables, initTrainingTables } = require('./config/db')
+const { seedCatalog, ensureAdmin, seedTrainingDays } = require('./config/seed')
 const healthRoutes = require('./routes/healthRoutes')
 const authRoutes = require('./routes/authRoutes')
 const courseRoutes = require('./routes/courseRoutes')
@@ -27,7 +27,9 @@ const start = async () => {
     await initUsersTable()
     await initCatalogTables()
     await initAffiliateTables()
+    await initTrainingTables()
     await seedCatalog()
+    await seedTrainingDays()
     await ensureAdmin()
     app.listen(PORT, (err) => {
       if (err) {
