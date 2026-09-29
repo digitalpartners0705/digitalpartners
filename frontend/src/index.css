@@ -9,4 +9,19 @@
   --color-brand-600: #4f46e5;
   --color-brand-700: #4338ca;
   --color-brand-800: #3730a3;
+  --color-ink-950: #040a16;
+  --color-gold-300: #ffe7a3;
+  --color-gold-400: #f5c14a;
+  --color-gold-500: #e09a12;
+}
+
+html {
+  scroll-padding-top: 6.5rem;
+}
+
+.gold-text {
+  background-image: linear-gradient(180deg, #fff6d4 0%, #f6c445 46%, #c8870d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
