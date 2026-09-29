@@ -1,12 +1,18 @@
 import { Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import AuthModal from '../components/AuthModal'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { getStoredToken } from '../services/api'
+import { captureReferralFromSearch } from '../utils/referral'
 import Home from './Home'
 
 function Landing() {
-  const { user, authOpen, authMode, setAuthMode, closeAuth, handleAuthSuccess } = useAuth()
+  const { user, authOpen, authMode, signupDefaults, setAuthMode, closeAuth, handleAuthSuccess } = useAuth()
+
+  useEffect(() => {
+    captureReferralFromSearch()
+  }, [])
 
   if (user || getStoredToken()) {
     return <Navigate to="/dashboard" replace />
@@ -19,6 +25,7 @@ function Landing() {
       <AuthModal
         isOpen={authOpen}
         mode={authMode}
+        signupDefaults={signupDefaults}
         onModeChange={setAuthMode}
         onClose={closeAuth}
         onSuccess={handleAuthSuccess}

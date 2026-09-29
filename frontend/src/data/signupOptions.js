@@ -1,10 +1,4 @@
-export const KNOWLEDGE_PACKAGES = [
-  'Full-Stack Web Development',
-  'Data Science Bootcamp',
-  'UI/UX Design Mastery',
-  'Digital Marketing Pro',
-  'Finance & GST Essentials',
-]
+export const KNOWLEDGE_PACKAGES = ['Social Expert', 'Ads Expert', 'AI Premium Expert']
 
 export const VALID_PROMO_CODES = {
   WELCOME10: '10% off applied',
@@ -62,6 +56,7 @@ export const COUNTRIES = {
   'United Kingdom': ['England', 'Scotland', 'Wales', 'Northern Ireland'],
   Canada: ['Alberta', 'British Columbia', 'Ontario', 'Quebec'],
   Australia: ['New South Wales', 'Queensland', 'Victoria', 'Western Australia'],
+  Singapore: ['Singapore'],
 }
 
 export const COUNTRY_NAMES = Object.keys(COUNTRIES)

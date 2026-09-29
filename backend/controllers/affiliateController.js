@@ -1,5 +1,7 @@
 const { people, earnings } = require('../data/leaderboardTest')
 const { leaderboardWindows, partsOf, addDays, toIso } = require('../services/leaderboardWindow')
+const { PACKAGE_NAMES, activeCommissionFor } = require('../data/commissions')
+const { query } = require('../config/db')
 
 const peopleById = new Map(people.map((person) => [person.id, person]))
 
@@ -53,4 +55,38 @@ const leaderboard = async (req, res) => {
   }
 }
 
-module.exports = { leaderboard }
+const linkKit = async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT referral_code FROM users WHERE id = $1`,
+      [req.user.id],
+    )
+    const referralCode = result.rows[0]?.referral_code
+    if (!referralCode) {
+      return res.status(404).json({ message: 'Referral code not found' })
+    }
+
+    const packages = PACKAGE_NAMES.map((name) => {
+      const commission = activeCommissionFor(name)
+      return {
+        id: commission.packageId,
+        name,
+        listedPrice: commission.listedPrice,
+        netAmount: commission.netAmount,
+        activePercent: commission.commissionPercent,
+        activeAmount: commission.amount,
+      }
+    })
+
+    return res.json({
+      referralCode,
+      incomeType: 'active',
+      packages,
+    })
+  } catch (error) {
+    console.error('Link kit error:', error.message)
+    return res.status(500).json({ message: 'Could not load referral links' })
+  }
+}
+
+module.exports = { leaderboard, linkKit }

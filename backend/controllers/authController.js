@@ -1,13 +1,15 @@
 const fs = require('fs')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { query } = require('../config/db')
+const { query, createReferralCode } = require('../config/db')
+const { PACKAGE_NAMES, canPurchasePackage } = require('../data/commissions')
+const { creditActiveCommission, creditSponsorForPurchase } = require('../services/affiliateCommission')
 const storage = require('../services/storage')
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const USER_FIELDS = `id, full_name, email, phone, country, state, knowledge_package,
-  promo_code, coupon_code, has_gst, role, avatar_key, created_at`
+  promo_code, coupon_code, has_gst, role, avatar_key, referral_code, referred_by, created_at`
 
 const publicUser = async (row) => ({
   id: row.id,
@@ -21,6 +23,8 @@ const publicUser = async (row) => ({
   couponCode: row.coupon_code,
   hasGst: row.has_gst,
   role: row.role || 'student',
+  referralCode: row.referral_code || null,
+  referredBy: row.referred_by || null,
   avatarUrl: await storage.signedGet(row.avatar_key),
   createdAt: row.created_at,
 })
@@ -31,6 +35,28 @@ const signToken = (user) =>
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   )
+
+const allocateReferralCode = async () => {
+  for (let attempt = 0; attempt < 16; attempt += 1) {
+    const code = createReferralCode()
+    const existing = await query(`SELECT 1 FROM users WHERE referral_code = $1 LIMIT 1`, [code])
+    if (!existing.rows[0]) return code
+  }
+  throw new Error('Could not allocate a referral code')
+}
+
+const findSponsorByCode = async (rawCode) => {
+  const referralCode = String(rawCode || '').trim()
+  if (!referralCode) return null
+  const result = await query(
+    `SELECT id, referral_code, knowledge_package
+     FROM users
+     WHERE referral_code = $1
+     LIMIT 1`,
+    [referralCode],
+  )
+  return result.rows[0] || null
+}
 
 const signup = async (req, res) => {
   try {
@@ -44,6 +70,7 @@ const signup = async (req, res) => {
     const couponCode = String(req.body.couponCode || '').trim().toUpperCase() || null
     const password = String(req.body.password || '')
     const hasGst = Boolean(req.body.hasGst)
+    const incomingReferral = String(req.body.referralCode || req.body.ref || '').trim()
 
     if (!email) return res.status(400).json({ message: 'Email Id is required' })
     if (!EMAIL_PATTERN.test(email)) return res.status(400).json({ message: 'Enter a valid email address' })
@@ -52,21 +79,53 @@ const signup = async (req, res) => {
     if (!country) return res.status(400).json({ message: 'Country is required' })
     if (!state) return res.status(400).json({ message: 'State is required' })
     if (!knowledgePackage) return res.status(400).json({ message: 'Please select a knowledge package' })
+    if (!PACKAGE_NAMES.includes(knowledgePackage)) {
+      return res.status(400).json({ message: 'Choose Social Expert, Ads Expert, or AI Premium Expert' })
+    }
     if (!password) return res.status(400).json({ message: 'Password is required' })
     if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' })
 
+    const sponsor = await findSponsorByCode(incomingReferral)
+    if (incomingReferral && !sponsor) {
+      return res.status(400).json({ message: 'Referral code is invalid' })
+    }
+
     const passwordHash = await bcrypt.hash(password, 10)
+    const referralCode = await allocateReferralCode()
     const result = await query(
       `INSERT INTO users (
          full_name, email, phone, country, state, knowledge_package,
-         promo_code, coupon_code, has_gst, password_hash
+         promo_code, coupon_code, has_gst, password_hash, referral_code, referred_by
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING ${USER_FIELDS}`,
-      [fullName, email, phone, country, state, knowledgePackage, promoCode, couponCode, hasGst, passwordHash]
+      [
+        fullName,
+        email,
+        phone,
+        country,
+        state,
+        knowledgePackage,
+        promoCode,
+        couponCode,
+        hasGst,
+        passwordHash,
+        referralCode,
+        sponsor?.id || null,
+      ],
     )
 
-    const user = await publicUser(result.rows[0])
+    const created = result.rows[0]
+    if (sponsor?.id) {
+      await creditActiveCommission({
+        sponsorId: sponsor.id,
+        buyerId: created.id,
+        packageName: knowledgePackage,
+        country,
+      })
+    }
+
+    const user = await publicUser(created)
     return res.status(201).json({ token: signToken(user), user })
   } catch (error) {
     if (error.code === '23505') {
@@ -89,7 +148,7 @@ const login = async (req, res) => {
     const result = await query(
       `SELECT ${USER_FIELDS}, password_hash
        FROM users WHERE email = $1`,
-      [email]
+      [email],
     )
 
     const row = result.rows[0]
@@ -102,6 +161,12 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' })
     }
 
+    if (!row.referral_code) {
+      const code = await allocateReferralCode()
+      await query(`UPDATE users SET referral_code = $1 WHERE id = $2`, [code, row.id])
+      row.referral_code = code
+    }
+
     const user = await publicUser(row)
     return res.json({ token: signToken(user), user })
   } catch (error) {
@@ -112,19 +177,64 @@ const login = async (req, res) => {
 
 const me = async (req, res) => {
   try {
-    const result = await query(
-      `SELECT ${USER_FIELDS} FROM users WHERE id = $1`,
-      [req.user.id]
-    )
+    const result = await query(`SELECT ${USER_FIELDS} FROM users WHERE id = $1`, [req.user.id])
 
     if (!result.rows[0]) {
       return res.status(404).json({ message: 'User not found' })
     }
 
-    return res.json({ user: await publicUser(result.rows[0]) })
+    const row = result.rows[0]
+    if (!row.referral_code) {
+      const code = await allocateReferralCode()
+      await query(`UPDATE users SET referral_code = $1 WHERE id = $2`, [code, row.id])
+      row.referral_code = code
+    }
+
+    return res.json({ user: await publicUser(row) })
   } catch (error) {
     console.error('Me error:', error.message)
     return res.status(500).json({ message: 'Could not load profile' })
+  }
+}
+
+const purchasePackage = async (req, res) => {
+  try {
+    const packageName = String(req.body.packageName || req.body.knowledgePackage || '').trim()
+    if (!packageName) {
+      return res.status(400).json({ message: 'Please select a package to buy' })
+    }
+
+    const current = await query(`SELECT ${USER_FIELDS} FROM users WHERE id = $1`, [req.user.id])
+    const row = current.rows[0]
+    if (!row) return res.status(404).json({ message: 'User not found' })
+
+    const check = canPurchasePackage(row.knowledge_package, packageName)
+    if (!check.ok) {
+      return res.status(400).json({ message: check.message })
+    }
+
+    const updated = await query(
+      `UPDATE users SET knowledge_package = $1 WHERE id = $2 RETURNING ${USER_FIELDS}`,
+      [check.package.name, row.id],
+    )
+
+    const earning = await creditSponsorForPurchase({
+      buyerId: row.id,
+      packageName: check.package.name,
+      country: row.country,
+    })
+
+    return res.json({
+      user: await publicUser(updated.rows[0]),
+      purchase: {
+        packageName: check.package.name,
+        commissionCredited: Boolean(earning),
+        activeAmount: earning ? Number(earning.amount) : null,
+      },
+    })
+  } catch (error) {
+    console.error('Purchase error:', error.message)
+    return res.status(500).json({ message: 'Could not complete the purchase' })
   }
 }
 
@@ -152,7 +262,7 @@ const updateAvatar = async (req, res) => {
 
     const updated = await query(
       `UPDATE users SET avatar_key = $1 WHERE id = $2 RETURNING ${USER_FIELDS}`,
-      [key, req.user.id]
+      [key, req.user.id],
     )
     return res.json({ user: await publicUser(updated.rows[0]) })
   } catch (error) {
@@ -190,4 +300,4 @@ const changePassword = async (req, res) => {
   }
 }
 
-module.exports = { signup, login, me, updateAvatar, changePassword }
+module.exports = { signup, login, me, purchasePackage, updateAvatar, changePassword }

@@ -8,6 +8,7 @@ import AffiliateCommunity from './pages/affiliate/AffiliateCommunity'
 import AffiliateDownloads from './pages/affiliate/AffiliateDownloads'
 import AffiliateEarnings from './pages/affiliate/AffiliateEarnings'
 import AffiliateLeaderboard from './pages/affiliate/AffiliateLeaderboard'
+import AffiliateLinks from './pages/affiliate/AffiliateLinks'
 import AffiliateRefInfo from './pages/affiliate/AffiliateRefInfo'
 import AffiliateProfile from './pages/affiliate/AffiliateProfile'
 import AffiliateSection from './pages/affiliate/AffiliateSection'
@@ -19,12 +20,14 @@ import DashboardHome from './pages/dashboard/DashboardHome'
 import MyCourses from './pages/dashboard/MyCourses'
 import RecentUpdates from './pages/dashboard/RecentUpdates'
 import Upgrade from './pages/dashboard/Upgrade'
+import Join from './pages/Join'
 import Landing from './pages/Landing'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/join" element={<Join />} />
       <Route
         path="/dashboard"
         element={
@@ -57,7 +60,7 @@ function App() {
         <Route path="trainings" element={<AffiliateTrainings />} />
         <Route path="leaderboard" element={<AffiliateLeaderboard />} />
         <Route path="kyc" element={<AffiliateSection />} />
-        <Route path="links" element={<AffiliateSection />} />
+        <Route path="links" element={<AffiliateLinks />} />
         <Route path="ref-info" element={<AffiliateRefInfo />} />
         <Route path="qualification" element={<AffiliateSection />} />
         <Route path="achievements" element={<AffiliateAchievements />} />

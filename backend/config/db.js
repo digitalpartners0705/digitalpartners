@@ -61,6 +61,31 @@ const initUsersTable = async () => {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS has_gst BOOLEAN NOT NULL DEFAULT FALSE`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'student'`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_key TEXT`)
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT`)
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by UUID REFERENCES users(id) ON DELETE SET NULL`)
+  await query(`CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code_uidx ON users (referral_code) WHERE referral_code IS NOT NULL`)
+  await query(`CREATE INDEX IF NOT EXISTS users_referred_by_idx ON users (referred_by)`)
+  await ensureReferralCodes()
+}
+
+const createReferralCode = () => String(Math.floor(10_000_000_000 + Math.random() * 90_000_000_000))
+
+const ensureReferralCodes = async () => {
+  const missing = await query(`SELECT id FROM users WHERE referral_code IS NULL OR referral_code = ''`)
+  for (const row of missing.rows) {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const code = createReferralCode()
+      try {
+        await query(`UPDATE users SET referral_code = $1 WHERE id = $2 AND (referral_code IS NULL OR referral_code = '')`, [
+          code,
+          row.id,
+        ])
+        break
+      } catch (error) {
+        if (error.code !== '23505') throw error
+      }
+    }
+  }
 }
 
 const initCatalogTables = async () => {
@@ -127,8 +152,21 @@ const initAffiliateTables = async () => {
       earned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS buyer_id UUID REFERENCES users(id) ON DELETE SET NULL`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS package_name TEXT`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS income_type TEXT NOT NULL DEFAULT 'active'`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS commission_percent NUMERIC(6,2)`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS net_amount NUMERIC(12,2)`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS country TEXT`)
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_user_idx ON affiliate_earnings (user_id)`)
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_earned_at_idx ON affiliate_earnings (earned_at)`)
+  await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_income_type_idx ON affiliate_earnings (income_type)`)
+  await query(`DROP INDEX IF EXISTS affiliate_earnings_active_buyer_uidx`)
+  await query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS affiliate_earnings_active_buyer_package_uidx
+    ON affiliate_earnings (buyer_id, package_name)
+    WHERE income_type = 'active' AND buyer_id IS NOT NULL AND package_name IS NOT NULL
+  `)
 }
 
 const initTrainingTables = async () => {
@@ -157,4 +195,13 @@ const initTrainingTables = async () => {
   `)
 }
 
-module.exports = { pool, query, initUsersTable, initCatalogTables, initAffiliateTables, initTrainingTables }
+module.exports = {
+  pool,
+  query,
+  initUsersTable,
+  initCatalogTables,
+  initAffiliateTables,
+  initTrainingTables,
+  createReferralCode,
+  ensureReferralCodes,
+}

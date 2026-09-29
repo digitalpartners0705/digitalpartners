@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import LoginForm from './LoginForm'
 import SignupForm from './SignupForm'
 
-function AuthModal({ isOpen, mode, onModeChange, onClose, onSuccess }) {
+function AuthModal({ isOpen, mode, onModeChange, onClose, onSuccess, signupDefaults }) {
   useEffect(() => {
     if (!isOpen) return undefined
 
@@ -51,7 +51,11 @@ function AuthModal({ isOpen, mode, onModeChange, onClose, onSuccess }) {
         </button>
 
         {mode === 'signup' ? (
-          <SignupForm onSwitchToLogin={() => onModeChange('login')} onSuccess={onSuccess} />
+          <SignupForm
+            defaults={signupDefaults}
+            onSwitchToLogin={() => onModeChange('login')}
+            onSuccess={onSuccess}
+          />
         ) : (
           <LoginForm onSwitchToSignup={() => onModeChange('signup')} onSuccess={onSuccess} />
         )}

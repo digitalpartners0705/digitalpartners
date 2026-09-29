@@ -4,7 +4,7 @@ import { changePassword, uploadAvatar } from '../services/api'
 
 function downloadInvoice(user) {
   const lines = [
-    'Digital Expert',
+    'Digital Aarambh',
     'Account invoice',
     '',
     `Name: ${user?.fullName || ''}`,
@@ -17,7 +17,7 @@ function downloadInvoice(user) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = 'digital-expert-invoice.txt'
+  link.download = 'digital-aarambh-invoice.txt'
   link.click()
   URL.revokeObjectURL(url)
 }

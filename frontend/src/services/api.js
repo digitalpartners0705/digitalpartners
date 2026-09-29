@@ -82,6 +82,12 @@ export const changePassword = async (payload) => {
   return response.data
 }
 
+export const purchasePackage = async (packageName) => {
+  const response = await api.post('/api/auth/purchase', { packageName })
+  localStorage.setItem(USER_KEY, JSON.stringify(response.data.user))
+  return response.data
+}
+
 export const getLeaderboard = async () => {
   const response = await api.get('/api/affiliate/leaderboard')
   return response.data

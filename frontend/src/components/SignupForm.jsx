@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { signupUser } from '../services/api'
 import {
   COUNTRIES,
@@ -7,6 +7,7 @@ import {
   VALID_COUPON_CODES,
   VALID_PROMO_CODES,
 } from '../data/signupOptions'
+import { readReferral } from '../utils/referral'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -45,27 +46,43 @@ function Chevron() {
   )
 }
 
-function SignupForm({ onSwitchToLogin, onSuccess }) {
-  const [step, setStep] = useState(1)
-  const [form, setForm] = useState({
+function buildInitialForm(defaults = {}) {
+  const stored = readReferral() || {}
+  return {
     email: '',
     fullName: '',
     phone: '',
-    country: '',
+    country: defaults.country || stored.country || '',
     state: '',
-    knowledgePackage: '',
+    knowledgePackage: defaults.knowledgePackage || stored.package || '',
     promoCode: '',
     couponCode: '',
     password: '',
     hasGst: false,
-  })
+    referralCode: defaults.referralCode || stored.ref || '',
+  }
+}
+
+function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
+  const [step, setStep] = useState(1)
+  const [form, setForm] = useState(() => buildInitialForm(defaults))
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [promoStatus, setPromoStatus] = useState('')
   const [couponStatus, setCouponStatus] = useState('')
 
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      country: defaults.country || prev.country || '',
+      knowledgePackage: defaults.knowledgePackage || prev.knowledgePackage || '',
+      referralCode: defaults.referralCode || prev.referralCode || '',
+    }))
+  }, [defaults.country, defaults.knowledgePackage, defaults.referralCode])
+
   const states = form.country ? COUNTRIES[form.country] || [] : []
+  const packageLocked = Boolean(defaults.knowledgePackage)
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target
@@ -143,6 +160,7 @@ function SignupForm({ onSwitchToLogin, onSuccess }) {
         couponCode: form.couponCode.trim().toUpperCase() || null,
         password: form.password,
         hasGst: form.hasGst,
+        referralCode: form.referralCode.trim() || null,
       })
       onSuccess(data.user)
     } catch (error) {
@@ -281,7 +299,8 @@ function SignupForm({ onSwitchToLogin, onSuccess }) {
                 name="knowledgePackage"
                 value={form.knowledgePackage}
                 onChange={updateField}
-                className={selectClass}
+                disabled={packageLocked}
+                className={`${selectClass} disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-600`}
               >
                 <option value="">Choose a package</option>
                 {KNOWLEDGE_PACKAGES.map((item) => (
@@ -293,6 +312,12 @@ function SignupForm({ onSwitchToLogin, onSuccess }) {
               <Chevron />
             </div>
           </Field>
+
+          {form.referralCode ? (
+            <p className="rounded-lg border border-[#f3e2b3] bg-[#fff8e8] px-3 py-2 text-xs text-slate-600">
+              Referred with code <span className="font-semibold text-slate-800">{form.referralCode}</span>
+            </p>
+          ) : null}
 
           <div className="grid gap-3.5 sm:grid-cols-2">
             <div className="min-w-0">

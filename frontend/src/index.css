@@ -25,3 +25,42 @@ html {
   background-clip: text;
   color: transparent;
 }
+
+.brand-wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.brand-wordmark-digital {
+  font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background-image: linear-gradient(180deg, #e8b84a 0%, #c98a12 48%, #8f5f08 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-wordmark-aarambh {
+  margin-top: 0.12rem;
+  font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background-image: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 55%, #0284c7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-wordmark-on-dark .brand-wordmark-digital {
+  background-image: linear-gradient(180deg, #fff1c2 0%, #f0c14a 42%, #c8870d 100%);
+}
+
+.brand-wordmark-on-dark .brand-wordmark-aarambh {
+  background-image: linear-gradient(90deg, #7dd3fc 0%, #38bdf8 45%, #e0f2fe 100%);
+}

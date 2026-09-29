@@ -5,10 +5,6 @@ const PAGES = {
     title: 'KYC',
     text: 'Complete verification here when payouts are ready.',
   },
-  '/affiliate/links': {
-    title: 'Link Gen',
-    text: 'Create and copy referral links from this page.',
-  },
   '/affiliate/qualification': {
     title: 'Qualification',
     text: 'Rank targets and qualification status will show here.',

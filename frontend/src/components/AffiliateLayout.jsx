@@ -153,13 +153,18 @@ function AffiliateLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Link to="/affiliate/earnings" className="flex items-center gap-2.5 border-b border-white/10 px-5 py-5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-300 text-sm font-bold text-slate-900">
-            D
-          </span>
+        <Link
+          to="/affiliate/earnings"
+          className="flex items-center gap-2.5 border-b border-white/10 px-4 py-4"
+          aria-label="Digital Aarambh affiliate home"
+        >
+          <img src="/assets/logo-removebg.png" alt="" className="h-12 w-auto shrink-0 object-contain" />
           <span>
-            <span className="block text-sm font-extrabold tracking-tight text-white">Digital Expert</span>
-            <span className="block text-[11px] font-medium text-slate-500">Affiliate</span>
+            <span className="brand-wordmark brand-wordmark-on-dark">
+              <span className="brand-wordmark-digital">Digital</span>
+              <span className="brand-wordmark-aarambh">Aarambh</span>
+            </span>
+            <span className="mt-1 block text-[11px] font-medium tracking-wide text-slate-500">Affiliate</span>
           </span>
         </Link>
 
