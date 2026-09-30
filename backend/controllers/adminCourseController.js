@@ -62,15 +62,16 @@ const readCourseInput = (body) => {
   const hours = Number(body.hours)
   const accent = isAllowedAccent(body.accent) ? body.accent : DEFAULT_ACCENT
   const status = body.status === 'draft' ? 'draft' : 'published'
-  const requiresUpgrade = Boolean(body.requiresUpgrade)
+  const packageId = body.packageId || null
 
-  return { title, instructor, description, category, hours, accent, status, requiresUpgrade }
+  return { title, instructor, description, category, hours, accent, status, packageId, requiresUpgrade: true }
 }
 
 const validateCourse = (input) => {
   if (!input.title) return 'Title is required'
   if (!input.instructor) return 'Instructor is required'
   if (!input.category) return 'Category is required'
+  if (!input.packageId) return 'Package is required'
   if (!Number.isFinite(input.hours) || input.hours < 0) return 'Hours must be a number'
   return ''
 }
@@ -126,7 +127,8 @@ const createCourse = async (req, res) => {
     if (message) return res.status(400).json({ message })
 
     const categoryId = await resolveCategory(input.category)
-    const packageId = await resolvePackage(req.body.packageId || null)
+    const packageId = await resolvePackage(input.packageId)
+    if (!packageId) return res.status(400).json({ message: 'Package is required' })
     const slug = await uniqueSlug(input.title)
     const sort = await query('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM courses')
 
@@ -135,7 +137,7 @@ const createCourse = async (req, res) => {
          slug, title, instructor, description, category_id, package_id,
          accent, hours, requires_upgrade, status, sort_order
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, $9, $10)
        RETURNING id`,
       [
         slug,
@@ -146,7 +148,6 @@ const createCourse = async (req, res) => {
         packageId,
         input.accent,
         input.hours,
-        input.requiresUpgrade,
         input.status,
         sort.rows[0].next,
       ]
@@ -170,7 +171,8 @@ const updateCourse = async (req, res) => {
     if (message) return res.status(400).json({ message })
 
     const categoryId = await resolveCategory(input.category)
-    const packageId = await resolvePackage(req.body.packageId || null)
+    const packageId = await resolvePackage(input.packageId)
+    if (!packageId) return res.status(400).json({ message: 'Package is required' })
     const slug = current.title === input.title ? current.slug : await uniqueSlug(input.title, current.id)
 
     let thumbnailKey = current.thumbnail_key
@@ -188,9 +190,9 @@ const updateCourse = async (req, res) => {
     await query(
       `UPDATE courses
        SET slug = $1, title = $2, instructor = $3, description = $4, category_id = $5,
-           package_id = $6, accent = $7, hours = $8, requires_upgrade = $9, status = $10,
-           thumbnail_key = $11, updated_at = NOW()
-       WHERE id = $12`,
+           package_id = $6, accent = $7, hours = $8, requires_upgrade = TRUE, status = $9,
+           thumbnail_key = $10, updated_at = NOW()
+       WHERE id = $11`,
       [
         slug,
         input.title,
@@ -200,7 +202,6 @@ const updateCourse = async (req, res) => {
         packageId,
         input.accent,
         input.hours,
-        input.requiresUpgrade,
         input.status,
         thumbnailKey,
         current.id,

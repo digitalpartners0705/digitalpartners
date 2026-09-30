@@ -86,7 +86,7 @@ function CoursesPage() {
 
   const published = courses.filter((course) => course.status === 'published').length
   const drafts = courses.filter((course) => course.status !== 'published').length
-  const pro = courses.filter((course) => course.requiresUpgrade).length
+  const withPackage = courses.filter((course) => course.packageName).length
 
   const results = useMemo(() => {
     const value = query.trim().toLowerCase()
@@ -132,7 +132,7 @@ function CoursesPage() {
         <StatCard label="Total" value={loading ? '—' : courses.length} />
         <StatCard label="Published" value={loading ? '—' : published} />
         <StatCard label="Drafts" value={loading ? '—' : drafts} />
-        <StatCard label="Pro" value={loading ? '—' : pro} />
+        <StatCard label="Packaged" value={loading ? '—' : withPackage} />
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -231,9 +231,9 @@ function CoursesPage() {
                   >
                     {publishedCourse ? 'Published' : 'Draft'}
                   </span>
-                  {course.requiresUpgrade ? (
+                  {course.packageName ? (
                     <span className="absolute right-2 top-2 rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-semibold text-white">
-                      Pro
+                      {course.packageName}
                     </span>
                   ) : null}
                 </Link>

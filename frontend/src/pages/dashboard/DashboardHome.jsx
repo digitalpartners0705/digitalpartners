@@ -10,7 +10,9 @@ function DashboardHome() {
   const firstName = user?.fullName?.split(' ')[0] || 'there'
   const enrolled = getEnrolledCourses(courses, user)
   const continueCourse = enrolled[0]
-  const recommended = courses.slice(0, 3)
+  const recommended = user?.knowledgePackage
+    ? courses.filter((course) => course.packageName === user.knowledgePackage).slice(0, 3)
+    : courses.slice(0, 3)
 
   return (
     <div className="space-y-8">

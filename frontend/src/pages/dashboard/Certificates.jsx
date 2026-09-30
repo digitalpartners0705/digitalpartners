@@ -5,9 +5,11 @@ import { useAuth } from '../../context/AuthContext'
 import { useCatalog } from '../../hooks/useCatalog'
 import { canViewCourse } from '../../utils/courses'
 
-const CATEGORIES = [
-  { id: 'free', label: 'Free' },
-  { id: 'pro', label: 'Pro' },
+const PACKAGE_FILTERS = [
+  { id: 'all', label: 'All packages' },
+  { id: 'Social Expert', label: 'Social Expert' },
+  { id: 'Ads Expert', label: 'Ads Expert' },
+  { id: 'AI Premium Expert', label: 'AI Premium Expert' },
 ]
 
 function Certificates() {
@@ -15,7 +17,7 @@ function Certificates() {
   const [searchParams] = useSearchParams()
   const { courses, loading, error } = useCatalog()
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('free')
+  const [category, setCategory] = useState(user?.knowledgePackage || 'all')
   const [claimed, setClaimed] = useState({})
   const appliedCourse = useRef(false)
   const requestedCourseId = searchParams.get('course') || ''
@@ -24,16 +26,15 @@ function Certificates() {
   useEffect(() => {
     if (!requestedCourse || appliedCourse.current) return
     appliedCourse.current = true
-    setCategory(requestedCourse.requiresUpgrade ? 'pro' : 'free')
+    setCategory(requestedCourse.packageName || 'all')
   }, [requestedCourse])
 
   const results = useMemo(() => {
     const value = query.trim().toLowerCase()
     return courses.filter((course) => {
-      const isPro = Boolean(course.requiresUpgrade)
-      if ((category === 'pro') !== isPro) return false
+      if (category !== 'all' && course.packageName !== category) return false
       if (!value) return true
-      return [course.title, course.tag, course.instructor, course.description].some((part) =>
+      return [course.title, course.tag, course.instructor, course.description, course.packageName].some((part) =>
         String(part || '').toLowerCase().includes(value),
       )
     })
@@ -46,7 +47,9 @@ function Certificates() {
   return (
     <div>
       <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Certificates</h1>
-      <p className="mt-1 text-slate-500">Choose Free or Pro and collect a certificate for each course you can access.</p>
+      <p className="mt-1 text-slate-500">
+        Certificates are available for courses in your purchased package.
+      </p>
 
       <input
         type="search"
@@ -57,7 +60,7 @@ function Certificates() {
       />
 
       <div className="mt-5 flex flex-wrap gap-2">
-        {CATEGORIES.map((item) => {
+        {PACKAGE_FILTERS.map((item) => {
           const isActive = category === item.id
           return (
             <button
@@ -81,8 +84,8 @@ function Certificates() {
 
       {!loading && results.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-          <p className="text-lg font-semibold text-slate-900">No courses in {category === 'pro' ? 'Pro' : 'Free'}</p>
-          <p className="mt-2 text-sm text-slate-500">Try the other category or clear the search.</p>
+          <p className="text-lg font-semibold text-slate-900">No courses in this package</p>
+          <p className="mt-2 text-sm text-slate-500">Try another package filter or clear the search.</p>
         </div>
       ) : null}
 
@@ -99,15 +102,13 @@ function Certificates() {
               >
                 <CourseCover course={course} locked={!unlocked} />
                 <div className="flex flex-1 flex-col p-5">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
                       {course.tag}
                     </span>
-                    {unlocked ? null : (
-                      <span className="rounded-full bg-[#1b2140] px-2.5 py-1 text-xs font-semibold text-white">
-                        Pro
-                      </span>
-                    )}
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                      {course.packageName || 'Unassigned'}
+                    </span>
                   </div>
                   <h2 className="mt-3 text-lg font-bold leading-snug text-slate-900">{course.title}</h2>
                   <p className="mt-1 text-sm text-slate-500">{course.instructor}</p>

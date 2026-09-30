@@ -1,13 +1,11 @@
-export const canViewCourse = (course, user) =>
-  !course?.requiresUpgrade || course.title === user?.knowledgePackage
+export const canViewCourse = (course, user) => {
+  const userPackage = String(user?.knowledgePackage || '').trim()
+  const coursePackage = String(course?.packageName || '').trim()
+  if (!userPackage || !coursePackage) return false
+  return coursePackage === userPackage
+}
 
 export const getEnrolledCourses = (courses, user) => {
-  const accessible = courses.filter((course) => canViewCourse(course, user))
-  if (!user?.knowledgePackage) return accessible
-
-  return [...accessible].sort((a, b) => {
-    if (a.title === user.knowledgePackage) return -1
-    if (b.title === user.knowledgePackage) return 1
-    return 0
-  })
+  if (!user?.knowledgePackage) return []
+  return (courses || []).filter((course) => canViewCourse(course, user))
 }

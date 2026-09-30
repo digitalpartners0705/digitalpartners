@@ -46,6 +46,13 @@ function Chevron() {
   )
 }
 
+// A package link pre-fills the package, so that flag tells the two link types apart.
+function referralSource(defaults = {}) {
+  const stored = readReferral() || {}
+  if (defaults.knowledgePackage || stored.package) return 'package'
+  return 'joining'
+}
+
 function buildInitialForm(defaults = {}) {
   const stored = readReferral() || {}
   return {
@@ -161,6 +168,7 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
         password: form.password,
         hasGst: form.hasGst,
         referralCode: form.referralCode.trim() || null,
+        referralSource: referralSource(defaults),
       })
       onSuccess(data.user)
     } catch (error) {

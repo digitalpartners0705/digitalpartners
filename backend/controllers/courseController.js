@@ -1,6 +1,39 @@
 const { query } = require('../config/db')
 const catalog = require('../services/catalog')
 
+const getPackageCourses = async (req, res) => {
+  try {
+    const packageSlug = String(req.params.packageSlug || '').trim().toLowerCase()
+    const packages = await catalog.listPackages()
+    const matched = packages.find((item) => item.id === packageSlug || item.name.toLowerCase() === packageSlug)
+    if (!matched) return res.status(404).json({ message: 'Package not found' })
+
+    const courses = await catalog.listCourses({ publishedOnly: true })
+    const packageCourses = courses
+      .filter((course) => course.packageName === matched.name)
+      .map((course) => ({
+        id: course.id,
+        title: course.title,
+        instructor: course.instructor,
+        description: course.description,
+        tag: course.tag,
+        hours: course.hours,
+        lessons: course.lessons,
+        accent: course.accent,
+        packageName: course.packageName,
+        thumbnailUrl: course.thumbnailUrl || null,
+      }))
+
+    return res.json({
+      package: { id: matched.id, name: matched.name, summary: matched.summary },
+      courses: packageCourses,
+    })
+  } catch (error) {
+    console.error('Package courses error:', error.message)
+    return res.status(500).json({ message: 'Could not load package courses' })
+  }
+}
+
 const getCatalog = async (req, res) => {
   try {
     const [courses, categories, packages] = await Promise.all([
@@ -46,7 +79,7 @@ const playLesson = async (req, res) => {
     const viewer = await query('SELECT knowledge_package FROM users WHERE id = $1', [req.user.id])
     const user = { knowledgePackage: viewer.rows[0]?.knowledge_package }
     if (!catalog.canViewCourse(course, user)) {
-      return res.status(403).json({ message: 'Upgrade to watch this course' })
+      return res.status(403).json({ message: 'Buy this package to watch this course' })
     }
 
     const lessons = await catalog.listLessons(row.id)
@@ -72,4 +105,4 @@ const playLesson = async (req, res) => {
   }
 }
 
-module.exports = { getCatalog, getCourse, playLesson }
+module.exports = { getCatalog, getPackageCourses, getCourse, playLesson }

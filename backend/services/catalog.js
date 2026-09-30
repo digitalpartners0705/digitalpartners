@@ -106,7 +106,12 @@ const listLessons = async (courseId) => {
   return result.rows
 }
 
-const canViewCourse = (course, user) => !course.requiresUpgrade || course.title === user?.knowledgePackage
+const canViewCourse = (course, user) => {
+  const userPackage = String(user?.knowledgePackage || '').trim()
+  const coursePackage = String(course?.packageName || '').trim()
+  if (!userPackage || !coursePackage) return false
+  return coursePackage === userPackage
+}
 
 const listCategories = async () => {
   const result = await query('SELECT id, name FROM categories ORDER BY sort_order ASC, name ASC')

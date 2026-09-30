@@ -67,7 +67,11 @@ function MyCourses() {
       {!loading && !error && enrolled.length === 0 ? (
         <div className="mt-8 rounded-xl border border-slate-200 bg-white px-6 py-16 text-center">
           <p className="text-lg font-semibold text-slate-900">No courses in your plan yet</p>
-          <p className="mt-2 text-sm text-slate-500">Browse the catalog and upgrade to unlock more lessons.</p>
+          <p className="mt-2 text-sm text-slate-500">
+            {user?.knowledgePackage
+              ? 'Browse other packages or continue with your unlocked courses.'
+              : 'Purchase a package to unlock your courses.'}
+          </p>
           <Link
             to="/dashboard/browse"
             className="mt-6 inline-flex rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"

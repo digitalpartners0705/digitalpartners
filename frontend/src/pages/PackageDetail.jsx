@@ -1,10 +1,26 @@
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import AuthModal from '../components/AuthModal'
+import CourseCover from '../components/CourseCover'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { getPackageById, PACKAGES, packagePath } from '../data/packages'
+import { getPackageCourses } from '../services/courses'
 
 const rupees = (value) => `₹${value.toLocaleString('en-IN')}`
+
+const shortLabel = (title) => {
+  const words = String(title || '')
+    .split(/\s+/)
+    .filter(Boolean)
+  if (words.length === 0) return 'COURSE'
+  if (words.length === 1) return words[0].slice(0, 10).toUpperCase()
+  return words
+    .slice(0, 2)
+    .map((word) => word.slice(0, 8))
+    .join(' ')
+    .toUpperCase()
+}
 
 const themeStyles = {
   teal: {
@@ -126,6 +142,58 @@ function PackageDetail() {
   const { packageId } = useParams()
   const pkg = getPackageById(packageId)
   const { authOpen, authMode, signupDefaults, openAuth, setAuthMode, closeAuth, handleAuthSuccess } = useAuth()
+  const [courses, setCourses] = useState([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
+  const [coursesError, setCoursesError] = useState('')
+
+  useEffect(() => {
+    if (!pkg?.id) {
+      setCourses([])
+      setCoursesLoading(false)
+      return undefined
+    }
+
+    let cancelled = false
+    setCoursesLoading(true)
+    setCoursesError('')
+
+    getPackageCourses(pkg.id)
+      .then((data) => {
+        if (cancelled) return
+        setCourses(data.courses || [])
+      })
+      .catch(() => {
+        if (cancelled) return
+        setCourses([])
+        setCoursesError('Could not load courses for this package.')
+      })
+      .finally(() => {
+        if (!cancelled) setCoursesLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [pkg?.id])
+
+  const totalHours = courses.reduce((sum, course) => sum + (Number(course.hours) || 0), 0)
+  const stats = [
+    {
+      label: 'Courses',
+      value: coursesLoading ? '—' : String(courses.length),
+      icon: 'book',
+    },
+    {
+      label: 'Learning hours',
+      value: totalHours > 0 ? `${totalHours}+` : pkg?.stats?.find((item) => item.label === 'Learning hours')?.value || '—',
+      icon: 'clock',
+    },
+    pkg?.stats?.find((item) => item.label === 'Learners') || {
+      label: 'Learners',
+      value: '3K+',
+      icon: 'users',
+    },
+  ]
 
   if (!pkg) {
     return <Navigate to="/#courses" replace />
@@ -133,7 +201,8 @@ function PackageDetail() {
 
   const theme = themeStyles[pkg.theme]
   const otherPackages = PACKAGES.filter((item) => item.id !== pkg.id)
-  const showcase = pkg.modules.slice(0, 3)
+  const showcaseSource = courses.length > 0 ? courses : pkg.modules
+  const showcase = showcaseSource.slice(0, 3)
 
   const handleBuy = () => {
     openAuth('signup', { knowledgePackage: pkg.name })
@@ -180,7 +249,7 @@ function PackageDetail() {
                 </a>
 
                 <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                  {pkg.stats.map((stat) => (
+                  {stats.map((stat) => (
                     <div
                       key={stat.label}
                       className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 backdrop-blur-sm"
@@ -218,20 +287,22 @@ function PackageDetail() {
                 />
                 <div className="pointer-events-none absolute bottom-8 left-1/2 h-8 w-48 -translate-x-1/2 rounded-full bg-sky-400/20 blur-xl" />
 
-                {showcase.map((module, index) => {
+                {showcase.map((item, index) => {
                   const poses = [
                     'z-[1] -translate-x-[5.5rem] translate-y-8 -rotate-[14deg] sm:-translate-x-[7rem]',
                     'z-[3] translate-y-0 scale-110',
                     'z-[2] translate-x-[5.5rem] translate-y-8 rotate-[14deg] sm:translate-x-[7rem]',
                   ]
+                  const label = item.short || shortLabel(item.title)
+                  const subtitle = item.subtitle || item.tag || item.instructor || 'Knowledge Pack'
                   return (
                     <div
-                      key={module.title}
+                      key={item.id || item.title}
                       className={`absolute transition duration-500 ease-out hover:-translate-y-3 ${poses[index]}`}
                     >
                       <PackageBox
-                        label={module.short}
-                        subtitle={module.subtitle}
+                        label={label}
+                        subtitle={subtitle}
                         accent={theme}
                         featured={index === 1}
                       />
@@ -280,21 +351,6 @@ function PackageDetail() {
             </div>
           </div>
 
-          <div className="mt-8 rounded-2xl bg-ink-950 p-6 text-white sm:p-8">
-            <h2 className="text-xl font-bold sm:text-2xl">Modules inside {pkg.name}</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-              Focused learning blocks designed for practical execution — not theory-only lessons.
-            </p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {pkg.modules.map((module) => (
-                <div key={module.title} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <p className="font-semibold text-gold-300">{module.title}</p>
-                  <p className="mt-1.5 text-sm text-slate-400">{module.subtitle}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="mt-10 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#f3e2b3] bg-[#fffdf8] p-6 sm:flex-row sm:items-center sm:p-8">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#c48a09]">Ready to begin?</p>
@@ -332,6 +388,61 @@ function PackageDetail() {
                 </Link>
               ))}
             </div>
+          </div>
+
+          <div className="mt-16">
+            <h2 className="text-2xl font-extrabold tracking-tight text-[#10203c]">Courses in {pkg.name}</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Published courses included when you purchase this package.
+            </p>
+
+            {coursesLoading ? <p className="mt-6 text-sm text-slate-500">Loading courses...</p> : null}
+            {coursesError ? <p className="mt-6 text-sm text-red-600">{coursesError}</p> : null}
+
+            {!coursesLoading && !coursesError && courses.length === 0 ? (
+              <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+                <p className="text-lg font-semibold text-slate-900">No courses in this package yet</p>
+                <p className="mt-2 text-sm text-slate-500">Courses assigned to {pkg.name} will appear here.</p>
+              </div>
+            ) : null}
+
+            {!coursesLoading && courses.length > 0 ? (
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {courses.map((course) => (
+                  <article
+                    key={course.id}
+                    className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <CourseCover course={course} short />
+                    <div className="flex flex-1 flex-col p-3.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+                          {course.tag}
+                        </span>
+                        {course.packageName ? (
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                            {course.packageName}
+                          </span>
+                        ) : null}
+                      </div>
+                      <h3 className="mt-2 line-clamp-2 text-sm font-bold leading-snug text-slate-900">{course.title}</h3>
+                      <p className="mt-0.5 truncate text-xs text-slate-500">{course.instructor}</p>
+                      <p className="mt-1.5 line-clamp-2 flex-1 text-xs leading-5 text-slate-600">{course.description}</p>
+                      <p className="mt-2 text-[11px] font-medium text-slate-500">
+                        {course.lessons} lessons · {course.hours} hours
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleBuy}
+                        className="mt-3 inline-flex w-full cursor-pointer items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-700"
+                      >
+                        Buy package to unlock
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : null}
           </div>
         </section>
       </main>

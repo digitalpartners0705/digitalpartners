@@ -100,9 +100,16 @@ function BrowseCourses() {
               >
                 <CourseCover course={course} locked={!unlocked} />
                 <div className="flex flex-1 flex-col p-5">
-                  <span className="w-fit rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-                    {course.tag}
-                  </span>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="w-fit rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+                      {course.tag}
+                    </span>
+                    {course.packageName ? (
+                      <span className="w-fit rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                        {course.packageName}
+                      </span>
+                    ) : null}
+                  </div>
                   <h2 className="mt-3 text-lg font-bold leading-snug text-slate-900">{course.title}</h2>
                   <p className="mt-1 text-sm font-medium text-slate-500">{course.instructor}</p>
                   <p className="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-slate-600">{course.description}</p>

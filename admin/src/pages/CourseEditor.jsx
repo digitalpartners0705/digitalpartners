@@ -34,7 +34,7 @@ const emptyForm = {
   packageId: '',
   accent: '',
   hours: 0,
-  requiresUpgrade: false,
+  requiresUpgrade: true,
   status: 'draft',
 }
 
@@ -178,8 +178,10 @@ function CourseEditor() {
             >
               {published ? 'Published' : 'Draft'}
             </span>
-            {form.requiresUpgrade ? (
-              <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-semibold text-white">Pro</span>
+            {form.packageId ? (
+              <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                {meta.packages.find((item) => item.packageId === form.packageId)?.name || 'Package'}
+              </span>
             ) : null}
           </div>
           <p className="mt-1 text-sm text-slate-500">
@@ -227,8 +229,8 @@ function CourseEditor() {
               </datalist>
             </Field>
             <Field label="Package">
-              <select name="packageId" value={form.packageId} onChange={update} className={fieldClass}>
-                <option value="">None</option>
+              <select name="packageId" value={form.packageId} onChange={update} className={fieldClass} required>
+                <option value="">Choose a package</option>
                 {meta.packages.map((item) => (
                   <option key={item.packageId} value={item.packageId}>
                     {item.name}
@@ -311,13 +313,9 @@ function CourseEditor() {
                   </select>
                 </div>
               </Field>
-              <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2.5">
-                <span>
-                  <span className="block text-sm font-medium text-slate-900">Requires upgrade</span>
-                  <span className="block text-xs text-slate-500">Mark this as a Pro course.</span>
-                </span>
-                <input name="requiresUpgrade" type="checkbox" checked={form.requiresUpgrade} onChange={update} className="h-4 w-4" />
-              </label>
+              <p className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-600">
+                Every course must belong to one package. Learners only unlock courses in the package they purchased.
+              </p>
             </div>
           </Panel>
         </div>

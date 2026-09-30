@@ -63,6 +63,7 @@ const initUsersTable = async () => {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_key TEXT`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by UUID REFERENCES users(id) ON DELETE SET NULL`)
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_source TEXT`)
   await query(`CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code_uidx ON users (referral_code) WHERE referral_code IS NOT NULL`)
   await query(`CREATE INDEX IF NOT EXISTS users_referred_by_idx ON users (referred_by)`)
   await ensureReferralCodes()
@@ -162,10 +163,11 @@ const initAffiliateTables = async () => {
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_earned_at_idx ON affiliate_earnings (earned_at)`)
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_income_type_idx ON affiliate_earnings (income_type)`)
   await query(`DROP INDEX IF EXISTS affiliate_earnings_active_buyer_uidx`)
+  await query(`DROP INDEX IF EXISTS affiliate_earnings_active_buyer_package_uidx`)
   await query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS affiliate_earnings_active_buyer_package_uidx
-    ON affiliate_earnings (buyer_id, package_name)
-    WHERE income_type = 'active' AND buyer_id IS NOT NULL AND package_name IS NOT NULL
+    CREATE UNIQUE INDEX IF NOT EXISTS affiliate_earnings_buyer_package_type_uidx
+    ON affiliate_earnings (user_id, buyer_id, package_name, income_type)
+    WHERE buyer_id IS NOT NULL AND package_name IS NOT NULL
   `)
 }
 

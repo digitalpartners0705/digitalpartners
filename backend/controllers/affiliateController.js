@@ -1,6 +1,6 @@
 const { people, earnings } = require('../data/leaderboardTest')
 const { leaderboardWindows, partsOf, addDays, toIso } = require('../services/leaderboardWindow')
-const { PACKAGE_NAMES, activeCommissionFor } = require('../data/commissions')
+const { INCOME_LEVELS, PACKAGE_NAMES, commissionPlanFor } = require('../data/commissions')
 const { query } = require('../config/db')
 
 const peopleById = new Map(people.map((person) => [person.id, person]))
@@ -67,20 +67,23 @@ const linkKit = async (req, res) => {
     }
 
     const packages = PACKAGE_NAMES.map((name) => {
-      const commission = activeCommissionFor(name)
+      const plan = commissionPlanFor(name)
       return {
-        id: commission.packageId,
+        id: plan.packageId,
         name,
-        listedPrice: commission.listedPrice,
-        netAmount: commission.netAmount,
-        activePercent: commission.commissionPercent,
-        activeAmount: commission.amount,
+        listedPrice: plan.listedPrice,
+        netAmount: plan.netAmount,
+        levels: plan.levels.map((level) => ({
+          level: level.level,
+          incomeType: level.incomeType,
+          percent: level.commissionPercent,
+          amount: level.amount,
+        })),
       }
     })
 
     return res.json({
       referralCode,
-      incomeType: 'active',
       packages,
     })
   } catch (error) {
@@ -137,7 +140,7 @@ const myEarnings = async (req, res) => {
         amount: sumAmount(matched),
       }
     })
-    const totalSales = packageTotals.reduce((total, item) => total + item.sales, 0)
+    const totalPackageAmount = packageTotals.reduce((total, item) => total + item.amount, 0)
 
     const stateMap = new Map()
     rows.forEach((row) => {
@@ -149,18 +152,29 @@ const myEarnings = async (req, res) => {
     })
     const byState = [...stateMap.values()].sort((a, b) => b.sales - a.sales || b.amount - a.amount)
 
+    const byIncomeType = INCOME_LEVELS.map((config) => {
+      const matched = rows.filter((row) => row.income_type === config.incomeType)
+      return {
+        incomeType: config.incomeType,
+        level: config.level,
+        label: config.label,
+        sales: matched.length,
+        amount: sumAmount(matched),
+      }
+    })
+
     return res.json({
-      incomeType: 'active',
       totals: {
         today: sumAmount(todayRows),
         last7Days: sumAmount(weekRows),
         last30Days: sumAmount(monthRows),
         allTime: sumAmount(rows),
-        salesCount: rows.length,
+        commissionCount: rows.length,
       },
+      byIncomeType,
       packages: packageTotals.map((item) => ({
         ...item,
-        share: totalSales ? Math.round((item.sales / totalSales) * 100) : 0,
+        share: totalPackageAmount ? Math.round((item.amount / totalPackageAmount) * 100) : 0,
       })),
       byState,
       recent: rows.slice(0, 20).map((row) => ({
@@ -182,4 +196,66 @@ const myEarnings = async (req, res) => {
   }
 }
 
-module.exports = { leaderboard, linkKit, myEarnings }
+const LEAD_TYPE_LABEL = {
+  joining: 'Joining Link',
+  package: 'Package Link',
+}
+
+const myLeads = async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT
+         u.id,
+         u.full_name,
+         u.email,
+         u.phone,
+         u.country,
+         u.state,
+         u.knowledge_package,
+         u.referral_source,
+         u.created_at,
+         COALESCE(SUM(e.amount), 0) AS earned_from_lead
+       FROM users u
+       LEFT JOIN affiliate_earnings e
+         ON e.buyer_id = u.id AND e.user_id = $1
+       WHERE u.referred_by = $1
+       GROUP BY u.id
+       ORDER BY u.created_at DESC`,
+      [req.user.id],
+    )
+
+    const leads = result.rows.map((row) => ({
+      id: row.id,
+      name: row.full_name,
+      email: row.email,
+      phone: row.phone,
+      country: row.country,
+      state: row.state,
+      packageName: row.knowledge_package,
+      type: row.referral_source || 'joining',
+      typeLabel: LEAD_TYPE_LABEL[row.referral_source] || LEAD_TYPE_LABEL.joining,
+      earned: Number(row.earned_from_lead || 0),
+      createdAt: row.created_at,
+    }))
+
+    const now = new Date()
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const thirtyDaysAgo = new Date(startOfToday)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
+
+    return res.json({
+      totals: {
+        allTime: leads.length,
+        today: leads.filter((lead) => new Date(lead.createdAt) >= startOfToday).length,
+        last30Days: leads.filter((lead) => new Date(lead.createdAt) >= thirtyDaysAgo).length,
+        converted: leads.filter((lead) => lead.packageName).length,
+      },
+      leads,
+    })
+  } catch (error) {
+    console.error('Leads error:', error.message)
+    return res.status(500).json({ message: 'Could not load your leads' })
+  }
+}
+
+module.exports = { leaderboard, linkKit, myEarnings, myLeads }

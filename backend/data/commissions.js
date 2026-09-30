@@ -1,7 +1,7 @@
 /**
- * Active income only for now (passive / second later).
- * Percents are of Net Amount after 18% GST (listed × 82%), per marketing plan.
- * Every package purchase credits active % for that package (not first purchase only).
+ * Percents are of Net Amount after 18% GST (listed × 82%), per the marketing plan.
+ * One sale pays three levels up the referral chain and nothing beyond that.
+ * Every package purchase pays these percents again for the package that was bought.
  */
 const PACKAGES = {
   'Social Expert': {
@@ -9,6 +9,8 @@ const PACKAGES = {
     listedPrice: 6999,
     netAmount: 5740,
     activePercent: 52.26,
+    passivePercent: 10.45,
+    secondPercent: 4.36,
     rank: 1,
   },
   'Ads Expert': {
@@ -16,6 +18,8 @@ const PACKAGES = {
     listedPrice: 14999,
     netAmount: 12300,
     activePercent: 52.85,
+    passivePercent: 9.76,
+    secondPercent: 4.07,
     rank: 2,
   },
   'AI Premium Expert': {
@@ -23,9 +27,19 @@ const PACKAGES = {
     listedPrice: 21999,
     netAmount: 18040,
     activePercent: 55.43,
+    passivePercent: 9.98,
+    secondPercent: 4.16,
     rank: 3,
   },
 }
+
+const INCOME_LEVELS = [
+  { level: 1, incomeType: 'active', percentKey: 'activePercent', label: 'Active' },
+  { level: 2, incomeType: 'passive', percentKey: 'passivePercent', label: 'Passive' },
+  { level: 3, incomeType: 'second', percentKey: 'secondPercent', label: 'Second level' },
+]
+
+const MAX_LEVEL = INCOME_LEVELS.length
 
 const PACKAGE_BY_ID = Object.fromEntries(
   Object.entries(PACKAGES).map(([name, pkg]) => [pkg.id, { name, ...pkg }]),
@@ -43,7 +57,26 @@ const resolvePackage = (value) => {
 
 const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100
 
-const activeCommissionFor = (packageValue) => {
+const commissionForLevel = (packageValue, level) => {
+  const pkg = resolvePackage(packageValue)
+  const config = INCOME_LEVELS.find((item) => item.level === level)
+  if (!pkg || !config) return null
+
+  const percent = pkg[config.percentKey]
+  return {
+    packageName: pkg.name,
+    packageId: pkg.id,
+    listedPrice: pkg.listedPrice,
+    netAmount: pkg.netAmount,
+    level: config.level,
+    incomeType: config.incomeType,
+    commissionPercent: percent,
+    amount: roundMoney((pkg.netAmount * percent) / 100),
+    rank: pkg.rank,
+  }
+}
+
+const commissionPlanFor = (packageValue) => {
   const pkg = resolvePackage(packageValue)
   if (!pkg) return null
   return {
@@ -51,10 +84,7 @@ const activeCommissionFor = (packageValue) => {
     packageId: pkg.id,
     listedPrice: pkg.listedPrice,
     netAmount: pkg.netAmount,
-    commissionPercent: pkg.activePercent,
-    amount: roundMoney((pkg.netAmount * pkg.activePercent) / 100),
-    incomeType: 'active',
-    rank: pkg.rank,
+    levels: INCOME_LEVELS.map((config) => commissionForLevel(pkg.name, config.level)),
   }
 }
 
@@ -78,7 +108,10 @@ module.exports = {
   PACKAGES,
   PACKAGE_BY_ID,
   PACKAGE_NAMES,
+  INCOME_LEVELS,
+  MAX_LEVEL,
   resolvePackage,
-  activeCommissionFor,
+  commissionForLevel,
+  commissionPlanFor,
   canPurchasePackage,
 }

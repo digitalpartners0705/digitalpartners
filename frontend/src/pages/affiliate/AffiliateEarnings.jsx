@@ -16,6 +16,30 @@ const EMPTY_PACKAGES = [
   { name: 'AI Premium Expert', share: 0, sales: 0, amount: 0 },
 ]
 
+const EMPTY_LEVELS = [
+  { incomeType: 'active', level: 1, label: 'Active', sales: 0, amount: 0 },
+  { incomeType: 'passive', level: 2, label: 'Passive', sales: 0, amount: 0 },
+  { incomeType: 'second', level: 3, label: 'Second level', sales: 0, amount: 0 },
+]
+
+const LEVEL_NOTE = {
+  active: 'Your direct referral bought a package',
+  passive: 'Someone your referral brought in bought a package',
+  second: 'One more step down the chain bought a package',
+}
+
+const LEVEL_TONE = {
+  active: 'text-teal-200',
+  passive: 'text-sky-200',
+  second: 'text-violet-200',
+}
+
+const LEVEL_LABEL = {
+  active: 'Active',
+  passive: 'Passive',
+  second: 'Second level',
+}
+
 function rupees(value) {
   return `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 }
@@ -59,8 +83,9 @@ function AffiliateEarnings() {
     }
   }, [])
 
-  const totals = data?.totals || { today: 0, last7Days: 0, last30Days: 0, allTime: 0, salesCount: 0 }
+  const totals = data?.totals || { today: 0, last7Days: 0, last30Days: 0, allTime: 0, commissionCount: 0 }
   const packages = data?.packages?.length ? data.packages : EMPTY_PACKAGES
+  const levels = data?.byIncomeType?.length ? data.byIncomeType : EMPTY_LEVELS
   const byState = data?.byState || []
   const recent = data?.recent || []
 
@@ -92,7 +117,7 @@ function AffiliateEarnings() {
       value: rupees(totals.allTime),
       hint:
         totals.allTime > 0
-          ? `${totals.salesCount} active sale${totals.salesCount === 1 ? '' : 's'} recorded`
+          ? `${totals.commissionCount} commission${totals.commissionCount === 1 ? '' : 's'} across all levels`
           : 'Earnings start with your first referral',
     },
   ]
@@ -142,10 +167,10 @@ function AffiliateEarnings() {
             <p className="text-sm text-slate-400">Package outlook</p>
             <p className="mt-3 text-sm leading-6 text-slate-300">
               You are on <span className="font-semibold text-white">{user?.knowledgePackage || 'a starter plan'}</span>.
-              Active commission is credited on every referred package purchase at the fixed plan %.
+              Commission is credited on every purchase in your chain at the fixed plan %.
             </p>
             <p className="mt-4 text-3xl font-extrabold text-teal-300">{loading ? '…' : rupees(totals.allTime)}</p>
-            <p className="mt-1 text-xs text-slate-500">All-time active income from your referrals.</p>
+            <p className="mt-1 text-xs text-slate-500">All-time income across active, passive, and second level.</p>
           </div>
           <Link
             to="/dashboard/upgrade"
@@ -155,6 +180,26 @@ function AffiliateEarnings() {
           </Link>
         </aside>
       </div>
+
+      <section className="mt-4 grid gap-3 sm:grid-cols-3">
+        {levels.map((item) => (
+          <article key={item.incomeType} className="rounded-xl border border-white/10 bg-[#171b27] px-4 py-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-200">{item.label}</p>
+              <span className="rounded-md bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-slate-400">
+                Level {item.level}
+              </span>
+            </div>
+            <p className={`mt-3 text-2xl font-bold ${LEVEL_TONE[item.incomeType] || 'text-white'}`}>
+              {loading ? '…' : rupees(item.amount)}
+            </p>
+            <p className="mt-2 text-xs text-slate-500">{LEVEL_NOTE[item.incomeType]}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {item.sales} commission{item.sales === 1 ? '' : 's'}
+            </p>
+          </article>
+        ))}
+      </section>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
         <section className="rounded-xl border border-white/10 bg-[#171b27] p-5">
@@ -225,16 +270,19 @@ function AffiliateEarnings() {
 
       <section className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-[#171b27]">
         <div className="border-b border-white/10 px-4 py-4 sm:px-5">
-          <h2 className="text-lg font-bold">Recent active commissions</h2>
-          <p className="mt-1 text-sm text-slate-400">Each referred package purchase creates one active earning row.</p>
+          <h2 className="text-lg font-bold">Recent commissions</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            One purchase can pay up to three levels of your chain. Nothing is paid beyond level 3.
+          </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[40rem] w-full text-left text-sm">
+          <table className="min-w-[44rem] w-full text-left text-sm">
             <thead>
               <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-teal-200/80">
                 <th className="px-4 py-3 font-medium sm:px-5">Date</th>
                 <th className="px-3 py-3 font-medium">Buyer</th>
                 <th className="px-3 py-3 font-medium">Package</th>
+                <th className="px-3 py-3 font-medium">Level</th>
                 <th className="px-3 py-3 font-medium">%</th>
                 <th className="px-4 py-3 font-medium sm:px-5">Amount</th>
               </tr>
@@ -242,13 +290,13 @@ function AffiliateEarnings() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-5 py-10 text-center text-slate-400">
+                  <td colSpan="6" className="px-5 py-10 text-center text-slate-400">
                     Loading earnings…
                   </td>
                 </tr>
               ) : recent.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-5 py-10 text-center text-slate-400">
+                  <td colSpan="6" className="px-5 py-10 text-center text-slate-400">
                     No commissions yet. Share a referral link to start earning.
                   </td>
                 </tr>
@@ -258,6 +306,11 @@ function AffiliateEarnings() {
                     <td className="px-4 py-4 text-slate-300 sm:px-5">{formatDay(row.earnedAt)}</td>
                     <td className="px-3 py-4 font-medium">{row.buyerName || '—'}</td>
                     <td className="px-3 py-4 text-slate-300">{row.packageName || '—'}</td>
+                    <td className="px-3 py-4">
+                      <span className={`text-xs font-semibold ${LEVEL_TONE[row.incomeType] || 'text-slate-300'}`}>
+                        {LEVEL_LABEL[row.incomeType] || row.incomeType}
+                      </span>
+                    </td>
                     <td className="px-3 py-4 text-slate-300">
                       {row.commissionPercent != null ? `${row.commissionPercent}%` : '—'}
                     </td>

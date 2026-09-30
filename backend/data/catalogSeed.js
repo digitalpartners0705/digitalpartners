@@ -1,14 +1,3 @@
-const SAMPLE_URLS = [
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-]
-
 const CATEGORIES = [
   'AI',
   'Career',
@@ -25,124 +14,18 @@ const PACKAGES = [
   {
     slug: 'social-expert',
     name: 'Social Expert',
-    summary: 'Instagram Branding, LinkedIn Expert, YouTube Master, and Sales Funnel',
+    summary: 'Social media, content, and personal branding courses',
   },
   {
     slug: 'ads-expert',
     name: 'Ads Expert',
-    summary: 'Meta Ads Expert, Google Ads Expert, and Website Design',
+    summary: 'Paid ads, funnels, and conversion-focused courses',
   },
   {
     slug: 'ai-premium-expert',
     name: 'AI Premium Expert',
-    summary: 'AI Master, E-Commerce, and Freelancing',
+    summary: 'AI, freelancing, and advanced monetization courses',
   },
 ]
 
-const LESSONS = {
-  fullstack: [
-    'Welcome and course setup',
-    'HTML and CSS foundations',
-    'JavaScript essentials',
-    'React components and state',
-    'APIs with Node and Express',
-    'Databases and auth',
-    'Build and deploy a full app',
-  ],
-  data: [
-    'Start with Python',
-    'Cleaning and exploring data',
-    'Visualizing insights',
-    'First machine learning model',
-    'Evaluate and improve results',
-    'Capstone walkthrough',
-  ],
-  design: [
-    'Design thinking basics',
-    'Wireframes in Figma',
-    'Color, type, and spacing',
-    'Building a design system',
-    'Prototype and handoff',
-  ],
-  marketing: [
-    'Positioning your offer',
-    'Content that converts',
-    'Paid ads overview',
-    'Landing pages and funnels',
-    'Measure and iterate',
-  ],
-  finance: [
-    'Invoices that look professional',
-    'GST in plain language',
-    'Books for a solo founder',
-    'Payouts and tax basics',
-  ],
-  'instagram-branding': [
-    'Profile that converts',
-    'Content pillars and grid',
-    'Reels that get saved',
-    'Hashtags and reach',
-    'Turning views into DMs',
-  ],
-  'linkedin-expert': [
-    'Profile and headline',
-    'Posts that get comments',
-    'Warm outreach',
-    'Turning conversations into clients',
-  ],
-  'youtube-master': [
-    'Channel setup',
-    'Script and hook',
-    'Filming and lighting',
-    'Edit for retention',
-    'Thumbnails and titles',
-  ],
-  'sales-funnel': [
-    'Map the customer journey',
-    'Lead magnet and opt-in',
-    'Email sequence',
-    'Checkout and follow-up',
-  ],
-  'meta-ads': ['Pixel and events', 'Audiences and creatives', 'Campaign structure', 'Reading results'],
-  'google-ads': ['Search campaign setup', 'Keywords and intent', 'YouTube and Performance Max', 'Budget and bidding'],
-  'website-design': ['Page structure that sells', 'Hero and offer blocks', 'Mobile layout', 'Launch checklist'],
-  'ai-master': ['AI tools overview', 'Prompting that works', 'Research and writing', 'Automation workflows'],
-  ecommerce: ['Pick and position a product', 'Store setup', 'Ads for first sales', 'Fulfillment and support'],
-  freelancing: ['Pick your offer', 'Find first clients', 'Price and proposals', 'Delivery and retainers'],
-  'ai-image': ['Prompting for products', 'Lighting and composition', 'Background cleanup', 'Campaign-ready exports'],
-  'ai-content': ['Idea to script', 'Batching with AI', 'Voice and brand tone', 'Publishing workflow'],
-  'freelance-ai': ['Package AI into a service', 'Faster delivery', 'Client communication', 'Scale without burnout'],
-  'video-editing': ['Project setup', 'Cuts and pacing', 'Color and sound', 'Export for social'],
-  'interview-lab': ['Story bank', 'Portfolio walkthrough', 'Mock interview', 'Follow-up and offer'],
-  'business-playbook': ['Validate the offer', 'Price with confidence', 'Simple ops', 'First 10 customers'],
-  'react-advanced': ['App architecture', 'Performance patterns', 'Data fetching', 'Production checklist'],
-  'gst-freelance': ['When GST applies', 'Invoices and records', 'Filing basics', 'Common mistakes'],
-}
-
-const COURSES = [
-  { slug: 'fullstack', title: 'Full-Stack Web Development', instructor: 'Sarah Chen', description: 'Build modern apps with React, Node.js, and databases from scratch.', tag: 'Development', accent: 'from-indigo-500 to-violet-500', hours: 28, requiresUpgrade: false },
-  { slug: 'data', title: 'Data Science Bootcamp', instructor: 'Marcus Reid', description: 'Learn Python, analytics, and machine learning with hands-on projects.', tag: 'Others', accent: 'from-sky-500 to-indigo-500', hours: 24, requiresUpgrade: false },
-  { slug: 'design', title: 'UI/UX Design Mastery', instructor: 'Priya Nair', description: 'Design beautiful, usable products with Figma and proven design systems.', tag: 'Design', accent: 'from-fuchsia-500 to-brand-600', hours: 16, requiresUpgrade: false },
-  { slug: 'marketing', title: 'Digital Marketing Pro', instructor: 'James Okonkwo', description: 'Grow an audience with content, ads, and conversion-focused campaigns.', tag: 'Marketing', accent: 'from-amber-500 to-orange-500', hours: 14, requiresUpgrade: false },
-  { slug: 'finance', title: 'Finance & GST Essentials', instructor: 'Anita Desai', description: 'Understand invoicing, GST, and the finance basics every founder needs.', tag: 'Finance', accent: 'from-emerald-500 to-teal-600', hours: 12, requiresUpgrade: false },
-  { slug: 'instagram-branding', title: 'Instagram Branding', instructor: 'Neha Kapoor', description: 'Build a consistent brand, content system, and growth plan for Instagram.', tag: 'Media', accent: 'from-rose-500 to-orange-400', hours: 8, requiresUpgrade: false, packageName: 'Social Expert' },
-  { slug: 'linkedin-expert', title: 'LinkedIn Expert', instructor: 'Rohit Mehta', description: 'Turn LinkedIn into a personal brand and lead-generation channel.', tag: 'Career', accent: 'from-sky-600 to-blue-700', hours: 7, requiresUpgrade: false, packageName: 'Social Expert' },
-  { slug: 'youtube-master', title: 'YouTube Master', instructor: 'Kabir Shah', description: 'Plan, film, and grow a YouTube channel from first video to repeat views.', tag: 'Media', accent: 'from-red-500 to-rose-600', hours: 12, requiresUpgrade: true, packageName: 'Social Expert' },
-  { slug: 'sales-funnel', title: 'Sales Funnel', instructor: 'Meera Iyer', description: 'Design funnels that turn attention into booked calls and sales.', tag: 'Marketing', accent: 'from-violet-500 to-indigo-600', hours: 10, requiresUpgrade: true, packageName: 'Social Expert' },
-  { slug: 'meta-ads', title: 'Meta Ads Expert', instructor: 'Arjun Bhatia', description: 'Run profitable Facebook and Instagram ads with targeting and creative tests.', tag: 'Marketing', accent: 'from-blue-500 to-indigo-600', hours: 11, requiresUpgrade: true, packageName: 'Ads Expert' },
-  { slug: 'google-ads', title: 'Google Ads Expert', instructor: 'Sana Qureshi', description: 'Set up Search, YouTube, and Performance Max campaigns that convert.', tag: 'Marketing', accent: 'from-emerald-500 to-lime-500', hours: 10, requiresUpgrade: true, packageName: 'Ads Expert' },
-  { slug: 'website-design', title: 'Website Design', instructor: 'Priya Nair', description: 'Design conversion-ready landing pages and websites for brands and offers.', tag: 'Design', accent: 'from-cyan-500 to-sky-600', hours: 9, requiresUpgrade: false, packageName: 'Ads Expert' },
-  { slug: 'ai-master', title: 'AI Master', instructor: 'Dev Sharma', description: 'Use AI tools for content, research, automation, and daily work workflows.', tag: 'AI', accent: 'from-brand-500 to-violet-600', hours: 13, requiresUpgrade: true, packageName: 'AI Premium Expert' },
-  { slug: 'ecommerce', title: 'E-Commerce', instructor: 'Lina Fernandes', description: 'Launch and grow an online store, from product pages to ads and fulfillment.', tag: 'Business', accent: 'from-orange-500 to-amber-500', hours: 12, requiresUpgrade: true, packageName: 'AI Premium Expert' },
-  { slug: 'freelancing', title: 'Freelancing', instructor: 'Aditi Rao', description: 'Find clients, price your work, and build a freelance practice that lasts.', tag: 'Career', accent: 'from-teal-500 to-emerald-600', hours: 8, requiresUpgrade: false, packageName: 'AI Premium Expert' },
-  { slug: 'ai-image', title: 'AI Image Creation', instructor: 'Dev Sharma', description: 'Create campaign-ready images with prompting, lighting, and product shots.', tag: 'AI', accent: 'from-fuchsia-500 to-pink-500', hours: 5, requiresUpgrade: true, packageName: 'AI Premium Expert' },
-  { slug: 'ai-content', title: 'AI for Content Creators', instructor: 'Neha Kapoor', description: 'Write, storyboard, and batch content faster with AI-assisted workflows.', tag: 'AI', accent: 'from-violet-500 to-purple-700', hours: 6, requiresUpgrade: true, packageName: 'AI Premium Expert' },
-  { slug: 'freelance-ai', title: 'Freelancing with AI', instructor: 'Aditi Rao', description: 'Combine client acquisition with AI tools to deliver more work, faster.', tag: 'AI', accent: 'from-indigo-500 to-slate-700', hours: 6, requiresUpgrade: true, packageName: 'AI Premium Expert' },
-  { slug: 'video-editing', title: 'Video Editing Studio', instructor: 'Kabir Shah', description: 'Cut, grade, and export polished videos for social, ads, and YouTube.', tag: 'Media', accent: 'from-slate-600 to-zinc-800', hours: 16, requiresUpgrade: true },
-  { slug: 'interview-lab', title: 'Career Interview Lab', instructor: 'James Okonkwo', description: 'Practice interviews, portfolios, and the stories that get you hired.', tag: 'Career', accent: 'from-brand-600 to-indigo-700', hours: 6, requiresUpgrade: false },
-  { slug: 'business-playbook', title: 'Startup Business Playbook', instructor: 'Lina Fernandes', description: 'Validate an offer, price it, and turn a skill into a small business.', tag: 'Business', accent: 'from-amber-600 to-orange-700', hours: 9, requiresUpgrade: true },
-  { slug: 'react-advanced', title: 'React Advanced Patterns', instructor: 'Sarah Chen', description: 'Level up React with architecture, performance, and production patterns.', tag: 'Development', accent: 'from-cyan-600 to-indigo-600', hours: 18, requiresUpgrade: true },
-  { slug: 'gst-freelance', title: 'GST for Freelancers', instructor: 'Anita Desai', description: 'Stay compliant with invoices, GST, and simple books for solo work.', tag: 'Finance', accent: 'from-teal-600 to-emerald-700', hours: 5, requiresUpgrade: true },
-]
-
-module.exports = { SAMPLE_URLS, CATEGORIES, PACKAGES, LESSONS, COURSES }
+module.exports = { CATEGORIES, PACKAGES }

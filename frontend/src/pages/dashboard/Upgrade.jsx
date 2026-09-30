@@ -110,9 +110,10 @@ function Upgrade() {
     try {
       const data = await purchasePackage(pkg.name)
       updateUser(data.user)
+      const levelsPaid = data.purchase?.levelsPaid?.length || 0
       setMessage(
-        data.purchase?.commissionCredited
-          ? `${pkg.name} unlocked. Your referrer earned active commission on this purchase.`
+        levelsPaid > 0
+          ? `${pkg.name} unlocked. Commission was credited to ${levelsPaid} level${levelsPaid === 1 ? '' : 's'} of your referral chain.`
           : `${pkg.name} unlocked.`,
       )
     } catch (err) {
@@ -134,8 +135,7 @@ function Upgrade() {
             Unlock Your <span className="gold-text">Full Potential.</span>
           </h1>
           <p className="mt-3 text-base leading-7 text-slate-300">
-            Choose the perfect package to elevate your skills and accelerate your career. Every package includes
-            lifetime access, certification, and community support to help you grow, earn, and thrive.
+            Choose a package to unlock its courses. You only get access to courses inside the package you purchase.
           </p>
         </div>
       </section>

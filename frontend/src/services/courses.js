@@ -5,6 +5,11 @@ export const getCatalog = async () => {
   return response.data
 }
 
+export const getPackageCourses = async (packageSlug) => {
+  const response = await api.get(`/api/courses/public/package/${packageSlug}`)
+  return response.data
+}
+
 export const getCourse = async (slug) => {
   const response = await api.get(`/api/courses/${slug}`)
   return response.data

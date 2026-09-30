@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { query, createReferralCode } = require('../config/db')
 const { PACKAGE_NAMES, canPurchasePackage } = require('../data/commissions')
-const { creditActiveCommission, creditSponsorForPurchase } = require('../services/affiliateCommission')
+const { creditUplineCommissions } = require('../services/affiliateCommission')
 const storage = require('../services/storage')
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -45,6 +45,13 @@ const allocateReferralCode = async () => {
   throw new Error('Could not allocate a referral code')
 }
 
+const REFERRAL_SOURCES = new Set(['joining', 'package'])
+
+const normalizeReferralSource = (value) => {
+  const source = String(value || '').trim().toLowerCase()
+  return REFERRAL_SOURCES.has(source) ? source : null
+}
+
 const findSponsorByCode = async (rawCode) => {
   const referralCode = String(rawCode || '').trim()
   if (!referralCode) return null
@@ -71,6 +78,7 @@ const signup = async (req, res) => {
     const password = String(req.body.password || '')
     const hasGst = Boolean(req.body.hasGst)
     const incomingReferral = String(req.body.referralCode || req.body.ref || '').trim()
+    const referralSource = normalizeReferralSource(req.body.referralSource)
 
     if (!email) return res.status(400).json({ message: 'Email Id is required' })
     if (!EMAIL_PATTERN.test(email)) return res.status(400).json({ message: 'Enter a valid email address' })
@@ -95,9 +103,10 @@ const signup = async (req, res) => {
     const result = await query(
       `INSERT INTO users (
          full_name, email, phone, country, state, knowledge_package,
-         promo_code, coupon_code, has_gst, password_hash, referral_code, referred_by
+         promo_code, coupon_code, has_gst, password_hash, referral_code, referred_by,
+         referral_source
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING ${USER_FIELDS}`,
       [
         fullName,
@@ -112,13 +121,13 @@ const signup = async (req, res) => {
         passwordHash,
         referralCode,
         sponsor?.id || null,
+        sponsor?.id ? referralSource || 'joining' : null,
       ],
     )
 
     const created = result.rows[0]
     if (sponsor?.id) {
-      await creditActiveCommission({
-        sponsorId: sponsor.id,
+      await creditUplineCommissions({
         buyerId: created.id,
         packageName: knowledgePackage,
         country,
@@ -218,7 +227,7 @@ const purchasePackage = async (req, res) => {
       [check.package.name, row.id],
     )
 
-    const earning = await creditSponsorForPurchase({
+    const credited = await creditUplineCommissions({
       buyerId: row.id,
       packageName: check.package.name,
       country: row.country,
@@ -228,8 +237,8 @@ const purchasePackage = async (req, res) => {
       user: await publicUser(updated.rows[0]),
       purchase: {
         packageName: check.package.name,
-        commissionCredited: Boolean(earning),
-        activeAmount: earning ? Number(earning.amount) : null,
+        commissionCredited: credited.length > 0,
+        levelsPaid: credited.map((earning) => earning.income_type),
       },
     })
   } catch (error) {

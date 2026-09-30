@@ -246,8 +246,10 @@ function CourseLessons() {
             >
               {published ? 'Published' : 'Draft'}
             </span>
-            {course.requiresUpgrade ? (
-              <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-semibold text-white">Pro</span>
+            {course.packageName ? (
+              <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                {course.packageName}
+              </span>
             ) : null}
           </div>
           <p className="mt-1 text-sm text-slate-500">

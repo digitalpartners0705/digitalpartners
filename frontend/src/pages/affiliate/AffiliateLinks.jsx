@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { buildGeneralLink, buildPackageLink } from '../../utils/referral'
+import AffiliateLeads from './AffiliateLeads'
+
+const TABS = [
+  { id: 'links', label: 'Link Generator' },
+  { id: 'leads', label: 'All Leads' },
+]
 
 const PACKAGES = [
   {
@@ -10,6 +17,8 @@ const PACKAGES = [
     price: 6999,
     netAmount: 5740,
     activePercent: 52.26,
+    passivePercent: 10.45,
+    secondPercent: 4.36,
     accent: 'sky',
     tagline: 'Social & content foundation',
   },
@@ -20,6 +29,8 @@ const PACKAGES = [
     price: 14999,
     netAmount: 12300,
     activePercent: 52.85,
+    passivePercent: 9.76,
+    secondPercent: 4.07,
     accent: 'gold',
     tagline: 'Paid ads & lead generation',
   },
@@ -30,6 +41,8 @@ const PACKAGES = [
     price: 21999,
     netAmount: 18040,
     activePercent: 55.43,
+    passivePercent: 9.98,
+    secondPercent: 4.16,
     accent: 'violet',
     tagline: 'Full ecosystem to earn online',
   },
@@ -117,15 +130,7 @@ async function copyText(text) {
   document.body.removeChild(area)
 }
 
-function AffiliateLinks() {
-  const { user } = useAuth()
-  const refCode = user?.referralCode || '—'
-  const origin = useMemo(() => buildOrigin(), [])
-  const generalLink = refCode !== '—' ? buildGeneralLink(origin, refCode) : `${origin}/?ref=`
-
-  const [countries, setCountries] = useState(() =>
-    Object.fromEntries(PACKAGES.map((pkg) => [pkg.id, ''])),
-  )
+function useCopyFlash() {
   const [copiedKey, setCopiedKey] = useState('')
 
   const flashCopied = (key) => {
@@ -135,11 +140,14 @@ function AffiliateLinks() {
     }, 1600)
   }
 
-  const handleCopyCode = async () => {
-    if (refCode === '—') return
-    await copyText(refCode)
-    flashCopied('code')
-  }
+  return { copiedKey, flashCopied }
+}
+
+function LinkGeneratorPanel({ refCode, origin, generalLink }) {
+  const { copiedKey, flashCopied } = useCopyFlash()
+  const [countries, setCountries] = useState(() =>
+    Object.fromEntries(PACKAGES.map((pkg) => [pkg.id, ''])),
+  )
 
   const handleCopyGeneral = async () => {
     if (refCode === '—') return
@@ -155,38 +163,8 @@ function AffiliateLinks() {
   }
 
   return (
-    <div className="-mx-4 -my-8 min-h-[calc(100vh-4.25rem)] bg-[#10131c] px-4 py-8 text-slate-100 sm:-mx-8 sm:px-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Referral Link Generation</h1>
-          <p className="mt-1 max-w-xl text-sm text-slate-400">
-            Share your code or links. Active income is credited at the fixed % on every package purchase through your referral.
-          </p>
-        </div>
-
-        <div className="flex w-full max-w-md items-center gap-4 rounded-full border border-white/10 bg-[#171b27] py-2.5 pl-5 pr-2.5 shadow-lg shadow-black/20 sm:max-w-lg">
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold leading-tight text-slate-300 sm:text-xs">
-              My Referral
-              <br />
-              Code
-            </p>
-          </div>
-          <p className="truncate font-mono text-lg font-bold tracking-wide text-white sm:text-2xl">{refCode}</p>
-          <button
-            type="button"
-            onClick={handleCopyCode}
-            disabled={refCode === '—'}
-            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-b from-teal-300 to-teal-500 text-slate-900 shadow-md shadow-teal-900/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Copy referral code"
-            title={copiedKey === 'code' ? 'Copied' : 'Copy code'}
-          >
-            {copiedKey === 'code' ? <CheckIcon className="h-[18px] w-[18px]" /> : <CopyIcon className="h-[18px] w-[18px]" />}
-          </button>
-        </div>
-      </div>
-
-      <section className="mt-7 overflow-hidden rounded-2xl border border-white/10 bg-[#171b27]">
+    <>
+      <section className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#171b27]">
         <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal-200/80">General referral link</p>
@@ -211,7 +189,7 @@ function AffiliateLinks() {
         <div className="mb-4">
           <h2 className="text-lg font-bold tracking-tight">Package links</h2>
           <p className="mt-0.5 text-sm text-slate-400">
-            Pick a country, then copy a link. Active commission uses the marketing-plan %.
+            Pick a country, then copy a link. Percentages come from the marketing plan.
           </p>
         </div>
 
@@ -222,6 +200,8 @@ function AffiliateLinks() {
             const ready = Boolean(country) && refCode !== '—'
             const isCopied = copiedKey === pkg.id
             const activeAmount = Math.round((pkg.netAmount * pkg.activePercent) / 100)
+            const passiveAmount = Math.round((pkg.netAmount * pkg.passivePercent) / 100)
+            const secondAmount = Math.round((pkg.netAmount * pkg.secondPercent) / 100)
 
             return (
               <article
@@ -237,11 +217,29 @@ function AffiliateLinks() {
                     <h3 className="text-xl font-bold tracking-tight">{pkg.name}</h3>
                     <p className="mt-1 text-sm text-slate-400">{pkg.tagline}</p>
                     <p className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ${styles.badge}`}>
-                      {rupees(pkg.price)} · Active {pkg.activePercent}%
+                      {rupees(pkg.price)}
                     </p>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Est. active: {rupees(activeAmount)} of net {rupees(pkg.netAmount)}
-                    </p>
+                    <dl className="mt-4 space-y-1.5 text-left text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="text-slate-400">Active · L1</dt>
+                        <dd className="font-semibold text-teal-200">
+                          {pkg.activePercent}% · {rupees(activeAmount)}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="text-slate-400">Passive · L2</dt>
+                        <dd className="font-semibold text-sky-200">
+                          {pkg.passivePercent}% · {rupees(passiveAmount)}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="text-slate-400">Second · L3</dt>
+                        <dd className="font-semibold text-violet-200">
+                          {pkg.secondPercent}% · {rupees(secondAmount)}
+                        </dd>
+                      </div>
+                    </dl>
+                    <p className="mt-2 text-left text-[11px] text-slate-500">Of net {rupees(pkg.netAmount)} after GST</p>
                   </div>
 
                   <label className="mt-6 block">
@@ -277,6 +275,91 @@ function AffiliateLinks() {
           })}
         </div>
       </section>
+    </>
+  )
+}
+
+function AffiliateLinks() {
+  const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'leads' ? 'leads' : 'links'
+  const { copiedKey, flashCopied } = useCopyFlash()
+
+  const refCode = user?.referralCode || '—'
+  const origin = useMemo(() => buildOrigin(), [])
+  const generalLink = refCode !== '—' ? buildGeneralLink(origin, refCode) : `${origin}/?ref=`
+
+  const selectTab = (next) => {
+    setSearchParams(next === 'leads' ? { tab: 'leads' } : {}, { replace: true })
+  }
+
+  const handleCopyCode = async () => {
+    if (refCode === '—') return
+    await copyText(refCode)
+    flashCopied('code')
+  }
+
+  return (
+    <div className="-mx-4 -my-8 min-h-[calc(100vh-4.25rem)] bg-[#10131c] px-4 py-8 text-slate-100 sm:-mx-8 sm:px-8">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            {tab === 'leads' ? 'All Leads' : 'Referral Link Generation'}
+          </h1>
+          <p className="mt-1 max-w-xl text-sm text-slate-400">
+            {tab === 'leads'
+              ? 'Every sign-up that came through your referral code, newest first.'
+              : 'Share your code or links. Every purchase in your chain pays a fixed % at up to three levels.'}
+          </p>
+        </div>
+
+        <div className="flex w-full max-w-md items-center gap-4 rounded-full border border-white/10 bg-[#171b27] py-2.5 pl-5 pr-2.5 shadow-lg shadow-black/20 sm:max-w-lg">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold leading-tight text-slate-300 sm:text-xs">
+              My Referral
+              <br />
+              Code
+            </p>
+          </div>
+          <p className="truncate font-mono text-lg font-bold tracking-wide text-white sm:text-2xl">{refCode}</p>
+          <button
+            type="button"
+            onClick={handleCopyCode}
+            disabled={refCode === '—'}
+            className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-gradient-to-b from-teal-300 to-teal-500 text-slate-900 shadow-md shadow-teal-900/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Copy referral code"
+            title={copiedKey === 'code' ? 'Copied' : 'Copy code'}
+          >
+            {copiedKey === 'code' ? <CheckIcon className="h-[18px] w-[18px]" /> : <CopyIcon className="h-[18px] w-[18px]" />}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-6 inline-flex rounded-full border border-white/12 bg-[#141823] p-1.5">
+        {TABS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => selectTab(item.id)}
+            aria-current={tab === item.id ? 'page' : undefined}
+            className={`cursor-pointer rounded-full px-5 py-2.5 text-sm font-bold transition sm:px-7 ${
+              tab === item.id
+                ? 'bg-gradient-to-b from-teal-400/90 to-teal-600/90 text-white shadow-md shadow-teal-950/40'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'leads' ? (
+        <div className="mt-6">
+          <AffiliateLeads />
+        </div>
+      ) : (
+        <LinkGeneratorPanel refCode={refCode} origin={origin} generalLink={generalLink} />
+      )}
     </div>
   )
 }
