@@ -89,4 +89,97 @@ const linkKit = async (req, res) => {
   }
 }
 
-module.exports = { leaderboard, linkKit }
+const sumAmount = (rows) => rows.reduce((total, row) => total + Number(row.amount || 0), 0)
+
+const myEarnings = async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT
+         e.id,
+         e.amount,
+         e.package_name,
+         e.income_type,
+         e.commission_percent,
+         e.net_amount,
+         e.country,
+         e.earned_at,
+         u.full_name AS buyer_name,
+         u.state AS buyer_state
+       FROM affiliate_earnings e
+       LEFT JOIN users u ON u.id = e.buyer_id
+       WHERE e.user_id = $1
+       ORDER BY e.earned_at DESC`,
+      [req.user.id],
+    )
+
+    const rows = result.rows
+    const now = new Date()
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const sevenDaysAgo = new Date(startOfToday)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+    const thirtyDaysAgo = new Date(startOfToday)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
+
+    const inRange = (row, from) => {
+      const earnedAt = new Date(row.earned_at)
+      return earnedAt >= from
+    }
+
+    const todayRows = rows.filter((row) => inRange(row, startOfToday))
+    const weekRows = rows.filter((row) => inRange(row, sevenDaysAgo))
+    const monthRows = rows.filter((row) => inRange(row, thirtyDaysAgo))
+
+    const packageTotals = PACKAGE_NAMES.map((name) => {
+      const matched = rows.filter((row) => row.package_name === name)
+      return {
+        name,
+        sales: matched.length,
+        amount: sumAmount(matched),
+      }
+    })
+    const totalSales = packageTotals.reduce((total, item) => total + item.sales, 0)
+
+    const stateMap = new Map()
+    rows.forEach((row) => {
+      const state = row.buyer_state || row.country || 'Unknown'
+      const current = stateMap.get(state) || { name: state, sales: 0, amount: 0 }
+      current.sales += 1
+      current.amount += Number(row.amount || 0)
+      stateMap.set(state, current)
+    })
+    const byState = [...stateMap.values()].sort((a, b) => b.sales - a.sales || b.amount - a.amount)
+
+    return res.json({
+      incomeType: 'active',
+      totals: {
+        today: sumAmount(todayRows),
+        last7Days: sumAmount(weekRows),
+        last30Days: sumAmount(monthRows),
+        allTime: sumAmount(rows),
+        salesCount: rows.length,
+      },
+      packages: packageTotals.map((item) => ({
+        ...item,
+        share: totalSales ? Math.round((item.sales / totalSales) * 100) : 0,
+      })),
+      byState,
+      recent: rows.slice(0, 20).map((row) => ({
+        id: row.id,
+        amount: Number(row.amount),
+        packageName: row.package_name,
+        incomeType: row.income_type,
+        commissionPercent: row.commission_percent != null ? Number(row.commission_percent) : null,
+        netAmount: row.net_amount != null ? Number(row.net_amount) : null,
+        country: row.country,
+        buyerName: row.buyer_name,
+        buyerState: row.buyer_state,
+        earnedAt: row.earned_at,
+      })),
+    })
+  } catch (error) {
+    console.error('Earnings error:', error.message)
+    return res.status(500).json({ message: 'Could not load earnings' })
+  }
+}
+
+module.exports = { leaderboard, linkKit, myEarnings }

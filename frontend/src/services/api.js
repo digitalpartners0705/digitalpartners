@@ -93,6 +93,11 @@ export const getLeaderboard = async () => {
   return response.data
 }
 
+export const getAffiliateEarnings = async () => {
+  const response = await api.get('/api/affiliate/earnings')
+  return response.data
+}
+
 export const getTrainings = async () => {
   const response = await api.get('/api/affiliate/trainings')
   return response.data

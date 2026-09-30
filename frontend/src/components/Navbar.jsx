@@ -1,19 +1,20 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { KNOWLEDGE_PACKAGES } from '../data/signupOptions'
+import { PACKAGE_SLUGS } from '../utils/referral'
 
 const links = [
-  { label: 'Home', href: '#home' },
-  { label: 'Courses', href: '#courses' },
-  { label: 'About Us', href: '#about' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Home', to: '/', hash: '#home' },
+  { label: 'Packages', to: '/', hash: '#courses', dropdown: true },
+  { label: 'About Us', to: '/about' },
+  { label: 'Contact', to: '/contact' },
 ]
 
-function isCurrent(href, hash) {
-  const current = hash || '#home'
-  if (href === '#home') return current === '#home' || current === '#'
-  return current === href
-}
+const packageLinks = KNOWLEDGE_PACKAGES.map((name) => ({
+  label: name,
+  to: `/packages/${PACKAGE_SLUGS[name]}`,
+}))
 
 function Logo() {
   return (
@@ -23,15 +24,47 @@ function Logo() {
   )
 }
 
+function Chevron({ open }) {
+  return (
+    <svg
+      className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  )
+}
+
+function linkHref(link) {
+  if (!link.hash) return link.to
+  return `${link.to}${link.hash}`
+}
+
 function Navbar() {
   const { openAuth } = useAuth()
+  const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [packagesOpen, setPackagesOpen] = useState(false)
+  const [mobilePackagesOpen, setMobilePackagesOpen] = useState(false)
   const [hash, setHash] = useState(() => (typeof window === 'undefined' ? '#home' : window.location.hash))
   const [scrolled, setScrolled] = useState(false)
+  const packagesRef = useRef(null)
+  const onHome = location.pathname === '/'
+  const onAbout = location.pathname === '/about'
+  const onContact = location.pathname === '/contact'
+  const onPackage = location.pathname.startsWith('/packages/')
+  const solidHeader = scrolled || menuOpen || onAbout || onContact || onPackage
 
   useEffect(() => {
     const syncHash = () => setHash(window.location.hash)
     const syncScroll = () => setScrolled(window.scrollY > 8)
+    syncHash()
     syncScroll()
     window.addEventListener('hashchange', syncHash)
     window.addEventListener('scroll', syncScroll, { passive: true })
@@ -39,11 +72,45 @@ function Navbar() {
       window.removeEventListener('hashchange', syncHash)
       window.removeEventListener('scroll', syncScroll)
     }
-  }, [])
+  }, [location.pathname])
 
-  const handleNavClick = (href) => {
+  useEffect(() => {
+    if (!packagesOpen) return undefined
+    const onPointerDown = (event) => {
+      if (packagesRef.current && !packagesRef.current.contains(event.target)) {
+        setPackagesOpen(false)
+      }
+    }
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setPackagesOpen(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [packagesOpen])
+
+  const isActive = (link) => {
+    if (link.to === '/about') return onAbout
+    if (link.to === '/contact') return onContact
+    if (link.dropdown) return onPackage || (onHome && (hash === '#courses'))
+    if (!onHome) return false
+    const current = hash || '#home'
+    if (link.hash === '#home') return current === '#home' || current === '' || current === '#'
+    return current === link.hash
+  }
+
+  const closeMenus = () => {
     setMenuOpen(false)
-    setHash(href)
+    setPackagesOpen(false)
+    setMobilePackagesOpen(false)
+  }
+
+  const handleSectionClick = (link) => {
+    closeMenus()
+    if (link.hash) setHash(link.hash)
   }
 
   const authButtons = (fullWidth) => (
@@ -51,7 +118,7 @@ function Navbar() {
       <button
         type="button"
         onClick={() => {
-          setMenuOpen(false)
+          closeMenus()
           openAuth('login')
         }}
         className={`${fullWidth ? 'w-full' : ''} rounded-full border border-white/25 px-5 py-2 text-sm font-semibold text-white transition hover:border-white/50 hover:bg-white/5`}
@@ -61,7 +128,7 @@ function Navbar() {
       <button
         type="button"
         onClick={() => {
-          setMenuOpen(false)
+          closeMenus()
           openAuth('signup')
         }}
         className={`${fullWidth ? 'w-full' : ''} rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-5 py-2 text-sm font-bold text-[#1a1203] shadow-[0_8px_20px_rgba(245,193,74,0.28)] transition hover:brightness-105`}
@@ -74,7 +141,7 @@ function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-40 transition-colors ${
-        scrolled || menuOpen ? 'bg-ink-950' : 'bg-transparent'
+        solidHeader ? 'bg-ink-950' : 'bg-transparent'
       }`}
     >
       <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
@@ -82,13 +149,52 @@ function Navbar() {
 
         <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-12 lg:flex xl:gap-20">
           {links.map((link) => {
-            const active = isCurrent(link.href, hash)
+            const active = isActive(link)
+            if (link.dropdown) {
+              return (
+                <li key={link.label} className="relative" ref={packagesRef}>
+                  <button
+                    type="button"
+                    aria-expanded={packagesOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setPackagesOpen((open) => !open)}
+                    className={`inline-flex items-center gap-1.5 text-sm font-medium transition ${
+                      active || packagesOpen
+                        ? 'border-b-2 border-gold-400 pb-1 text-gold-400'
+                        : 'text-white/75 hover:text-white'
+                    }`}
+                  >
+                    {link.label}
+                    <Chevron open={packagesOpen} />
+                  </button>
+                  {packagesOpen ? (
+                    <div
+                      role="menu"
+                      className="absolute left-1/2 top-full z-50 mt-3 w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-white/10 bg-ink-950 py-2 shadow-2xl"
+                    >
+                      {packageLinks.map((item) => (
+                        <Link
+                          key={item.label}
+                          to={linkHref(item)}
+                          role="menuitem"
+                          onClick={() => handleSectionClick(item)}
+                          className="block px-4 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-gold-400"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </li>
+              )
+            }
+
             return (
               <li key={link.label}>
-                <a
-                  href={link.href}
+                <Link
+                  to={linkHref(link)}
                   aria-current={active ? 'page' : undefined}
-                  onClick={() => handleNavClick(link.href)}
+                  onClick={() => handleSectionClick(link)}
                   className={`text-sm font-medium transition ${
                     active
                       ? 'border-b-2 border-gold-400 pb-1 text-gold-400'
@@ -96,7 +202,7 @@ function Navbar() {
                   }`}
                 >
                   {link.label}
-                </a>
+                </Link>
               </li>
             )
           })}
@@ -131,18 +237,53 @@ function Navbar() {
       >
         <ul className="flex flex-col gap-1 px-4 py-3">
           {links.map((link) => {
-            const active = isCurrent(link.href, hash)
+            const active = isActive(link)
+            if (link.dropdown) {
+              return (
+                <li key={link.label}>
+                  <button
+                    type="button"
+                    aria-expanded={mobilePackagesOpen}
+                    onClick={() => setMobilePackagesOpen((open) => !open)}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium ${
+                      active || mobilePackagesOpen
+                        ? 'bg-white/5 text-gold-400'
+                        : 'text-white/80 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    {link.label}
+                    <Chevron open={mobilePackagesOpen} />
+                  </button>
+                  {mobilePackagesOpen ? (
+                    <ul className="mt-1 space-y-0.5 border-l border-white/10 pl-3">
+                      {packageLinks.map((item) => (
+                        <li key={item.label}>
+                          <Link
+                            to={linkHref(item)}
+                            onClick={() => handleSectionClick(item)}
+                            className="block rounded-lg px-3 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-gold-400"
+                          >
+                            {item.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              )
+            }
+
             return (
               <li key={link.label}>
-                <a
-                  href={link.href}
-                  onClick={() => handleNavClick(link.href)}
+                <Link
+                  to={linkHref(link)}
+                  onClick={() => handleSectionClick(link)}
                   className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${
                     active ? 'bg-white/5 text-gold-400' : 'text-white/80 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   {link.label}
-                </a>
+                </Link>
               </li>
             )
           })}

@@ -22,11 +22,17 @@ import RecentUpdates from './pages/dashboard/RecentUpdates'
 import Upgrade from './pages/dashboard/Upgrade'
 import Join from './pages/Join'
 import Landing from './pages/Landing'
+import About from './pages/About'
+import Contact from './pages/Contact'
+import PackageDetail from './pages/PackageDetail'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/packages/:packageId" element={<PackageDetail />} />
       <Route path="/join" element={<Join />} />
       <Route
         path="/dashboard"

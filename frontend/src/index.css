@@ -19,6 +19,15 @@ html {
   scroll-padding-top: 6.5rem;
 }
 
+a,
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 .gold-text {
   background-image: linear-gradient(180deg, #fff6d4 0%, #f6c445 46%, #c8870d 100%);
   -webkit-background-clip: text;
