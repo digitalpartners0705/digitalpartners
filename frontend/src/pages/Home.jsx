@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import SiteFooter from '../components/SiteFooter'
 import { packagePath } from '../data/packages'
 
 const heroStats = [
@@ -605,59 +606,7 @@ function Home() {
         </div>
       </section>
 
-      <footer id="contact" className="border-t border-slate-800 bg-slate-950 text-slate-300">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3 lg:px-8">
-          <div>
-            <img src="/assets/logo.png" alt="Digital Aarambh" className="h-16 w-auto" />
-            <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
-              An online learning platform for career-ready skills, expert mentors, and real-world projects.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">Quick links</h3>
-            <ul className="mt-4 space-y-2 text-sm">
-              <li>
-                <a href="#home" className="hover:text-white">
-                  Home
-                </a>
-              </li>
-              <li>
-                <a href="#courses" className="hover:text-white">
-                  Packages
-                </a>
-              </li>
-              <li>
-                <a href="/about" className="hover:text-white">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="/contact" className="hover:text-white">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">Follow us</h3>
-            <div className="mt-4 flex gap-3">
-              {['X', 'in', 'Ig', 'Yt'].map((network) => (
-                <span
-                  key={network}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white"
-                >
-                  {network}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-white/10 py-5 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} Digital Aarambh. All rights reserved.
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   )
 }

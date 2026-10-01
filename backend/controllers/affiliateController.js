@@ -1,53 +1,68 @@
-const { people, earnings } = require('../data/leaderboardTest')
-const { leaderboardWindows, partsOf, addDays, toIso } = require('../services/leaderboardWindow')
+const { leaderboardWindows } = require('../services/leaderboardWindow')
 const { INCOME_LEVELS, PACKAGE_NAMES, commissionPlanFor } = require('../data/commissions')
 const { query } = require('../config/db')
+const storage = require('../services/storage')
 
-const peopleById = new Map(people.map((person) => [person.id, person]))
+const rankBoard = async (window, viewerId) => {
+  const params = []
+  const filters = []
 
-const inWindow = (iso, window) => {
-  if (iso > window.to) return false
-  if (!window.from) return true
-  return iso >= window.from
-}
+  if (window.from) {
+    params.push(window.from)
+    filters.push(`(e.earned_at AT TIME ZONE 'Asia/Kolkata')::date >= $${params.length}::date`)
+  }
+  if (window.to) {
+    params.push(window.to)
+    filters.push(`(e.earned_at AT TIME ZONE 'Asia/Kolkata')::date <= $${params.length}::date`)
+  }
 
-const rankBoard = (window, today) => {
-  const totals = new Map()
+  const where = filters.length ? `WHERE ${filters.join(' AND ')}` : ''
+  const result = await query(
+    `SELECT
+       e.user_id,
+       u.full_name,
+       u.avatar_key,
+       SUM(e.amount)::NUMERIC AS amount
+     FROM affiliate_earnings e
+     JOIN users u ON u.id = e.user_id
+     ${where}
+     GROUP BY e.user_id, u.full_name, u.avatar_key
+     HAVING SUM(e.amount) > 0
+     ORDER BY amount DESC, u.full_name ASC
+     LIMIT 10`,
+    params,
+  )
 
-  earnings.forEach((entry) => {
-    const iso = toIso(addDays(today, -entry.daysAgo))
-    if (!inWindow(iso, window)) return
-    const person = peopleById.get(entry.personId)
-    if (!person) return
-    const current = totals.get(entry.personId) || { name: person.name, avatarUrl: person.avatar, amount: 0 }
-    current.amount += entry.amount
-    totals.set(entry.personId, current)
-  })
-
-  return [...totals.values()]
-    .filter((row) => row.amount > 0)
-    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name))
-    .slice(0, 10)
-    .map((row, index) => ({
+  const rows = []
+  for (let index = 0; index < result.rows.length; index += 1) {
+    const row = result.rows[index]
+    rows.push({
       rank: index + 1,
-      name: row.name,
-      amount: row.amount,
-      avatarUrl: row.avatarUrl || null,
-      you: false,
-    }))
+      name: row.full_name,
+      amount: Number(row.amount),
+      avatarUrl: await storage.signedGet(row.avatar_key),
+      you: row.user_id === viewerId,
+    })
+  }
+  return rows
 }
 
 const leaderboard = async (req, res) => {
   try {
-    const now = new Date()
-    const windows = leaderboardWindows(now)
-    const today = partsOf(now)
+    const windows = leaderboardWindows(new Date())
+    const viewerId = req.user.id
+
+    const [weekly, monthly, overall] = await Promise.all([
+      rankBoard(windows.weekly, viewerId),
+      rankBoard(windows.monthly, viewerId),
+      rankBoard(windows.overall, viewerId),
+    ])
 
     return res.json({
       windows,
-      weekly: rankBoard(windows.weekly, today),
-      monthly: rankBoard(windows.monthly, today),
-      overall: rankBoard(windows.overall, today),
+      weekly,
+      monthly,
+      overall,
     })
   } catch (error) {
     console.error('Leaderboard error:', error.message)
@@ -189,6 +204,18 @@ const myEarnings = async (req, res) => {
         buyerState: row.buyer_state,
         earnedAt: row.earned_at,
       })),
+      commissions: rows.map((row) => ({
+        id: row.id,
+        amount: Number(row.amount),
+        packageName: row.package_name,
+        incomeType: row.income_type,
+        commissionPercent: row.commission_percent != null ? Number(row.commission_percent) : null,
+        netAmount: row.net_amount != null ? Number(row.net_amount) : null,
+        country: row.country,
+        buyerName: row.buyer_name,
+        buyerState: row.buyer_state,
+        earnedAt: row.earned_at,
+      })),
     })
   } catch (error) {
     console.error('Earnings error:', error.message)
@@ -258,4 +285,44 @@ const myLeads = async (req, res) => {
   }
 }
 
-module.exports = { leaderboard, linkKit, myEarnings, myLeads }
+const myRefInfo = async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT
+         u.id,
+         u.full_name,
+         u.email,
+         u.phone,
+         u.country,
+         u.knowledge_package,
+         u.created_at
+       FROM users u
+       WHERE u.referred_by = $1
+       ORDER BY u.created_at DESC`,
+      [req.user.id],
+    )
+
+    const referrals = result.rows.map((row) => ({
+      id: row.id,
+      name: row.full_name,
+      phone: row.phone || '—',
+      email: row.email,
+      date: row.created_at,
+      country: row.country || '—',
+      package: row.knowledge_package || '—',
+    }))
+
+    // Payout transfer flow is not built yet — return an empty live list
+    // so the UI never falls back to sample rows.
+    return res.json({
+      packages: PACKAGE_NAMES,
+      referrals,
+      payouts: [],
+    })
+  } catch (error) {
+    console.error('Ref info error:', error.message)
+    return res.status(500).json({ message: 'Could not load referral info' })
+  }
+}
+
+module.exports = { leaderboard, linkKit, myEarnings, myLeads, myRefInfo }

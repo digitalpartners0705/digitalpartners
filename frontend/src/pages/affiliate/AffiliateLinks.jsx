@@ -15,10 +15,6 @@ const PACKAGES = [
     name: 'Social Expert',
     short: 'Social',
     price: 6999,
-    netAmount: 5740,
-    activePercent: 52.26,
-    passivePercent: 10.45,
-    secondPercent: 4.36,
     accent: 'sky',
     tagline: 'Social & content foundation',
   },
@@ -27,10 +23,6 @@ const PACKAGES = [
     name: 'Ads Expert',
     short: 'Ads',
     price: 14999,
-    netAmount: 12300,
-    activePercent: 52.85,
-    passivePercent: 9.76,
-    secondPercent: 4.07,
     accent: 'gold',
     tagline: 'Paid ads & lead generation',
   },
@@ -39,10 +31,6 @@ const PACKAGES = [
     name: 'AI Premium Expert',
     short: 'AI Premium',
     price: 21999,
-    netAmount: 18040,
-    activePercent: 55.43,
-    passivePercent: 9.98,
-    secondPercent: 4.16,
     accent: 'violet',
     tagline: 'Full ecosystem to earn online',
   },
@@ -53,24 +41,30 @@ const COUNTRIES = ['India', 'United Arab Emirates', 'United States', 'United Kin
 const ACCENT = {
   sky: {
     glow: 'from-sky-500/20 via-sky-500/5 to-transparent',
-    ring: 'ring-sky-400/20',
-    badge: 'bg-sky-500/15 text-sky-300 ring-sky-400/25',
+    ring: 'ring-sky-400/25',
+    price: 'text-sky-300',
+    priceBg: 'bg-sky-400/10 ring-sky-400/30',
     mark: 'from-sky-400 to-sky-600',
-    soft: 'hover:border-sky-400/40',
+    soft: 'hover:border-sky-400/45',
+    ready: 'bg-sky-300 text-slate-900 hover:bg-sky-200',
   },
   gold: {
     glow: 'from-amber-400/20 via-amber-400/5 to-transparent',
     ring: 'ring-amber-400/25',
-    badge: 'bg-amber-400/15 text-amber-200 ring-amber-400/25',
+    price: 'text-amber-200',
+    priceBg: 'bg-amber-400/10 ring-amber-400/30',
     mark: 'from-amber-300 to-amber-500',
-    soft: 'hover:border-amber-400/40',
+    soft: 'hover:border-amber-400/45',
+    ready: 'bg-amber-300 text-slate-900 hover:bg-amber-200',
   },
   violet: {
     glow: 'from-violet-500/20 via-violet-500/5 to-transparent',
-    ring: 'ring-violet-400/20',
-    badge: 'bg-violet-500/15 text-violet-200 ring-violet-400/25',
+    ring: 'ring-violet-400/25',
+    price: 'text-violet-200',
+    priceBg: 'bg-violet-400/10 ring-violet-400/30',
     mark: 'from-violet-400 to-violet-600',
-    soft: 'hover:border-violet-400/40',
+    soft: 'hover:border-violet-400/45',
+    ready: 'bg-violet-300 text-slate-900 hover:bg-violet-200',
   },
 }
 
@@ -189,7 +183,7 @@ function LinkGeneratorPanel({ refCode, origin, generalLink }) {
         <div className="mb-4">
           <h2 className="text-lg font-bold tracking-tight">Package links</h2>
           <p className="mt-0.5 text-sm text-slate-400">
-            Pick a country, then copy a link. Percentages come from the marketing plan.
+            Pick a country, then copy a link for that package.
           </p>
         </div>
 
@@ -199,50 +193,28 @@ function LinkGeneratorPanel({ refCode, origin, generalLink }) {
             const country = countries[pkg.id]
             const ready = Boolean(country) && refCode !== '—'
             const isCopied = copiedKey === pkg.id
-            const activeAmount = Math.round((pkg.netAmount * pkg.activePercent) / 100)
-            const passiveAmount = Math.round((pkg.netAmount * pkg.passivePercent) / 100)
-            const secondAmount = Math.round((pkg.netAmount * pkg.secondPercent) / 100)
 
             return (
               <article
                 key={pkg.id}
-                className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-[#171b27] p-5 pt-7 ring-1 transition ${styles.ring} ${styles.soft}`}
+                className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-[#171b27] p-5 pt-6 ring-1 transition ${styles.ring} ${styles.soft}`}
               >
-                <div className={`pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b ${styles.glow}`} />
+                <div className={`pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b ${styles.glow}`} />
 
                 <div className="relative flex h-full flex-col">
                   <PackageMark short={pkg.short} accent={pkg.accent} />
 
                   <div className="mt-5 text-center">
-                    <h3 className="text-xl font-bold tracking-tight">{pkg.name}</h3>
+                    <h3 className="text-xl font-bold tracking-tight text-white">{pkg.name}</h3>
                     <p className="mt-1 text-sm text-slate-400">{pkg.tagline}</p>
-                    <p className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ${styles.badge}`}>
-                      {rupees(pkg.price)}
-                    </p>
-                    <dl className="mt-4 space-y-1.5 text-left text-xs">
-                      <div className="flex items-center justify-between gap-2">
-                        <dt className="text-slate-400">Active · L1</dt>
-                        <dd className="font-semibold text-teal-200">
-                          {pkg.activePercent}% · {rupees(activeAmount)}
-                        </dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <dt className="text-slate-400">Passive · L2</dt>
-                        <dd className="font-semibold text-sky-200">
-                          {pkg.passivePercent}% · {rupees(passiveAmount)}
-                        </dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <dt className="text-slate-400">Second · L3</dt>
-                        <dd className="font-semibold text-violet-200">
-                          {pkg.secondPercent}% · {rupees(secondAmount)}
-                        </dd>
-                      </div>
-                    </dl>
-                    <p className="mt-2 text-left text-[11px] text-slate-500">Of net {rupees(pkg.netAmount)} after GST</p>
                   </div>
 
-                  <label className="mt-6 block">
+                  <div className={`mt-5 rounded-2xl px-4 py-3 text-center ring-1 ${styles.priceBg}`}>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Package price</p>
+                    <p className={`mt-1 text-3xl font-extrabold tracking-tight ${styles.price}`}>{rupees(pkg.price)}</p>
+                  </div>
+
+                  <label className="mt-5 block">
                     <span className="mb-1.5 block text-xs font-medium text-slate-400">Country</span>
                     <select
                       value={country}
@@ -264,7 +236,9 @@ function LinkGeneratorPanel({ refCode, origin, generalLink }) {
                     type="button"
                     disabled={!ready}
                     onClick={() => handleCopyPackage(pkg)}
-                    className="mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white transition hover:border-teal-300/45 hover:bg-teal-300/10 disabled:cursor-not-allowed disabled:opacity-40"
+                    className={`mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/[0.03] disabled:text-slate-400 disabled:opacity-70 ${
+                      ready || isCopied ? styles.ready : ''
+                    }`}
                   >
                     {isCopied ? <CheckIcon /> : <CopyIcon />}
                     {isCopied ? 'Link copied' : ready ? 'Copy Link' : 'Select country first'}
@@ -309,7 +283,7 @@ function AffiliateLinks() {
           <p className="mt-1 max-w-xl text-sm text-slate-400">
             {tab === 'leads'
               ? 'Every sign-up that came through your referral code, newest first.'
-              : 'Share your code or links. Every purchase in your chain pays a fixed % at up to three levels.'}
+              : 'Share your code or package links with people you want to refer.'}
           </p>
         </div>
 

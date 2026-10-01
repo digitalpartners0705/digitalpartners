@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AuthModal from '../components/AuthModal'
 import Navbar from '../components/Navbar'
+import SiteFooter from '../components/SiteFooter'
 import { useAuth } from '../context/AuthContext'
 import { SOCIALS } from '../data/community'
 
@@ -327,6 +328,8 @@ function Contact() {
           </div>
         </section>
       </main>
+
+      <SiteFooter />
 
       <AuthModal
         isOpen={authOpen}

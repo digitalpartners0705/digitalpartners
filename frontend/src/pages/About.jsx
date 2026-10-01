@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import AuthModal from '../components/AuthModal'
 import Navbar from '../components/Navbar'
+import SiteFooter from '../components/SiteFooter'
 import { useAuth } from '../context/AuthContext'
 import { KNOWLEDGE_PACKAGES } from '../data/signupOptions'
 
@@ -96,6 +97,8 @@ function About() {
           </div>
         </section>
       </main>
+
+      <SiteFooter />
 
       <AuthModal
         isOpen={authOpen}

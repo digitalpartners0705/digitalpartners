@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import { PACKAGES, PAYOUTS, REFERRALS } from '../../data/refInfo'
+import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
+import { getAffiliateRefInfo } from '../../services/api'
 
 const PACKAGE_TONE = {
   'Social Expert': 'bg-violet-400/15 text-violet-200',
@@ -7,9 +8,13 @@ const PACKAGE_TONE = {
   'AI Premium Expert': 'bg-teal-300/15 text-teal-200',
 }
 
-function formatDay(iso) {
-  const [year, month, day] = iso.split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+const FALLBACK_PACKAGES = ['Social Expert', 'Ads Expert', 'AI Premium Expert']
+
+function formatDay(value) {
+  if (!value) return '—'
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function formatMoney(amount) {
@@ -22,29 +27,64 @@ function formatMoney(amount) {
 }
 
 function AffiliateRefInfo() {
+  const { user } = useAuth()
+  const rawName = user?.fullName?.split(' ')[0] || 'there'
+  const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
   const [tab, setTab] = useState('referrals')
   const [query, setQuery] = useState('')
   const [packageName, setPackageName] = useState('All packages')
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const needle = query.trim().toLowerCase()
 
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    getAffiliateRefInfo()
+      .then((payload) => {
+        if (!active) return
+        setData(payload)
+        setError('')
+      })
+      .catch((err) => {
+        if (!active) return
+        setError(err.response?.data?.message || 'Could not load referral info')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const packages = data?.packages?.length ? data.packages : FALLBACK_PACKAGES
+  const allReferrals = data?.referrals || []
+  const allPayouts = data?.payouts || []
+
   const referrals = useMemo(() => {
-    return REFERRALS.filter((row) => {
+    return allReferrals.filter((row) => {
       const matchesPackage = packageName === 'All packages' || row.package === packageName
       const haystack = `${row.name} ${row.phone} ${row.email} ${row.country} ${row.package}`.toLowerCase()
       return matchesPackage && (!needle || haystack.includes(needle))
     })
-  }, [needle, packageName])
+  }, [allReferrals, needle, packageName])
 
   const payouts = useMemo(() => {
-    return PAYOUTS.filter((row) => {
+    return allPayouts.filter((row) => {
       const haystack = `${row.invoice} ${row.amount} ${row.status}`.toLowerCase()
       return !needle || haystack.includes(needle)
     })
-  }, [needle])
+  }, [allPayouts, needle])
 
   return (
     <div className="-mx-4 -my-8 min-h-[calc(100vh-4.25rem)] bg-[#10131c] px-4 py-8 text-slate-100 sm:-mx-8 sm:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+        Hello, <span className="text-teal-300">{firstName}</span>
+      </h1>
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
         <div className="inline-flex rounded-full border border-white/10 bg-[#171b27] p-1">
           {[
             ['referrals', 'Referral Details'],
@@ -75,7 +115,7 @@ function AffiliateRefInfo() {
               className="cursor-pointer rounded-lg border border-white/10 bg-[#171b27] px-3 py-2 text-sm text-slate-100 outline-none"
             >
               <option>All packages</option>
-              {PACKAGES.map((name) => (
+              {packages.map((name) => (
                 <option key={name}>{name}</option>
               ))}
             </select>
@@ -83,9 +123,13 @@ function AffiliateRefInfo() {
         ) : null}
       </div>
 
+      {error ? (
+        <p className="mt-4 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-100">{error}</p>
+      ) : null}
+
       <section className="mt-6 overflow-hidden rounded-xl border border-white/10 bg-[#171b27]">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
-          <h1 className="text-xl font-bold tracking-tight">{tab === 'referrals' ? 'Referral Details' : 'Payout Details'}</h1>
+          <h2 className="text-xl font-bold tracking-tight">{tab === 'referrals' ? 'Referral Details' : 'Payout Details'}</h2>
           <label className="flex w-full max-w-xs items-center gap-2 rounded-full border border-white/10 bg-[#10131c] px-3 py-2">
             <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <circle cx="11" cy="11" r="6.5" />
@@ -116,10 +160,18 @@ function AffiliateRefInfo() {
                 </tr>
               </thead>
               <tbody>
-                {referrals.length === 0 ? (
+                {loading ? (
                   <tr>
                     <td colSpan="7" className="px-5 py-12 text-center text-slate-400">
-                      No referrals match this search.
+                      Loading referrals…
+                    </td>
+                  </tr>
+                ) : referrals.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-5 py-12 text-center text-slate-400">
+                      {allReferrals.length === 0
+                        ? 'No referrals yet. Share a link and your buyers will appear here.'
+                        : 'No referrals match this search.'}
                     </td>
                   </tr>
                 ) : (
@@ -132,7 +184,11 @@ function AffiliateRefInfo() {
                       <td className="px-3 py-4 text-slate-300">{formatDay(row.date)}</td>
                       <td className="px-3 py-4 text-slate-300">{row.country}</td>
                       <td className="px-4 py-4 sm:px-5">
-                        <span className={`inline-flex rounded-md px-2.5 py-1 text-xs font-semibold ${PACKAGE_TONE[row.package]}`}>
+                        <span
+                          className={`inline-flex rounded-md px-2.5 py-1 text-xs font-semibold ${
+                            PACKAGE_TONE[row.package] || 'bg-white/10 text-slate-200'
+                          }`}
+                        >
                           {row.package}
                         </span>
                       </td>
@@ -154,10 +210,16 @@ function AffiliateRefInfo() {
                 </tr>
               </thead>
               <tbody>
-                {payouts.length === 0 ? (
+                {loading ? (
                   <tr>
                     <td colSpan="6" className="px-5 py-12 text-center text-slate-400">
-                      No payouts match this search.
+                      Loading payouts…
+                    </td>
+                  </tr>
+                ) : payouts.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-5 py-12 text-center text-slate-400">
+                      No payouts yet. Payouts will show here once KYC and transfers are set up.
                     </td>
                   </tr>
                 ) : (

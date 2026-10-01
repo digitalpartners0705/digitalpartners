@@ -9,6 +9,7 @@ import AffiliateDownloads from './pages/affiliate/AffiliateDownloads'
 import AffiliateEarnings from './pages/affiliate/AffiliateEarnings'
 import AffiliateLeaderboard from './pages/affiliate/AffiliateLeaderboard'
 import AffiliateLinks from './pages/affiliate/AffiliateLinks'
+import AffiliateCommission from './pages/affiliate/AffiliateCommission'
 import AffiliateRefInfo from './pages/affiliate/AffiliateRefInfo'
 import AffiliateProfile from './pages/affiliate/AffiliateProfile'
 import AffiliateSection from './pages/affiliate/AffiliateSection'
@@ -67,8 +68,8 @@ function App() {
         <Route path="leaderboard" element={<AffiliateLeaderboard />} />
         <Route path="kyc" element={<AffiliateSection />} />
         <Route path="links" element={<AffiliateLinks />} />
+        <Route path="commission" element={<AffiliateCommission />} />
         <Route path="ref-info" element={<AffiliateRefInfo />} />
-        <Route path="qualification" element={<AffiliateSection />} />
         <Route path="achievements" element={<AffiliateAchievements />} />
         <Route path="community" element={<AffiliateCommunity />} />
       </Route>

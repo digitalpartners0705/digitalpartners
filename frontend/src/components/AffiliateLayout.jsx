@@ -11,8 +11,8 @@ const navItems = [
   { to: '/affiliate/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
   { to: '/affiliate/kyc', label: 'KYC', icon: 'kyc' },
   { to: '/affiliate/links', label: 'Link Gen', icon: 'links' },
+  { to: '/affiliate/commission', label: 'Commission', icon: 'commission' },
   { to: '/affiliate/ref-info', label: 'Ref Info', icon: 'referrals' },
-  { to: '/affiliate/qualification', label: 'Qualification', icon: 'qualification' },
   { to: '/affiliate/achievements', label: 'Achievements', icon: 'achievements' },
   { to: '/affiliate/community', label: 'Community', icon: 'community' },
 ]
@@ -77,6 +77,14 @@ function NavIcon({ name }) {
       </svg>
     )
   }
+  if (name === 'commission') {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="8" />
+        <path strokeLinecap="round" d="M12 8v8M9.5 10.5h3.2a1.8 1.8 0 0 1 0 3.6H9.5" />
+      </svg>
+    )
+  }
   if (name === 'referrals') {
     return (
       <svg {...common}>
@@ -124,7 +132,6 @@ function AffiliateLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
-  const firstName = user?.fullName?.split(' ')[0] || 'there'
 
   useEffect(() => {
     const onPointerDown = (event) => {
@@ -202,7 +209,7 @@ function AffiliateLayout() {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-40 flex items-center justify-between gap-4 overflow-visible border-b border-white/10 bg-[#10131c] px-4 py-3 sm:px-8">
+        <header className="sticky top-0 z-40 flex items-center justify-between gap-4 overflow-visible bg-[#10131c]/95 px-4 py-3 backdrop-blur-sm sm:px-8">
           <button
             type="button"
             className="cursor-pointer rounded-lg p-2 text-slate-200 ring-1 ring-white/15 lg:hidden"
@@ -213,10 +220,6 @@ function AffiliateLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-
-          <p className="text-sm text-slate-400 sm:text-base">
-            Hello, <span className="font-semibold text-white">{firstName}</span>
-          </p>
 
           <div className="relative z-50 ml-auto flex items-center gap-2 pr-1 sm:pr-2" ref={menuRef}>
             <ProfileButton editable={false} ringClass="ring-[#10131c]" />
