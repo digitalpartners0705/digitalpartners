@@ -31,6 +31,24 @@ function NavIcon({ name }) {
     )
   }
 
+  if (name === 'orders') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 4h9.5L19 7.5V20H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
+        <path strokeLinecap="round" d="M9 11h6M9 15h4" />
+      </svg>
+    )
+  }
+
+  if (name === 'commissions') {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="8" />
+        <path strokeLinecap="round" d="M12 8v8M9.5 10.5c.5-.8 1.4-1.2 2.5-1.2 1.4 0 2.5.7 2.5 1.8S13.4 13 12 13s-2.5.6-2.5 1.7c0 1.1 1.1 1.8 2.5 1.8 1.1 0 2-.4 2.5-1.2" />
+      </svg>
+    )
+  }
+
   return (
     <svg {...common}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10 7V5H5v14h5v-2" />
@@ -41,6 +59,11 @@ function NavIcon({ name }) {
 }
 
 function pageCrumb(pathname) {
+  if (pathname.startsWith('/commissions/earners/')) return 'Earner history'
+  if (pathname.startsWith('/commissions')) return 'Commissions'
+  if (pathname.startsWith('/orders')) {
+    return pathname === '/orders' ? 'Orders' : 'Order details'
+  }
   if (pathname.startsWith('/trainings')) {
     if (pathname.endsWith('/edit')) return 'Edit day'
     if (pathname !== '/trainings') return 'Videos'
@@ -94,7 +117,7 @@ function AdminLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Link to="/courses" className="flex items-center gap-3 border-b border-slate-100 px-5 py-5">
+        <Link to="/orders" className="flex items-center gap-3 border-b border-slate-100 px-5 py-5">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">
             DE
           </span>

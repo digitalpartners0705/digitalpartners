@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const { query, createReferralCode } = require('../config/db')
 const { PACKAGE_NAMES, canPurchasePackage } = require('../data/commissions')
 const { creditUplineCommissions } = require('../services/affiliateCommission')
+const { createOrder, syncCommissionTotal } = require('../services/orders')
 const storage = require('../services/storage')
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -113,12 +114,13 @@ const signup = async (req, res) => {
     if (!phone) return res.status(400).json({ message: 'Contact number is required' })
     if (!country) return res.status(400).json({ message: 'Country is required' })
     if (!state) return res.status(400).json({ message: 'State is required' })
-    if (!knowledgePackage) return res.status(400).json({ message: 'Please select a knowledge package' })
-    if (!PACKAGE_NAMES.includes(knowledgePackage)) {
-      return res.status(400).json({ message: 'Choose Social Expert, Ads Expert, or AI Premium Expert' })
-    }
     if (!password) return res.status(400).json({ message: 'Password is required' })
     if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' })
+
+    // Package is chosen at signup for checkout intent only — access is granted after purchase.
+    if (knowledgePackage && !PACKAGE_NAMES.includes(knowledgePackage)) {
+      return res.status(400).json({ message: 'Choose Social Expert, Ads Expert, or AI Premium Expert' })
+    }
 
     const sponsor = await findSponsorByCode(incomingReferral)
     if (incomingReferral && !sponsor) {
@@ -141,7 +143,7 @@ const signup = async (req, res) => {
         phone,
         country,
         state,
-        knowledgePackage,
+        null,
         promoCode,
         couponCode,
         hasGst,
@@ -153,16 +155,12 @@ const signup = async (req, res) => {
     )
 
     const created = result.rows[0]
-    if (sponsor?.id) {
-      await creditUplineCommissions({
-        buyerId: created.id,
-        packageName: knowledgePackage,
-        country,
-      })
-    }
-
     const user = await publicUser(created)
-    return res.status(201).json({ token: signToken(user), user })
+    return res.status(201).json({
+      token: signToken(user),
+      user,
+      pendingPackage: knowledgePackage || null,
+    })
   } catch (error) {
     if (error.code === '23505') {
       return res.status(409).json({ message: 'An account with this email already exists' })
@@ -254,15 +252,26 @@ const purchasePackage = async (req, res) => {
       [check.package.name, row.id],
     )
 
+    const order = await createOrder({
+      userId: row.id,
+      packageName: check.package.name,
+      source: row.knowledge_package ? 'upgrade' : 'signup',
+      status: 'paid',
+      paymentStatus: 'captured',
+    })
+
     const credited = await creditUplineCommissions({
       buyerId: row.id,
       packageName: check.package.name,
       country: row.country,
+      orderId: order?.id || null,
     })
+    await syncCommissionTotal(order?.id)
 
     return res.json({
       user: await publicUser(updated.rows[0]),
       purchase: {
+        orderNumber: order?.order_number || null,
         packageName: check.package.name,
         commissionCredited: credited.length > 0,
         levelsPaid: credited.map((earning) => earning.income_type),

@@ -146,7 +146,7 @@ const faqs = [
   },
   {
     question: 'What if a course is not the right fit?',
-    answer: 'We offer a 7-day refund window on new enrollments if you have not completed more than 20% of the course.',
+    answer: 'Package purchases are final and non-refundable. You keep lifetime access to the courses included in the package you buy.',
   },
   {
     question: 'Do you offer mentor support?',

@@ -3,6 +3,10 @@ import AdminLayout from './components/AdminLayout'
 import CourseEditor from './pages/CourseEditor'
 import CourseLessons from './pages/CourseLessons'
 import CoursesPage from './pages/CoursesPage'
+import CommissionsPage from './pages/CommissionsPage'
+import EarnerDetail from './pages/EarnerDetail'
+import OrderDetail from './pages/OrderDetail'
+import OrdersPage from './pages/OrdersPage'
 import TrainingEditor from './pages/TrainingEditor'
 import TrainingVideos from './pages/TrainingVideos'
 import TrainingsPage from './pages/TrainingsPage'
@@ -26,7 +30,11 @@ function App() {
           </RequireAdmin>
         }
       >
-        <Route index element={<Navigate to="courses" replace />} />
+        <Route index element={<Navigate to="orders" replace />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="orders/:id" element={<OrderDetail />} />
+        <Route path="commissions" element={<CommissionsPage />} />
+        <Route path="commissions/earners/:userId" element={<EarnerDetail />} />
         <Route path="courses" element={<CoursesPage />} />
         <Route path="courses/new" element={<CourseEditor />} />
         <Route path="courses/:id/edit" element={<CourseEditor />} />

@@ -170,7 +170,7 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
         referralCode: form.referralCode.trim() || null,
         referralSource: referralSource(defaults),
       })
-      onSuccess(data.user)
+      onSuccess(data.user, { pendingPackage: form.knowledgePackage })
     } catch (error) {
       setErrors({ form: error.response?.data?.message || 'Could not create account. Please try again' })
     } finally {
@@ -191,7 +191,7 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
         <p className="mt-1.5 text-sm leading-6 text-slate-500">
           {step === 1
             ? 'Tell us who you are so we can set up your profile.'
-            : 'Choose a package and secure your account.'}
+            : 'Choose the package you want to buy, then create your account.'}
         </p>
       </div>
 
@@ -319,6 +319,11 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
               </select>
               <Chevron />
             </div>
+            {packageLocked ? (
+              <p className="mt-1.5 text-xs leading-4 text-slate-500">
+                You&apos;ll confirm payment for this package right after signup.
+              </p>
+            ) : null}
           </Field>
 
           {form.referralCode ? (

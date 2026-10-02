@@ -27,6 +27,24 @@ const {
   deleteVideo,
   reorderVideos,
 } = require('../controllers/adminTrainingController')
+const {
+  listOrders,
+  getOrder,
+  getOrderMeta,
+  getOrderStats,
+  createManualOrder,
+  recordPayment,
+  updateOrder,
+} = require('../controllers/adminOrderController')
+const {
+  listCommissions,
+  getCommissionStats,
+  getCommissionMeta,
+  getCommission,
+  getEarnerCommissions,
+  reverseCommission,
+  createAdjustment,
+} = require('../controllers/adminCommissionController')
 const { requireAdmin } = require('../middleware/auth')
 
 const router = express.Router()
@@ -46,6 +64,20 @@ const receiveFile = (req, res, next) => {
 
 router.use(requireAdmin)
 router.get('/meta', getMeta)
+router.get('/orders', listOrders)
+router.post('/orders', createManualOrder)
+router.get('/orders/meta', getOrderMeta)
+router.get('/orders/stats', getOrderStats)
+router.get('/orders/:id', getOrder)
+router.patch('/orders/:id', updateOrder)
+router.post('/orders/:id/payment', recordPayment)
+router.get('/commissions', listCommissions)
+router.post('/commissions', createAdjustment)
+router.get('/commissions/meta', getCommissionMeta)
+router.get('/commissions/stats', getCommissionStats)
+router.get('/commissions/earners/:userId', getEarnerCommissions)
+router.get('/commissions/:id', getCommission)
+router.post('/commissions/:id/reverse', reverseCommission)
 router.get('/trainings', listDays)
 router.post('/trainings', createDay)
 router.get('/trainings/:id', getDay)

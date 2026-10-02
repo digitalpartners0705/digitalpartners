@@ -8,7 +8,7 @@ const { MAX_LEVEL, commissionForLevel, resolvePackage } = require('../data/commi
  * An upline only earns if they own a package. A skipped upline does not shift the
  * levels down, so the company retains that share.
  */
-const creditCommission = async ({ sponsorId, buyerId, packageName, country, level }) => {
+const creditCommission = async ({ sponsorId, buyerId, packageName, country, level, orderId = null }) => {
   const commission = commissionForLevel(packageName, level)
   if (!commission || !sponsorId || !buyerId || sponsorId === buyerId) return null
 
@@ -16,10 +16,10 @@ const creditCommission = async ({ sponsorId, buyerId, packageName, country, leve
     const result = await query(
       `INSERT INTO affiliate_earnings (
          user_id, buyer_id, amount, package_name, income_type,
-         commission_percent, net_amount, country
+         commission_percent, net_amount, country, order_id
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, amount, package_name, income_type, commission_percent, net_amount`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING id, amount, package_name, income_type, commission_percent, net_amount, order_id`,
       [
         sponsorId,
         buyerId,
@@ -29,6 +29,7 @@ const creditCommission = async ({ sponsorId, buyerId, packageName, country, leve
         commission.commissionPercent,
         commission.netAmount,
         country || null,
+        orderId,
       ],
     )
     return result.rows[0]
@@ -38,7 +39,7 @@ const creditCommission = async ({ sponsorId, buyerId, packageName, country, leve
   }
 }
 
-const creditUplineCommissions = async ({ buyerId, packageName, country }) => {
+const creditUplineCommissions = async ({ buyerId, packageName, country, orderId = null }) => {
   if (!resolvePackage(packageName)) return []
 
   const buyer = await query(
@@ -72,6 +73,7 @@ const creditUplineCommissions = async ({ buyerId, packageName, country }) => {
         packageName,
         country: saleCountry,
         level,
+        orderId,
       })
       if (earning) credited.push(earning)
     }

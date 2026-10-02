@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearSession, getCurrentUser, getStoredToken, getStoredUser } from '../services/api'
+import CheckoutModal from '../components/CheckoutModal'
+import { getCheckoutPackage } from '../data/checkoutPackages'
+import { clearSession, getCurrentUser, getStoredToken, getStoredUser, purchasePackage } from '../services/api'
 import { captureReferralFromSearch, clearReferral, readReferral } from '../utils/referral'
 
 const AuthContext = createContext(null)
@@ -11,6 +13,9 @@ function AuthProvider({ children }) {
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState('login')
   const [signupDefaults, setSignupDefaults] = useState({})
+  const [pendingCheckout, setPendingCheckout] = useState(null)
+  const [paying, setPaying] = useState(false)
+  const [checkoutError, setCheckoutError] = useState('')
 
   useEffect(() => {
     captureReferralFromSearch()
@@ -46,21 +51,52 @@ function AuthProvider({ children }) {
   const closeAuth = useCallback(() => setAuthOpen(false), [])
 
   const handleAuthSuccess = useCallback(
-    (nextUser) => {
+    (nextUser, options = {}) => {
       clearReferral()
       setUser(nextUser)
       setAuthOpen(false)
       setSignupDefaults({})
+      setCheckoutError('')
+
+      const checkoutPkg = getCheckoutPackage(options.pendingPackage)
+      if (checkoutPkg && !nextUser?.knowledgePackage) {
+        setPendingCheckout(checkoutPkg)
+      } else {
+        setPendingCheckout(null)
+      }
+
       navigate('/dashboard', { replace: true })
     },
     [navigate],
   )
+
+  const closeCheckout = useCallback(() => {
+    if (paying) return
+    setPendingCheckout(null)
+    setCheckoutError('')
+  }, [paying])
+
+  const payPendingCheckout = useCallback(async () => {
+    if (!pendingCheckout) return
+    setPaying(true)
+    setCheckoutError('')
+    try {
+      const data = await purchasePackage(pendingCheckout.name)
+      setUser(data.user)
+      setPendingCheckout(null)
+    } catch (error) {
+      setCheckoutError(error.response?.data?.message || 'Could not complete the purchase')
+    } finally {
+      setPaying(false)
+    }
+  }, [pendingCheckout])
 
   const updateUser = useCallback((nextUser) => setUser(nextUser), [])
 
   const logout = useCallback(() => {
     clearSession()
     setUser(null)
+    setPendingCheckout(null)
     navigate('/')
   }, [navigate])
 
@@ -80,6 +116,22 @@ function AuthProvider({ children }) {
       }}
     >
       {children}
+      {pendingCheckout ? (
+        <>
+          <CheckoutModal
+            pkg={pendingCheckout}
+            paying={paying}
+            closeLabel="Pay later"
+            onClose={closeCheckout}
+            onPay={payPendingCheckout}
+          />
+          {checkoutError ? (
+            <p className="fixed bottom-6 left-1/2 z-[70] w-[min(24rem,calc(100%-2rem))] -translate-x-1/2 rounded-xl border border-red-300/50 bg-red-50 px-4 py-3 text-center text-sm text-red-700 shadow-lg">
+              {checkoutError}
+            </p>
+          ) : null}
+        </>
+      ) : null}
     </AuthContext.Provider>
   )
 }

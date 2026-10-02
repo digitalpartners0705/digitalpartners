@@ -5,7 +5,7 @@ const storage = require('../services/storage')
 
 const rankBoard = async (window, viewerId) => {
   const params = []
-  const filters = []
+  const filters = [`e.status = 'credited'`]
 
   if (window.from) {
     params.push(window.from)
@@ -125,7 +125,7 @@ const myEarnings = async (req, res) => {
          u.state AS buyer_state
        FROM affiliate_earnings e
        LEFT JOIN users u ON u.id = e.buyer_id
-       WHERE e.user_id = $1
+       WHERE e.user_id = $1 AND e.status = 'credited'
        ORDER BY e.earned_at DESC`,
       [req.user.id],
     )
@@ -244,7 +244,7 @@ const myLeads = async (req, res) => {
          COALESCE(SUM(e.amount), 0) AS earned_from_lead
        FROM users u
        LEFT JOIN affiliate_earnings e
-         ON e.buyer_id = u.id AND e.user_id = $1
+         ON e.buyer_id = u.id AND e.user_id = $1 AND e.status = 'credited'
        WHERE u.referred_by = $1
        GROUP BY u.id
        ORDER BY u.created_at DESC`,

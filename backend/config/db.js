@@ -162,15 +162,102 @@ const initAffiliateTables = async () => {
   await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS commission_percent NUMERIC(6,2)`)
   await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS net_amount NUMERIC(12,2)`)
   await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS country TEXT`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS notes TEXT`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'sale'`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS reverse_reason TEXT`)
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_user_idx ON affiliate_earnings (user_id)`)
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_earned_at_idx ON affiliate_earnings (earned_at)`)
   await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_income_type_idx ON affiliate_earnings (income_type)`)
   await query(`DROP INDEX IF EXISTS affiliate_earnings_active_buyer_uidx`)
   await query(`DROP INDEX IF EXISTS affiliate_earnings_active_buyer_package_uidx`)
+  await query(`DROP INDEX IF EXISTS affiliate_earnings_buyer_package_type_uidx`)
+}
+
+const initOrderTables = async () => {
+  await query(`CREATE SEQUENCE IF NOT EXISTS order_number_seq START 100001`)
+
   await query(`
-    CREATE UNIQUE INDEX IF NOT EXISTS affiliate_earnings_buyer_package_type_uidx
+    CREATE TABLE IF NOT EXISTS orders (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      order_number TEXT UNIQUE NOT NULL,
+      user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      package_name TEXT NOT NULL,
+      package_slug TEXT,
+      listed_price NUMERIC(12,2) NOT NULL DEFAULT 0,
+      discount_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      gross_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      net_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      gst_rate NUMERIC(5,2) NOT NULL DEFAULT 18,
+      gst_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+      promo_code TEXT,
+      coupon_code TEXT,
+      status TEXT NOT NULL DEFAULT 'paid',
+      source TEXT NOT NULL DEFAULT 'signup',
+      payment_status TEXT NOT NULL DEFAULT 'captured',
+      payment_provider TEXT NOT NULL DEFAULT 'none',
+      payment_method TEXT,
+      payment_reference TEXT,
+      payment_order_id TEXT,
+      payment_signature TEXT,
+      paid_at TIMESTAMPTZ,
+      buyer_name TEXT,
+      buyer_email TEXT,
+      buyer_phone TEXT,
+      buyer_country TEXT,
+      buyer_state TEXT,
+      has_gst BOOLEAN NOT NULL DEFAULT FALSE,
+      gst_number TEXT,
+      sponsor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      commission_total NUMERIC(12,2) NOT NULL DEFAULT 0,
+      notes TEXT,
+      created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+      refunded_at TIMESTAMPTZ,
+      refund_amount NUMERIC(12,2),
+      refund_reason TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+
+  await query(`CREATE INDEX IF NOT EXISTS orders_user_idx ON orders (user_id)`)
+  await query(`CREATE INDEX IF NOT EXISTS orders_created_at_idx ON orders (created_at DESC)`)
+  await query(`CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status)`)
+  await query(`CREATE INDEX IF NOT EXISTS orders_payment_status_idx ON orders (payment_status)`)
+  await query(`CREATE INDEX IF NOT EXISTS orders_package_idx ON orders (package_name)`)
+  await query(`CREATE INDEX IF NOT EXISTS orders_sponsor_idx ON orders (sponsor_id)`)
+
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS order_id UUID REFERENCES orders(id) ON DELETE SET NULL`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'credited'`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS reversed_at TIMESTAMPTZ`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS notes TEXT`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'sale'`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL`)
+  await query(`ALTER TABLE affiliate_earnings ADD COLUMN IF NOT EXISTS reverse_reason TEXT`)
+  // Debit adjustments store a negative amount so wallet totals stay a simple SUM.
+  await query(`ALTER TABLE affiliate_earnings DROP CONSTRAINT IF EXISTS affiliate_earnings_amount_check`)
+  await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_order_idx ON affiliate_earnings (order_id)`)
+  await query(`CREATE INDEX IF NOT EXISTS affiliate_earnings_status_idx ON affiliate_earnings (status)`)
+
+  // Only sale-level commissions stay unique; admin adjustments can repeat for the same buyer.
+  await query(`DROP INDEX IF EXISTS affiliate_earnings_buyer_package_type_uidx`)
+  await query(`DROP INDEX IF EXISTS affiliate_earnings_credited_uidx`)
+  await query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS affiliate_earnings_credited_uidx
     ON affiliate_earnings (user_id, buyer_id, package_name, income_type)
-    WHERE buyer_id IS NOT NULL AND package_name IS NOT NULL
+    WHERE buyer_id IS NOT NULL
+      AND package_name IS NOT NULL
+      AND status = 'credited'
+      AND income_type IN ('active', 'passive', 'second')
+  `)
+
+  // Purchases are treated as paid until a real gateway is wired in.
+  await query(`
+    UPDATE orders
+    SET payment_status = 'captured',
+        paid_at = COALESCE(paid_at, created_at),
+        updated_at = NOW()
+    WHERE status = 'paid' AND payment_status = 'pending'
   `)
 }
 
@@ -206,6 +293,7 @@ module.exports = {
   initUsersTable,
   initCatalogTables,
   initAffiliateTables,
+  initOrderTables,
   initTrainingTables,
   createReferralCode,
   ensureReferralCodes,
