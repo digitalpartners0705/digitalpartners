@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { purchasePackage } from '../../services/api'
+
+const GST_RATE = 0.18
 
 const packages = [
   {
@@ -57,7 +59,15 @@ const PACKAGE_RANK = {
   'AI Premium Expert': 3,
 }
 
-const rupees = (value) => `₹${value.toLocaleString('en-IN')}`
+const rupees = (value) =>
+  `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+
+function priceBreakdown(listedPrice) {
+  const total = Number(listedPrice)
+  const net = Math.round(total * (1 - GST_RATE))
+  const gst = total - net
+  return { listed: total, net, gst, total }
+}
 
 const accentStyles = {
   sky: {
@@ -95,31 +105,99 @@ function CheckIcon({ className }) {
   )
 }
 
+function CheckoutModal({ pkg, onClose, onPay, paying }) {
+  const breakdown = useMemo(() => priceBreakdown(pkg.price), [pkg.price])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#171b27] text-slate-100 shadow-2xl shadow-black/40"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="checkout-title"
+      >
+        <div className="border-b border-white/10 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-300">Checkout</p>
+          <h2 id="checkout-title" className="mt-1 text-xl font-extrabold tracking-tight">
+            {pkg.name}
+          </h2>
+          <p className="mt-1 text-sm text-slate-400">{pkg.tagline}</p>
+        </div>
+
+        <div className="px-5 py-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Amount breakdown</p>
+          <dl className="mt-3 space-y-2.5 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-400">Package price (before GST)</dt>
+              <dd className="font-semibold text-white">{rupees(breakdown.net)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-400">GST (18%)</dt>
+              <dd className="font-semibold text-white">{rupees(breakdown.gst)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+              <dt className="font-semibold text-slate-200">Total payable</dt>
+              <dd className="text-lg font-extrabold text-gold-300">{rupees(breakdown.total)}</dd>
+            </div>
+          </dl>
+
+          <p className="mt-4 rounded-xl border border-white/10 bg-[#10131c] px-3.5 py-3 text-xs leading-5 text-slate-400">
+            Payment gateway is not connected yet. Click Pay to unlock this package on your account.
+          </p>
+        </div>
+
+        <div className="flex gap-3 border-t border-white/10 px-5 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={paying}
+            className="flex-1 rounded-full border border-white/15 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/5 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onPay}
+            disabled={paying}
+            className="flex-1 rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-4 py-2.5 text-sm font-bold text-[#1a1203] transition hover:brightness-105 disabled:opacity-60"
+          >
+            {paying ? 'Processing…' : `Pay ${rupees(breakdown.total)}`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Upgrade() {
   const { user, updateUser } = useAuth()
   const currentPackage = user?.knowledgePackage || null
   const currentRank = PACKAGE_RANK[currentPackage] || 0
-  const [buying, setBuying] = useState('')
+  const [checkoutPkg, setCheckoutPkg] = useState(null)
+  const [paying, setPaying] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
-  const handleBuy = async (pkg) => {
+  const handlePay = async () => {
+    if (!checkoutPkg) return
     setError('')
     setMessage('')
-    setBuying(pkg.name)
+    setPaying(true)
     try {
-      const data = await purchasePackage(pkg.name)
+      const data = await purchasePackage(checkoutPkg.name)
       updateUser(data.user)
+      setCheckoutPkg(null)
       const levelsPaid = data.purchase?.levelsPaid?.length || 0
       setMessage(
         levelsPaid > 0
-          ? `${pkg.name} unlocked. Commission was credited to ${levelsPaid} level${levelsPaid === 1 ? '' : 's'} of your referral chain.`
-          : `${pkg.name} unlocked.`,
+          ? `${checkoutPkg.name} unlocked. Commission was credited to ${levelsPaid} level${levelsPaid === 1 ? '' : 's'} of your referral chain.`
+          : `${checkoutPkg.name} unlocked.`,
       )
     } catch (err) {
       setError(err.response?.data?.message || 'Could not complete the purchase')
     } finally {
-      setBuying('')
+      setPaying(false)
     }
   }
 
@@ -141,10 +219,10 @@ function Upgrade() {
       </section>
 
       {message ? (
-        <p className="rounded-xl border border-teal-400/30 bg-teal-400/10 px-4 py-3 text-sm text-teal-100">{message}</p>
+        <p className="rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{message}</p>
       ) : null}
       {error ? (
-        <p className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-100">{error}</p>
+        <p className="rounded-xl border border-red-300/50 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
       ) : null}
 
       <section className="grid gap-6 lg:grid-cols-3">
@@ -152,7 +230,7 @@ function Upgrade() {
           const styles = accentStyles[pkg.accent]
           const isCurrent = currentPackage === pkg.name
           const isLower = (PACKAGE_RANK[pkg.name] || 0) <= currentRank
-          const disabled = isCurrent || isLower || Boolean(buying)
+          const disabled = isCurrent || isLower || paying
           const highlighted = pkg.accent === 'gold'
 
           return (
@@ -185,21 +263,30 @@ function Upgrade() {
               <button
                 type="button"
                 disabled={disabled}
-                onClick={() => handleBuy(pkg)}
+                onClick={() => {
+                  setError('')
+                  setMessage('')
+                  setCheckoutPkg(pkg)
+                }}
                 className={`mt-7 w-full rounded-xl py-3 text-sm font-bold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${styles.button}`}
               >
-                {buying === pkg.name
-                  ? 'Processing…'
-                  : isCurrent
-                    ? 'Current plan'
-                    : isLower
-                      ? 'Included in your plan'
-                      : 'Buy Now'}
+                {isCurrent ? 'Current plan' : isLower ? 'Included in your plan' : 'Buy Now'}
               </button>
             </article>
           )
         })}
       </section>
+
+      {checkoutPkg ? (
+        <CheckoutModal
+          pkg={checkoutPkg}
+          paying={paying}
+          onClose={() => {
+            if (!paying) setCheckoutPkg(null)
+          }}
+          onPay={handlePay}
+        />
+      ) : null}
     </div>
   )
 }

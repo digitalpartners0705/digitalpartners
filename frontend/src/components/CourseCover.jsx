@@ -48,7 +48,7 @@ function LockBadge({ compact = false }) {
   )
 }
 
-function CourseCover({ course, compact = false, locked = false, short = false }) {
+function CourseCover({ course, compact = false, locked = false, short = false, fill = false }) {
   const [imageFailed, setImageFailed] = useState(false)
   const hasImage = Boolean(course.thumbnailUrl) && !imageFailed
   const gradient = accentClass(course.accent)
@@ -71,7 +71,7 @@ function CourseCover({ course, compact = false, locked = false, short = false })
     )
   }
 
-  const heightClass = short ? 'h-28' : 'h-44'
+  const heightClass = fill ? 'h-full min-h-44' : short ? 'h-28' : 'h-44'
 
   return (
     <div className={`relative overflow-hidden bg-slate-100 ${heightClass}`}>
@@ -79,7 +79,7 @@ function CourseCover({ course, compact = false, locked = false, short = false })
         <img
           src={course.thumbnailUrl}
           alt=""
-          className="h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
           onError={() => setImageFailed(true)}
         />
       ) : (

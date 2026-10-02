@@ -77,8 +77,18 @@ export const uploadAvatar = async (file) => {
   return response.data.user
 }
 
-export const changePassword = async (payload) => {
-  const response = await api.post('/api/auth/password', payload)
+export const updateProfile = async (payload) => {
+  const response = await api.patch('/api/auth/profile', payload)
+  localStorage.setItem(USER_KEY, JSON.stringify(response.data.user))
+  return response.data.user
+}
+
+export const changePassword = async ({ currentPassword, newPassword, confirmPassword }) => {
+  const response = await api.post('/api/auth/password', {
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  })
   return response.data
 }
 

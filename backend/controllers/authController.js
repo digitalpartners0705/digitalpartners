@@ -8,26 +8,53 @@ const storage = require('../services/storage')
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const USER_FIELDS = `id, full_name, email, phone, country, state, knowledge_package,
-  promo_code, coupon_code, has_gst, role, avatar_key, referral_code, referred_by, created_at`
+const USER_FIELDS = `id, full_name, email, phone, country, state, pin_code, manager_name, manager_phone,
+  knowledge_package, promo_code, coupon_code, has_gst, role, avatar_key, referral_code, referred_by, created_at`
 
-const publicUser = async (row) => ({
-  id: row.id,
-  fullName: row.full_name,
-  email: row.email,
-  phone: row.phone,
-  country: row.country,
-  state: row.state,
-  knowledgePackage: row.knowledge_package,
-  promoCode: row.promo_code,
-  couponCode: row.coupon_code,
-  hasGst: row.has_gst,
-  role: row.role || 'student',
-  referralCode: row.referral_code || null,
-  referredBy: row.referred_by || null,
-  avatarUrl: await storage.signedGet(row.avatar_key),
-  createdAt: row.created_at,
-})
+const publicUser = async (row) => {
+  let referredByLabel = null
+  let referrerName = null
+  let referrerPhone = null
+  if (row.referred_by) {
+    const referrer = await query(
+      `SELECT full_name, referral_code, phone FROM users WHERE id = $1 LIMIT 1`,
+      [row.referred_by],
+    )
+    const ref = referrer.rows[0]
+    if (ref) {
+      referredByLabel = ref.full_name || ref.referral_code || null
+      referrerName = ref.full_name || null
+      referrerPhone = ref.phone || null
+    }
+  }
+  if (!referredByLabel && row.promo_code) {
+    referredByLabel = row.promo_code
+  }
+
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    phone: row.phone,
+    country: row.country,
+    state: row.state,
+    pinCode: row.pin_code || '',
+    managerName: row.manager_name || '',
+    managerPhone: row.manager_phone || '',
+    referrerName: referrerName || '',
+    referrerPhone: referrerPhone || '',
+    knowledgePackage: row.knowledge_package,
+    promoCode: row.promo_code,
+    couponCode: row.coupon_code,
+    hasGst: row.has_gst,
+    role: row.role || 'student',
+    referralCode: row.referral_code || null,
+    referredBy: row.referred_by || null,
+    referredByLabel,
+    avatarUrl: await storage.signedGet(row.avatar_key),
+    createdAt: row.created_at,
+  }
+}
 
 const signToken = (user) =>
   jwt.sign(
@@ -286,11 +313,22 @@ const changePassword = async (req, res) => {
   try {
     const currentPassword = String(req.body.currentPassword || '')
     const nextPassword = String(req.body.newPassword || '')
+    const confirmPassword =
+      req.body.confirmPassword === undefined || req.body.confirmPassword === null
+        ? null
+        : String(req.body.confirmPassword)
+
     if (!currentPassword || !nextPassword) {
       return res.status(400).json({ message: 'Enter your current password and a new password' })
     }
+    if (confirmPassword !== null && nextPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'New password and confirm password do not match' })
+    }
     if (nextPassword.length < 6) {
       return res.status(400).json({ message: 'New password must be at least 6 characters' })
+    }
+    if (nextPassword === currentPassword) {
+      return res.status(400).json({ message: 'New password must be different from your current password' })
     }
 
     const result = await query('SELECT password_hash FROM users WHERE id = $1', [req.user.id])
@@ -309,4 +347,44 @@ const changePassword = async (req, res) => {
   }
 }
 
-module.exports = { signup, login, me, purchasePackage, updateAvatar, changePassword }
+const updateProfile = async (req, res) => {
+  try {
+    const fullName = String(req.body.fullName || '').trim()
+    const phone = String(req.body.phone || '').trim()
+    const state = String(req.body.state || '').trim()
+    const pinCode = String(req.body.pinCode || '').trim()
+    const managerName = String(req.body.managerName || '').trim()
+    const managerPhone = String(req.body.managerPhone || '').trim()
+
+    if (!fullName) return res.status(400).json({ message: 'User name is required' })
+    if (!phone) return res.status(400).json({ message: 'Contact number is required' })
+    if (!state) return res.status(400).json({ message: 'State is required' })
+    if (pinCode && !/^\d{4,10}$/.test(pinCode)) {
+      return res.status(400).json({ message: 'Enter a valid pin code' })
+    }
+    if (managerPhone && !/^\d{7,15}$/.test(managerPhone.replace(/\s+/g, ''))) {
+      return res.status(400).json({ message: "Enter a valid manager's contact number" })
+    }
+
+    const updated = await query(
+      `UPDATE users
+       SET full_name = $1,
+           phone = $2,
+           state = $3,
+           pin_code = $4,
+           manager_name = $5,
+           manager_phone = $6
+       WHERE id = $7
+       RETURNING ${USER_FIELDS}`,
+      [fullName, phone, state, pinCode || null, managerName || null, managerPhone || null, req.user.id],
+    )
+
+    if (!updated.rows[0]) return res.status(404).json({ message: 'User not found' })
+    return res.json({ user: await publicUser(updated.rows[0]) })
+  } catch (error) {
+    console.error('Profile update error:', error.message)
+    return res.status(500).json({ message: 'Could not update your profile' })
+  }
+}
+
+module.exports = { signup, login, me, purchasePackage, updateAvatar, updateProfile, changePassword }

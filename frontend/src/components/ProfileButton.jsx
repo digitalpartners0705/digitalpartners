@@ -11,7 +11,7 @@ function initials(name = '') {
     .join('')
 }
 
-function ProfileButton({ ringClass = 'ring-brand-100', editable = true }) {
+function ProfileButton({ ringClass = 'ring-gold-400/40', editable = true }) {
   const { user, updateUser } = useAuth()
   const [open, setOpen] = useState(false)
   const avatar = user?.avatarUrl ? (
@@ -23,7 +23,7 @@ function ProfileButton({ ringClass = 'ring-brand-100', editable = true }) {
   if (!editable) {
     return (
       <span
-        className={`flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white ring-2 ${ringClass}`}
+        className={`flex h-9 w-9 items-center justify-center rounded-full bg-ink-950 text-xs font-bold text-white ring-2 ${ringClass}`}
         aria-hidden="true"
       >
         {avatar}
@@ -36,7 +36,7 @@ function ProfileButton({ ringClass = 'ring-brand-100', editable = true }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white ring-2 ${ringClass}`}
+        className={`relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-ink-950 text-xs font-bold text-white ring-2 ${ringClass}`}
         aria-label="Open profile"
       >
         {avatar}
