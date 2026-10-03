@@ -14,14 +14,35 @@ const pool = new Pool({
   min: 0,
   keepAlive: true,
   idleTimeoutMillis: 10000,
-  connectionTimeoutMillis: 15000,
+  connectionTimeoutMillis: 30000,
+  statement_timeout: 60000,
 })
 
 pool.on('error', (error) => {
   console.error('Database connection dropped:', error.message)
 })
 
-const RETRY_CODES = new Set(['EAI_AGAIN', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET'])
+const RETRY_CODES = new Set([
+  'EAI_AGAIN',
+  'ENOTFOUND',
+  'ETIMEDOUT',
+  'ECONNRESET',
+  'ECONNREFUSED',
+  '57P01', // admin_shutdown
+  '57P03', // cannot_connect_now
+])
+
+const isRetryableDbError = (error) => {
+  if (!error) return false
+  if (RETRY_CODES.has(error.code)) return true
+  const message = String(error.message || '').toLowerCase()
+  return (
+    message.includes('timeout') ||
+    message.includes('terminated') ||
+    message.includes('connection') ||
+    message.includes('econnreset')
+  )
+}
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -33,11 +54,27 @@ const query = async (text, params) => {
       return await pool.query(text, params)
     } catch (error) {
       lastError = error
-      if (!RETRY_CODES.has(error.code) || attempt === 3) throw error
-      await sleep(400 * attempt)
+      if (!isRetryableDbError(error) || attempt === 3) throw error
+      await sleep(500 * attempt)
     }
   }
 
+  throw lastError
+}
+
+const waitForDatabase = async (attempts = 5) => {
+  let lastError
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await query('SELECT 1')
+      if (attempt > 1) console.log(`Database connected on attempt ${attempt}`)
+      return
+    } catch (error) {
+      lastError = error
+      console.warn(`Database not ready (attempt ${attempt}/${attempts}): ${error.message}`)
+      if (attempt < attempts) await sleep(1500 * attempt)
+    }
+  }
   throw lastError
 }
 
@@ -290,6 +327,7 @@ const initTrainingTables = async () => {
 module.exports = {
   pool,
   query,
+  waitForDatabase,
   initUsersTable,
   initCatalogTables,
   initAffiliateTables,

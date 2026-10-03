@@ -3,6 +3,7 @@ const cors = require('cors')
 require('dotenv').config()
 
 const {
+  waitForDatabase,
   initUsersTable,
   initCatalogTables,
   initAffiliateTables,
@@ -30,6 +31,7 @@ app.use('/api/affiliate', affiliateRoutes)
 
 const start = async () => {
   try {
+    await waitForDatabase()
     await initUsersTable()
     await initCatalogTables()
     await initAffiliateTables()
@@ -48,6 +50,7 @@ const start = async () => {
     })
   } catch (error) {
     console.error('Database connection failed:', error.message)
+    console.error('Check DATABASE_URL in backend/.env and that your Supabase project is not paused.')
     process.exit(1)
   }
 }
