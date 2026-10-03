@@ -118,6 +118,21 @@ export const getAffiliateRefInfo = async () => {
   return response.data
 }
 
+export const getAffiliateKyc = async () => {
+  const response = await api.get('/api/affiliate/kyc')
+  return response.data
+}
+
+export const submitAffiliateKyc = async (payload) => {
+  const response = await api.post('/api/affiliate/kyc', payload)
+  return response.data
+}
+
+export const updateAffiliateKycUpi = async (upi) => {
+  const response = await api.patch('/api/affiliate/kyc/upi', { upi })
+  return response.data
+}
+
 export const getAffiliateCommissionPlan = async () => {
   const response = await api.get('/api/affiliate/links')
   return response.data

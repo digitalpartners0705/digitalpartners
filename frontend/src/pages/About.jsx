@@ -33,7 +33,7 @@ function About() {
           <div className="relative mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-300">About us</p>
             <h1 className="mt-3 font-[Plus_Jakarta_Sans,Inter,sans-serif] text-3xl font-extrabold tracking-tight sm:text-5xl">
-              Building careers with <span className="gold-text">Digital Aarambh.</span>
+              Building careers with <span className="gold-text">Digital Arambh.</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
               We help learners and creators master modern digital skills through structured packages, practical
@@ -46,7 +46,7 @@ function About() {
           <div className="max-w-3xl">
             <h2 className="text-2xl font-bold tracking-tight text-[#10203c] sm:text-3xl">Who we are</h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              Digital Aarambh is an online learning platform focused on career-ready digital skills. From social media
+              Digital Arambh is an online learning platform focused on career-ready digital skills. From social media
               and paid ads to AI-powered workflows, our programs are designed to take you from fundamentals to
               confident execution.
             </p>

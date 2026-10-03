@@ -93,11 +93,11 @@ function DashboardLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Link to="/dashboard" className="flex items-center gap-2.5 border-b border-white/10 px-4 py-4" aria-label="Digital Aarambh home">
+        <Link to="/dashboard" className="flex items-center gap-2.5 border-b border-white/10 px-4 py-4" aria-label="Digital Arambh home">
           <img src="/assets/logo-removebg.png" alt="" className="h-12 w-auto shrink-0 object-contain" />
           <span className="brand-wordmark brand-wordmark-on-dark">
             <span className="brand-wordmark-digital">Digital</span>
-            <span className="brand-wordmark-aarambh">Aarambh</span>
+            <span className="brand-wordmark-arambh">Arambh</span>
           </span>
         </Link>
 

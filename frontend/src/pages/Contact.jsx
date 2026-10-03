@@ -13,8 +13,8 @@ const fieldClass =
 const contactDetails = [
   {
     label: 'Email',
-    value: 'support@digitalaarambh.com',
-    href: 'mailto:support@digitalaarambh.com',
+    value: 'support@digitalarambh.com',
+    href: 'mailto:support@digitalarambh.com',
     icon: 'mail',
   },
   {
@@ -176,7 +176,7 @@ function Contact() {
               <div className="rounded-2xl bg-ink-950 p-6 text-white shadow-lg ring-1 ring-white/10 sm:p-7">
                 <h2 className="text-xl font-bold">Contact details</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Reach Digital Aarambh through any of the channels below. We usually reply within one business day.
+                  Reach Digital Arambh through any of the channels below. We usually reply within one business day.
                 </p>
 
                 <ul className="mt-6 space-y-4">
@@ -217,7 +217,7 @@ function Contact() {
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">Visit</h3>
-                <p className="mt-3 text-base font-semibold text-slate-900">Digital Aarambh HQ</p>
+                <p className="mt-3 text-base font-semibold text-slate-900">Digital Arambh HQ</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">
                   Learning & Growth Hub
                   <br />

@@ -39,7 +39,13 @@ const creditCommission = async ({ sponsorId, buyerId, packageName, country, leve
   }
 }
 
-const creditUplineCommissions = async ({ buyerId, packageName, country, orderId = null }) => {
+const creditUplineCommissions = async ({
+  buyerId,
+  packageName,
+  country,
+  orderId = null,
+  sponsorId = null,
+}) => {
   if (!resolvePackage(packageName)) return []
 
   const buyer = await query(
@@ -53,7 +59,8 @@ const creditUplineCommissions = async ({ buyerId, packageName, country, orderId 
   const visited = new Set([buyerRow.id])
   const credited = []
 
-  let uplineId = buyerRow.referred_by
+  // Admin can assign a sponsor for this sale when the buyer has no referrer.
+  let uplineId = sponsorId || buyerRow.referred_by
 
   for (let level = 1; level <= MAX_LEVEL && uplineId; level += 1) {
     if (visited.has(uplineId)) break

@@ -209,6 +209,26 @@ const initAffiliateTables = async () => {
   await query(`DROP INDEX IF EXISTS affiliate_earnings_active_buyer_uidx`)
   await query(`DROP INDEX IF EXISTS affiliate_earnings_active_buyer_package_uidx`)
   await query(`DROP INDEX IF EXISTS affiliate_earnings_buyer_package_type_uidx`)
+
+  // One KYC row per user. After insert, affiliates cannot update — support must change it.
+  await query(`
+    CREATE TABLE IF NOT EXISTS user_kyc (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      account_holder_name TEXT NOT NULL,
+      bank_account_number TEXT NOT NULL,
+      ifsc_code TEXT NOT NULL,
+      bank_name TEXT NOT NULL,
+      branch TEXT NOT NULL,
+      upi TEXT,
+      aadhaar_number TEXT NOT NULL,
+      pan_number TEXT NOT NULL,
+      submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+  await query(`CREATE INDEX IF NOT EXISTS user_kyc_user_idx ON user_kyc (user_id)`)
 }
 
 const initOrderTables = async () => {

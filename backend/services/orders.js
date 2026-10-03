@@ -113,6 +113,7 @@ const createOrder = async ({
   createdBy = null,
   createdAt = null,
   buyer = null,
+  sponsorId = null,
 }) => {
   const pkg = resolvePackage(packageName)
   if (!pkg) return null
@@ -128,6 +129,7 @@ const createOrder = async ({
       : paymentStatus === 'captured' || status === 'paid'
         ? new Date()
         : null
+  const resolvedSponsorId = sponsorId || buyerRow.referred_by || null
 
   const result = await query(
     `INSERT INTO orders (
@@ -175,7 +177,7 @@ const createOrder = async ({
       buyerRow.state || null,
       Boolean(buyerRow.has_gst),
       gstNumber,
-      buyerRow.referred_by || null,
+      resolvedSponsorId,
       notes,
       createdBy,
       createdAt,

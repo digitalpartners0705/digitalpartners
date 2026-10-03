@@ -51,7 +51,7 @@ function LoginForm({ onSwitchToSignup, onSuccess }) {
       <div className="pr-8">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#c48a09]">Welcome back</p>
         <h2 id="auth-modal-title" className="mt-1 text-2xl font-bold tracking-tight text-[#10203c]">
-          Log in to Digital Aarambh
+          Log in to Digital Arambh
         </h2>
         <p className="mt-1.5 text-sm leading-6 text-slate-500">Continue learning from where you left off.</p>
       </div>

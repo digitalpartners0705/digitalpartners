@@ -325,4 +325,207 @@ const myRefInfo = async (req, res) => {
   }
 }
 
-module.exports = { leaderboard, linkKit, myEarnings, myLeads, myRefInfo }
+const SUPPORT_EMAIL = 'support@digitalarambh.com'
+
+const trimmed = (value) => String(value ?? '').trim()
+
+const mapKyc = (row) => {
+  if (!row) return null
+  const upi = trimmed(row.upi)
+  return {
+    accountHolderName: row.account_holder_name,
+    bankAccountNumber: row.bank_account_number,
+    ifscCode: row.ifsc_code,
+    bankName: row.bank_name,
+    branch: row.branch,
+    upi,
+    aadhaarNumber: row.aadhaar_number,
+    panNumber: row.pan_number,
+    submittedAt: row.submitted_at,
+    // UPI stays open until the affiliate fills it once.
+    upiLocked: Boolean(upi),
+    canAddUpi: !upi,
+  }
+}
+
+const getKyc = async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT account_holder_name, bank_account_number, ifsc_code, bank_name, branch,
+              upi, aadhaar_number, pan_number, submitted_at
+       FROM user_kyc
+       WHERE user_id = $1
+       LIMIT 1`,
+      [req.user.id],
+    )
+    const kyc = mapKyc(result.rows[0])
+    return res.json({
+      submitted: Boolean(kyc),
+      locked: Boolean(kyc),
+      canAddUpi: Boolean(kyc?.canAddUpi),
+      supportEmail: SUPPORT_EMAIL,
+      kyc,
+    })
+  } catch (error) {
+    console.error('Get KYC error:', error.message)
+    return res.status(500).json({ message: 'Could not load KYC details' })
+  }
+}
+
+const submitKyc = async (req, res) => {
+  try {
+    const existing = await query(`SELECT id FROM user_kyc WHERE user_id = $1 LIMIT 1`, [req.user.id])
+    if (existing.rows[0]) {
+      return res.status(409).json({
+        message: `KYC is already submitted. Contact ${SUPPORT_EMAIL} to change any detail.`,
+        supportEmail: SUPPORT_EMAIL,
+      })
+    }
+
+    const accountHolderName = trimmed(req.body.accountHolderName)
+    const bankAccountNumber = trimmed(req.body.bankAccountNumber).replace(/\s+/g, '')
+    const ifscCode = trimmed(req.body.ifscCode).toUpperCase()
+    const bankName = trimmed(req.body.bankName)
+    const branch = trimmed(req.body.branch)
+    const upi = trimmed(req.body.upi)
+    const aadhaarNumber = trimmed(req.body.aadhaarNumber).replace(/\s+/g, '')
+    const panNumber = trimmed(req.body.panNumber).toUpperCase()
+
+    if (!accountHolderName || accountHolderName.length < 2) {
+      return res.status(400).json({ message: 'Enter the account holder name' })
+    }
+    if (!/^\d{9,18}$/.test(bankAccountNumber)) {
+      return res.status(400).json({ message: 'Enter a valid bank account number (9–18 digits)' })
+    }
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) {
+      return res.status(400).json({ message: 'Enter a valid IFSC code' })
+    }
+    if (!bankName) {
+      return res.status(400).json({ message: 'Enter the bank name' })
+    }
+    if (!branch) {
+      return res.status(400).json({ message: 'Enter the branch name' })
+    }
+    if (upi && !/^[\w.\-]{2,}@[\w.\-]{2,}$/i.test(upi)) {
+      return res.status(400).json({ message: 'Enter a valid UPI ID or leave it blank' })
+    }
+    if (!/^\d{12}$/.test(aadhaarNumber)) {
+      return res.status(400).json({ message: 'Enter a valid 12-digit Aadhaar number' })
+    }
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNumber)) {
+      return res.status(400).json({ message: 'Enter a valid PAN number' })
+    }
+
+    const result = await query(
+      `INSERT INTO user_kyc (
+         user_id, account_holder_name, bank_account_number, ifsc_code, bank_name, branch,
+         upi, aadhaar_number, pan_number
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING account_holder_name, bank_account_number, ifsc_code, bank_name, branch,
+                 upi, aadhaar_number, pan_number, submitted_at`,
+      [
+        req.user.id,
+        accountHolderName,
+        bankAccountNumber,
+        ifscCode,
+        bankName,
+        branch,
+        upi || null,
+        aadhaarNumber,
+        panNumber,
+      ],
+    )
+
+    const kyc = mapKyc(result.rows[0])
+    return res.status(201).json({
+      submitted: true,
+      locked: true,
+      canAddUpi: Boolean(kyc?.canAddUpi),
+      supportEmail: SUPPORT_EMAIL,
+      kyc,
+      message: 'KYC saved successfully.',
+    })
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({
+        message: `KYC is already submitted. Contact ${SUPPORT_EMAIL} to change any detail.`,
+        supportEmail: SUPPORT_EMAIL,
+      })
+    }
+    console.error('Submit KYC error:', error.message)
+    return res.status(500).json({ message: 'Could not save KYC details' })
+  }
+}
+
+const updateKycUpi = async (req, res) => {
+  try {
+    const existing = await query(
+      `SELECT id, upi, account_holder_name, bank_account_number, ifsc_code, bank_name, branch,
+              aadhaar_number, pan_number, submitted_at
+       FROM user_kyc
+       WHERE user_id = $1
+       LIMIT 1`,
+      [req.user.id],
+    )
+    const row = existing.rows[0]
+    if (!row) {
+      return res.status(404).json({ message: 'Submit your KYC details first' })
+    }
+    if (trimmed(row.upi)) {
+      return res.status(409).json({
+        message: `UPI is already saved. Contact ${SUPPORT_EMAIL} to change it.`,
+        supportEmail: SUPPORT_EMAIL,
+      })
+    }
+
+    const upi = trimmed(req.body.upi)
+    if (!upi) {
+      return res.status(400).json({ message: 'Enter your UPI ID' })
+    }
+    if (!/^[\w.\-]{2,}@[\w.\-]{2,}$/i.test(upi)) {
+      return res.status(400).json({ message: 'Enter a valid UPI ID' })
+    }
+
+    const result = await query(
+      `UPDATE user_kyc
+       SET upi = $1, updated_at = NOW()
+       WHERE user_id = $2
+         AND (upi IS NULL OR TRIM(upi) = '')
+       RETURNING account_holder_name, bank_account_number, ifsc_code, bank_name, branch,
+                 upi, aadhaar_number, pan_number, submitted_at`,
+      [upi, req.user.id],
+    )
+
+    if (!result.rows[0]) {
+      return res.status(409).json({
+        message: `UPI is already saved. Contact ${SUPPORT_EMAIL} to change it.`,
+        supportEmail: SUPPORT_EMAIL,
+      })
+    }
+
+    const kyc = mapKyc(result.rows[0])
+    return res.json({
+      submitted: true,
+      locked: true,
+      canAddUpi: false,
+      supportEmail: SUPPORT_EMAIL,
+      kyc,
+      message: 'UPI saved successfully.',
+    })
+  } catch (error) {
+    console.error('Update KYC UPI error:', error.message)
+    return res.status(500).json({ message: 'Could not save UPI' })
+  }
+}
+
+module.exports = {
+  leaderboard,
+  linkKit,
+  myEarnings,
+  myLeads,
+  myRefInfo,
+  getKyc,
+  submitKyc,
+  updateKycUpi,
+}

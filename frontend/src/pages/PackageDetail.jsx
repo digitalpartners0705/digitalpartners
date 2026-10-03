@@ -77,7 +77,7 @@ function PackageBox({ label, subtitle, accent, featured }) {
         />
         <div className="relative flex h-full flex-col justify-between p-4 pl-5">
           <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45">Digital Aarambh</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/45">Digital Arambh</p>
             <p className="mt-1 line-clamp-2 text-[10px] font-medium leading-4 text-white/35">{subtitle}</p>
           </div>
           <p

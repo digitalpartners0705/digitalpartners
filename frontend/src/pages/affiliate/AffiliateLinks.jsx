@@ -104,7 +104,7 @@ function PackageMark({ short, accent }) {
 }
 
 function buildOrigin() {
-  if (typeof window === 'undefined') return 'https://digitalaarambh.com'
+  if (typeof window === 'undefined') return 'https://digitalarambh.com'
   return window.location.origin
 }
 

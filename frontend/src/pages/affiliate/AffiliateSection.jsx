@@ -1,10 +1,6 @@
 import { useLocation } from 'react-router-dom'
 
 const PAGES = {
-  '/affiliate/kyc': {
-    title: 'KYC',
-    text: 'Complete verification here when payouts are ready.',
-  },
   '/affiliate/qualification': {
     title: 'Qualification',
     text: 'Rank targets and qualification status will show here.',

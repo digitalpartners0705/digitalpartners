@@ -57,7 +57,7 @@ function RecentUpdates() {
           >
             Our community
           </p>
-          <p className="relative text-xs font-semibold uppercase tracking-[0.22em] text-gold-300">Digital Aarambh</p>
+          <p className="relative text-xs font-semibold uppercase tracking-[0.22em] text-gold-300">Digital Arambh</p>
           <h1 className="relative mt-3 text-3xl font-black uppercase tracking-[0.12em] sm:text-5xl">
             Our <span className="gold-text">community</span>
           </h1>

@@ -117,12 +117,12 @@ function AdminLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Link to="/orders" className="flex items-center gap-3 border-b border-slate-100 px-5 py-5">
+        <Link to="/orders" className="flex items-center gap-3 border-b border-slate-100 px-5 py-5" aria-label="Digital Arambh admin home">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">
-            DE
+            DA
           </span>
           <span>
-            <span className="block text-sm font-extrabold tracking-tight text-slate-900">Digital Expert</span>
+            <span className="block text-sm font-extrabold tracking-tight text-slate-900">Digital Arambh</span>
             <span className="mt-0.5 inline-flex rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
               Admin panel
             </span>

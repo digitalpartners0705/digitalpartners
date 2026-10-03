@@ -18,8 +18,8 @@ const packageLinks = KNOWLEDGE_PACKAGES.map((name) => ({
 
 function Logo() {
   return (
-    <Link to="/" className="shrink-0" aria-label="Digital Aarambh home">
-      <img src="/assets/logo.png" alt="Digital Aarambh" className="h-16 w-auto sm:h-20" />
+    <Link to="/" className="shrink-0" aria-label="Digital Arambh home">
+      <img src="/assets/logo.png" alt="Digital Arambh" className="h-16 w-auto sm:h-20" />
     </Link>
   )
 }

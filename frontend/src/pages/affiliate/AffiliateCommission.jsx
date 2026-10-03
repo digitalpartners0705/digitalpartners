@@ -79,7 +79,7 @@ function AffiliateCommission() {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-200/70">Marketing plan</p>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">Commission Structure</h1>
         <p className="mt-1.5 max-w-2xl text-sm text-slate-400">
-          Every purchase pays a fixed % of net amount (after 18% GST) to up to three levels in the referral chain.
+          Every purchase pays a fixed amount (after 18% GST) to up to three levels in the referral chain.
           Nothing is paid beyond level 3.
         </p>
       </div>
@@ -131,10 +131,7 @@ function AffiliateCommission() {
                           key={level.incomeType}
                           className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#10131c]/70 px-3.5 py-3"
                         >
-                          <div>
-                            <dt className={`text-sm font-semibold ${meta.tone}`}>{meta.label}</dt>
-                            <dd className="mt-0.5 text-[11px] text-slate-500">{level.percent}%</dd>
-                          </div>
+                          <dt className={`text-sm font-semibold ${meta.tone}`}>{meta.label}</dt>
                           <dd className="text-base font-bold text-white">{rupees(level.amount)}</dd>
                         </div>
                       )
@@ -148,7 +145,7 @@ function AffiliateCommission() {
       )}
 
       <p className="mt-6 max-w-2xl text-xs leading-5 text-slate-500">
-        Percents come from the Digital Aarambh marketing plan and apply on every package purchase in your chain.
+        Amounts come from the Digital Arambh marketing plan and apply on every package purchase in your chain.
         An upline only earns if they own a package. Empty levels are retained by the company.
       </p>
     </div>

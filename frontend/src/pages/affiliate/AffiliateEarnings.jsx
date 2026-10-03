@@ -264,7 +264,7 @@ function AffiliateEarnings() {
               <p className="mt-3 text-sm leading-6 text-slate-300">
                 You are on{' '}
                 <span className="font-semibold text-white">{user?.knowledgePackage || 'a starter plan'}</span>.
-                Commission is credited on every purchase in your chain at the fixed plan %.
+                Commission is credited on every purchase in your chain at the fixed plan amounts.
               </p>
               <p className="mt-5 text-3xl font-extrabold text-teal-300">{loading ? '…' : rupees(totals.allTime)}</p>
               <p className="mt-1 text-xs text-slate-500">All-time income across active, passive, and second level.</p>
@@ -393,20 +393,19 @@ function AffiliateEarnings() {
                 <th className="px-3 py-3 font-medium">Buyer</th>
                 <th className="px-3 py-3 font-medium">Package</th>
                 <th className="px-3 py-3 font-medium">Level</th>
-                <th className="px-3 py-3 font-medium">%</th>
                 <th className="px-4 py-3 font-medium sm:px-5">Amount</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-5 py-10 text-center text-slate-400">
+                  <td colSpan="5" className="px-5 py-10 text-center text-slate-400">
                     Loading earnings…
                   </td>
                 </tr>
               ) : recent.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-5 py-10 text-center text-slate-400">
+                  <td colSpan="5" className="px-5 py-10 text-center text-slate-400">
                     No commissions in this range. Share a referral link to start earning.
                   </td>
                 </tr>
@@ -422,9 +421,6 @@ function AffiliateEarnings() {
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${meta.badge}`}>
                           {meta.label}
                         </span>
-                      </td>
-                      <td className="px-3 py-4 text-slate-300">
-                        {row.commissionPercent != null ? `${row.commissionPercent}%` : '—'}
                       </td>
                       <td className="px-4 py-4 font-semibold text-teal-200 sm:px-5">{rupees(row.amount)}</td>
                     </tr>

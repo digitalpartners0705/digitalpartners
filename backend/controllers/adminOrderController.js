@@ -318,6 +318,19 @@ const findBuyer = async (identifier) => {
   return result.rows[0] ? loadBuyer(result.rows[0].id) : null
 }
 
+const findSponsorByReferralCode = async (rawCode) => {
+  const referralCode = trimmed(rawCode)
+  if (!referralCode) return null
+  const result = await query(
+    `SELECT id, full_name, email, referral_code, knowledge_package
+     FROM users
+     WHERE referral_code = $1
+     LIMIT 1`,
+    [referralCode],
+  )
+  return result.rows[0] || null
+}
+
 const createManualOrder = async (req, res) => {
   try {
     const buyer = await findBuyer(req.body.buyer || req.body.email || req.body.userId)
@@ -341,6 +354,29 @@ const createManualOrder = async (req, res) => {
     const paymentMethod = trimmed(req.body.paymentMethod).toLowerCase() || null
     if (paymentMethod && !PAYMENT_METHODS.includes(paymentMethod)) {
       return res.status(400).json({ message: 'Choose a valid payment method' })
+    }
+
+    const incomingReferral = trimmed(req.body.referralCode || req.body.sponsorCode)
+    let assignedSponsorId = null
+    if (incomingReferral && !buyer.referred_by) {
+      const sponsor = await findSponsorByReferralCode(incomingReferral)
+      if (!sponsor) {
+        return res.status(400).json({ message: 'Referral code is invalid' })
+      }
+      if (sponsor.id === buyer.id) {
+        return res.status(400).json({ message: 'Buyer cannot be their own referrer' })
+      }
+
+      // Attach so future upgrades also pay this affiliate. Existing referrers stay.
+      await query(
+        `UPDATE users
+         SET referred_by = $1,
+             referral_source = COALESCE(referral_source, 'joining')
+         WHERE id = $2 AND referred_by IS NULL`,
+        [sponsor.id, buyer.id],
+      )
+      buyer.referred_by = sponsor.id
+      assignedSponsorId = sponsor.id
     }
 
     const paymentReference = trimmed(req.body.paymentReference) || null
@@ -367,6 +403,7 @@ const createManualOrder = async (req, res) => {
       gstNumber: trimmed(req.body.gstNumber) || null,
       notes: trimmed(req.body.notes) || null,
       createdBy: req.user.id,
+      sponsorId: assignedSponsorId || buyer.referred_by || null,
     })
 
     if (!order) return res.status(500).json({ message: 'Could not record the order' })
@@ -382,6 +419,7 @@ const createManualOrder = async (req, res) => {
         packageName: pkg.name,
         country: buyer.country,
         orderId: order.id,
+        sponsorId: assignedSponsorId || null,
       })
       order.commission_total = await syncCommissionTotal(order.id)
     }

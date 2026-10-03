@@ -27,6 +27,7 @@ function Toggle({ checked, onChange, label, hint }) {
 
 function ManualOrderModal({ packages, paymentMethods, onClose, onCreated }) {
   const [buyer, setBuyer] = useState('')
+  const [referralCode, setReferralCode] = useState('')
   const [packageName, setPackageName] = useState(packages[0]?.name || '')
   const [discount, setDiscount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('upi')
@@ -63,6 +64,7 @@ function ManualOrderModal({ packages, paymentMethods, onClose, onCreated }) {
     try {
       const response = await api.post('/api/admin/orders', {
         buyer: buyer.trim(),
+        referralCode: referralCode.trim() || null,
         packageName,
         discountAmount: Number(discount) || 0,
         paymentMethod,
@@ -115,6 +117,19 @@ function ManualOrderModal({ packages, paymentMethods, onClose, onCreated }) {
             />
             <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-500">
               The buyer must already have an account.
+            </span>
+          </label>
+
+          <label className={labelClass}>
+            Referrer code
+            <input
+              value={referralCode}
+              onChange={(event) => setReferralCode(event.target.value)}
+              placeholder="Optional — affiliate referral code"
+              className={fieldClass}
+            />
+            <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-500">
+              If the buyer has no referrer, Active (L1) commission goes to this affiliate instead of the company.
             </span>
           </label>
 
@@ -219,7 +234,7 @@ function ManualOrderModal({ packages, paymentMethods, onClose, onCreated }) {
               checked={payCommissions}
               onChange={setPayCommissions}
               label="Pay affiliate commissions"
-              hint="Credits the three levels above the buyer when a referral applies."
+              hint="Credits L1–L3. Uses the buyer’s referrer, or the referrer code entered above."
             />
           </div>
         </div>

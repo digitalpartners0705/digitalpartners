@@ -35,7 +35,7 @@ export const SOCIALS = [
   {
     id: 'youtube',
     name: 'YouTube',
-    handle: 'Digital Expert',
+    handle: 'Digital Arambh',
     href: 'https://youtube.com',
     description: 'Longer walkthroughs and weekly recaps.',
   },
