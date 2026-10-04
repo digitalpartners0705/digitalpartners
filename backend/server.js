@@ -23,6 +23,38 @@ const PORT = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
+let readyPromise = null
+
+const ensureReady = () => {
+  if (!readyPromise) {
+    readyPromise = (async () => {
+      await waitForDatabase()
+      await initUsersTable()
+      await initCatalogTables()
+      await initAffiliateTables()
+      await initOrderTables()
+      await initTrainingTables()
+      await seedCatalog()
+      await seedTrainingDays()
+      await ensureAdmin()
+      await backfillOrders()
+    })()
+  }
+  return readyPromise
+}
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureReady()
+    next()
+  } catch (error) {
+    console.error('Database connection failed:', error.message)
+    res.status(503).json({
+      message: 'Database unavailable. Check DATABASE_URL and that your database is running.',
+    })
+  }
+})
+
 app.use('/api', healthRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/courses', courseRoutes)
@@ -31,16 +63,7 @@ app.use('/api/affiliate', affiliateRoutes)
 
 const start = async () => {
   try {
-    await waitForDatabase()
-    await initUsersTable()
-    await initCatalogTables()
-    await initAffiliateTables()
-    await initOrderTables()
-    await initTrainingTables()
-    await seedCatalog()
-    await seedTrainingDays()
-    await ensureAdmin()
-    await backfillOrders()
+    await ensureReady()
     app.listen(PORT, (err) => {
       if (err) {
         console.error('Failed to start server:', err.message)
@@ -55,4 +78,10 @@ const start = async () => {
   }
 }
 
-start()
+// Local / traditional hosting
+if (require.main === module) {
+  start()
+}
+
+// Vercel serverless
+module.exports = app
