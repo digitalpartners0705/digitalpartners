@@ -8,6 +8,14 @@ function TelegramIcon({ className = 'h-10 w-10' }) {
   )
 }
 
+function WhatsAppIcon({ className = 'h-11 w-11' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12.042 21.686A9.638 9.638 0 0 1 7.12 20.34l-.352-.209-3.642.955.972-3.551-.23-.365a9.627 9.627 0 0 1-1.474-5.127C2.394 6.713 6.726 2.38 12.046 2.38a9.61 9.61 0 0 1 6.815 2.825 9.588 9.588 0 0 1 2.823 6.817c-.004 5.334-4.338 9.664-9.642 9.664m8.006-17.683A11.236 11.236 0 0 0 12.046.75C5.832.75.772 5.81.769 12.027c0 1.986.518 3.926 1.503 5.631L0 23.25l5.748-1.508a11.236 11.236 0 0 0 5.29 1.328h.005c6.214 0 11.275-5.061 11.278-11.28a11.218 11.218 0 0 0-3.273-7.997m-2.58 13.915c-.301-.15-1.775-.875-2.05-1-.274-.124-.473-.186-.672.124-.199.31-.77 1-.944 1.2-.175.199-.349.224-.65.074-.3-.15-1.269-.467-2.417-1.492-.894-.798-1.497-1.784-1.672-2.084-.175-.301-.019-.463.132-.613.136-.135.301-.35.452-.525.15-.175.199-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.672-1.62-.921-2.22-.242-.584-.488-.504-.672-.513-.174-.009-.373-.009-.573-.009-.199 0-.523.074-.797.374-.274.3-1.047 1.022-1.047 2.49 0 1.468 1.07 2.888 1.22 3.088.15.2 2.106 3.216 5.102 4.51.713.308 1.27.492 1.704.63.716.228 1.368.196 1.884.119.576-.086 1.775-.726 2.025-1.427.25-.701.25-1.302.175-1.427-.075-.125-.274-.2-.575-.35Z" />
+    </svg>
+  )
+}
+
 function SocialMark({ id }) {
   if (id === 'facebook') {
     return (
@@ -57,42 +65,57 @@ function RecentUpdates() {
           >
             Our community
           </p>
-          <p className="relative text-xs font-semibold uppercase tracking-[0.22em] text-gold-300">Digital Arambh</p>
+          <p className="relative text-xs font-semibold uppercase tracking-[0.22em] text-gold-300">Digital Vidhya</p>
           <h1 className="relative mt-3 text-3xl font-black uppercase tracking-[0.12em] sm:text-5xl">
             Our <span className="gold-text">community</span>
           </h1>
           <p className="relative mx-auto mt-3 max-w-md text-sm leading-6 text-slate-400">
-            Join a language room and follow us on the channels you already use.
+            Join our official community rooms and follow us on the channels you already use.
           </p>
         </div>
 
         <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-2">
-          {COMMUNITIES.map((group) => (
-            <a
-              key={group.id}
-              href={group.href}
-              target="_blank"
-              rel="noreferrer"
-              className="group relative flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-gold-400/55 bg-[#0f1830]/90 px-5 pb-8 pt-10 transition hover:border-gold-300 hover:bg-[#121c38] hover:shadow-[0_0_28px_rgba(245,193,74,0.12)]"
-            >
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#1a1203] shadow-[0_6px_14px_rgba(245,193,74,0.35)] [clip-path:polygon(8%_0,92%_0,100%_100%,0_100%)]">
-                Must join!
-              </span>
-
-              <span className="relative flex h-20 w-20 items-center justify-center">
-                <span className="absolute inset-0 rounded-full bg-sky-400/25 blur-xl transition group-hover:bg-sky-300/35" />
-                <span className="relative text-[#2AABEE] drop-shadow-[0_0_18px_rgba(42,171,238,0.55)]">
-                  <TelegramIcon />
+          {COMMUNITIES.map((group) => {
+            const isWhatsApp = group.platform === 'whatsapp' || group.id === 'whatsapp'
+            return (
+              <a
+                key={group.id}
+                href={group.href}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-gold-400/55 bg-[#0f1830]/90 px-5 pb-8 pt-10 transition hover:border-gold-300 hover:bg-[#121c38] hover:shadow-[0_0_28px_rgba(245,193,74,0.12)]"
+              >
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#1a1203] shadow-[0_6px_14px_rgba(245,193,74,0.35)] [clip-path:polygon(8%_0,92%_0,100%_100%,0_100%)]">
+                  Must join!
                 </span>
-              </span>
 
-              <div className="mt-7 flex w-full items-center gap-3">
-                <span className="h-px flex-1 bg-white/15" />
-                <span className="text-lg font-semibold tracking-wide text-white">{group.language}</span>
-                <span className="h-px flex-1 bg-white/15" />
-              </div>
-            </a>
-          ))}
+                <span className="relative flex h-20 w-20 items-center justify-center">
+                  <span
+                    className={`absolute inset-0 rounded-full blur-xl transition ${
+                      isWhatsApp
+                        ? 'bg-emerald-500/25 group-hover:bg-emerald-400/35'
+                        : 'bg-sky-400/25 group-hover:bg-sky-300/35'
+                    }`}
+                  />
+                  <span
+                    className={`relative ${
+                      isWhatsApp
+                        ? 'text-[#25D366] drop-shadow-[0_0_18px_rgba(37,211,102,0.55)]'
+                        : 'text-[#2AABEE] drop-shadow-[0_0_18px_rgba(42,171,238,0.55)]'
+                    }`}
+                  >
+                    {isWhatsApp ? <WhatsAppIcon /> : <TelegramIcon />}
+                  </span>
+                </span>
+
+                <div className="mt-7 flex w-full items-center gap-3">
+                  <span className="h-px flex-1 bg-white/15" />
+                  <span className="text-lg font-semibold tracking-wide text-white">{group.language}</span>
+                  <span className="h-px flex-1 bg-white/15" />
+                </div>
+              </a>
+            )
+          })}
         </div>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-3">

@@ -86,7 +86,7 @@ export const PACKAGES = [
     theme: 'gold',
     headline: 'The complete ecosystem to earn confidently online.',
     description:
-      'Combine social, ads, AI automation, e-commerce, and freelancing into one premium path. Built for people who want the full Digital Arambh toolkit — with priority mentorship and lifetime updates.',
+      'Combine social, ads, AI automation, e-commerce, and freelancing into one premium path. Built for people who want the full Digital Vidhya toolkit — with priority mentorship and lifetime updates.',
     stats: [
       { label: 'Courses', value: '10+', icon: 'book' },
       { label: 'Learning hours', value: '60+', icon: 'clock' },

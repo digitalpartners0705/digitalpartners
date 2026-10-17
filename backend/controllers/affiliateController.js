@@ -325,7 +325,7 @@ const myRefInfo = async (req, res) => {
   }
 }
 
-const SUPPORT_EMAIL = 'support@digitalarambh.com'
+const SUPPORT_EMAIL = 'support@digitalvidhya.com'
 
 const trimmed = (value) => String(value ?? '').trim()
 

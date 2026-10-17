@@ -1,14 +1,16 @@
 export const COMMUNITIES = [
   {
-    id: 'english',
-    name: 'English community',
-    language: 'English',
+    id: 'whatsapp',
+    platform: 'whatsapp',
+    name: 'WhatsApp community',
+    language: 'WhatsApp',
     members: '12.4k',
-    description: 'Daily updates, live doubts, and course announcements for English learners.',
-    href: 'https://t.me/digitalexpert',
+    description: 'Daily updates, live doubts, and course announcements in our official WhatsApp community.',
+    href: 'https://chat.whatsapp.com',
   },
   {
     id: 'hindi',
+    platform: 'telegram',
     name: 'Hindi community',
     language: 'हिंदी',
     members: '15.6k',
@@ -35,7 +37,7 @@ export const SOCIALS = [
   {
     id: 'youtube',
     name: 'YouTube',
-    handle: 'Digital Arambh',
+    handle: 'Digital Vidhya',
     href: 'https://youtube.com',
     description: 'Longer walkthroughs and weekly recaps.',
   },

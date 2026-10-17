@@ -30,7 +30,7 @@ const LEVEL_META = {
     badge: 'bg-teal-400/15 text-teal-200 ring-teal-300/25',
   },
   passive: {
-    label: 'Passive · L2',
+    label: 'First level · L2',
     note: 'Someone your referral brought in buys',
     tone: 'text-sky-200',
     badge: 'bg-sky-400/15 text-sky-200 ring-sky-300/25',
@@ -145,7 +145,7 @@ function AffiliateCommission() {
       )}
 
       <p className="mt-6 max-w-2xl text-xs leading-5 text-slate-500">
-        Amounts come from the Digital Arambh marketing plan and apply on every package purchase in your chain.
+        Amounts come from the Digital Vidhya marketing plan and apply on every package purchase in your chain.
         An upline only earns if they own a package. Empty levels are retained by the company.
       </p>
     </div>

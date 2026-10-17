@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import AnimatedAmount from '../../components/AnimatedAmount'
 import { getAffiliateEarnings } from '../../services/api'
 
 // Milestone targets are the plan rules — progress comes from live earnings.
@@ -81,7 +82,9 @@ function AffiliateAchievements() {
         </div>
         <div className="rounded-2xl border border-white/10 bg-[#171b27] px-4 py-3 text-right">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">All-time earned</p>
-          <p className="mt-1 text-xl font-extrabold text-teal-300">{loading ? '…' : formatMoney(earned)}</p>
+          <p className="mt-1 text-xl font-extrabold text-teal-300">
+            {loading ? '…' : <AnimatedAmount value={earned} />}
+          </p>
           <p className="mt-0.5 text-xs text-slate-500">
             {unlockedCount} of {MILESTONES.length} unlocked
           </p>

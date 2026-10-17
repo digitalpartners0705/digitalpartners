@@ -9,6 +9,7 @@ const {
   initAffiliateTables,
   initOrderTables,
   initTrainingTables,
+  initContactTable,
 } = require('./config/db')
 const { seedCatalog, ensureAdmin, seedTrainingDays, backfillOrders } = require('./config/seed')
 const healthRoutes = require('./routes/healthRoutes')
@@ -16,6 +17,7 @@ const authRoutes = require('./routes/authRoutes')
 const courseRoutes = require('./routes/courseRoutes')
 const adminRoutes = require('./routes/adminRoutes')
 const affiliateRoutes = require('./routes/affiliateRoutes')
+const contactRoutes = require('./routes/contactRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -34,6 +36,7 @@ const ensureReady = () => {
       await initAffiliateTables()
       await initOrderTables()
       await initTrainingTables()
+      await initContactTable()
       await seedCatalog()
       await seedTrainingDays()
       await ensureAdmin()
@@ -56,6 +59,7 @@ app.use(async (req, res, next) => {
 })
 
 app.use('/api', healthRoutes)
+app.use('/api/contact', contactRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/courses', courseRoutes)
 app.use('/api/admin', adminRoutes)

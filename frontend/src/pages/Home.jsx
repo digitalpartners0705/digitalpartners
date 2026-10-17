@@ -65,7 +65,7 @@ const whyChoose = [
   {
     id: 'growth',
     title: 'Built for Dreamers & Doers',
-    detail: 'Whether you’re starting out or leveling up, Digital Arambh supports every phase.',
+    detail: 'Whether you’re starting out or leveling up, Digital Vidhya supports every phase.',
     tone: 'bg-[#eef1fb]',
     icon: 'flag',
   },
@@ -112,7 +112,7 @@ const instructors = [
 
 const testimonials = [
   {
-    quote: 'Digital Arambh helped me switch careers in six months. The projects felt like real work, not busywork.',
+    quote: 'Digital Vidhya helped me switch careers in six months. The projects felt like real work, not busywork.',
     name: 'Aisha Patel',
     role: 'Junior Developer',
     rating: 5,
@@ -186,7 +186,7 @@ function PackageBox({ label, accent }) {
         />
         <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent" />
         <div className="flex h-full flex-col justify-between p-4 pl-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">Digital Arambh</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">Digital Vidhya</p>
           <p
             className="font-[Plus_Jakarta_Sans,Inter,sans-serif] text-lg font-extrabold leading-tight tracking-tight sm:text-xl"
             style={{ color: accent.label }}
@@ -370,7 +370,7 @@ function Home() {
             <div className="relative">
               <img
                 src="/assets/hero.png"
-                alt="Digital Arambh platform on a laptop, with courses, mentors, and certificates"
+                alt="Digital Vidhya platform on a laptop, with courses, mentors, and certificates"
                 className="w-full object-contain"
               />
             </div>
@@ -398,7 +398,7 @@ function Home() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="mx-auto mb-12 max-w-3xl text-center">
             <h2 className="font-[Plus_Jakarta_Sans,Inter,sans-serif] text-3xl font-extrabold tracking-tight text-[#10203c] sm:text-4xl">
-              Why Learners Choose Digital Arambh
+              Why Learners Choose Digital Vidhya
             </h2>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

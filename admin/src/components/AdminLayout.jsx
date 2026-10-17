@@ -49,6 +49,19 @@ function NavIcon({ name }) {
     )
   }
 
+  if (name === 'contact') {
+    return (
+      <svg {...common}>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M7.5 19.5 4 21l1.2-3.5A7.8 7.8 0 1 1 12 19.8a8 8 0 0 1-4.5-.3Z"
+        />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 10h7M8.5 14h4" />
+      </svg>
+    )
+  }
+
   return (
     <svg {...common}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10 7V5H5v14h5v-2" />
@@ -72,6 +85,7 @@ function pageCrumb(pathname) {
   if (pathname === '/courses/new') return 'New course'
   if (pathname.endsWith('/edit')) return 'Edit course'
   if (pathname.startsWith('/courses/') && pathname !== '/courses') return 'Lessons'
+  if (pathname.startsWith('/contact')) return 'Contact requests'
   if (pathname.startsWith('/courses')) return 'Courses'
   return 'Admin'
 }
@@ -117,12 +131,12 @@ function AdminLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Link to="/orders" className="flex items-center gap-3 border-b border-slate-100 px-5 py-5" aria-label="Digital Arambh admin home">
+        <Link to="/orders" className="flex items-center gap-3 border-b border-slate-100 px-5 py-5" aria-label="Digital Vidhya admin home">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">
-            DA
+            DV
           </span>
           <span>
-            <span className="block text-sm font-extrabold tracking-tight text-slate-900">Digital Arambh</span>
+            <span className="block text-sm font-extrabold tracking-tight text-slate-900">Digital Vidhya</span>
             <span className="mt-0.5 inline-flex rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
               Admin panel
             </span>

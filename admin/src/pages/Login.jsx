@@ -33,10 +33,10 @@ function Login() {
       <form onSubmit={handleSubmit} className="w-full max-w-md rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">
-            DA
+            DV
           </span>
           <div>
-            <p className="text-sm font-semibold text-brand-600">Digital Arambh</p>
+            <p className="text-sm font-semibold text-brand-600">Digital Vidhya</p>
             <p className="text-xs font-medium text-slate-500">Admin panel</p>
           </div>
         </div>

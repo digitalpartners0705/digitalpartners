@@ -148,4 +148,9 @@ export const getTrainingPlayUrl = async (dayId, videoId) => {
   return response.data
 }
 
+export const sendContactMessage = async (payload) => {
+  const response = await api.post('/api/contact', payload)
+  return response.data
+}
+
 export default api

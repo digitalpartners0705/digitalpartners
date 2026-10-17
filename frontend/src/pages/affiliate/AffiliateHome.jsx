@@ -15,7 +15,7 @@ function AffiliateHome() {
             Hello, {firstName}
           </h1>
           <p className="mt-2 max-w-lg text-slate-500">
-            This is your affiliate area. Share Digital Arambh, track referrals, and come back to your courses anytime.
+            This is your affiliate area. Share Digital Vidhya, track referrals, and come back to your courses anytime.
           </p>
         </div>
         <div className="relative bg-[#1b2140] px-6 py-7 text-white sm:px-8">

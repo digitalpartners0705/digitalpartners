@@ -13,4 +13,10 @@ export const adminNav = [
       { to: '/trainings', label: 'Training', icon: 'trainings' },
     ],
   },
+  {
+    label: 'Support',
+    items: [
+      { to: '/contact', label: 'Contact', icon: 'contact' },
+    ],
+  },
 ]

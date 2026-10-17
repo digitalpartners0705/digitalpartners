@@ -344,6 +344,26 @@ const initTrainingTables = async () => {
   `)
 }
 
+const initContactTable = async () => {
+  await query(`
+    CREATE TABLE IF NOT EXISTS contact_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      admin_notes TEXT,
+      resolved_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+
+  await query(`CREATE INDEX IF NOT EXISTS idx_contact_requests_status ON contact_requests(status)`)
+  await query(`CREATE INDEX IF NOT EXISTS idx_contact_requests_created_at ON contact_requests(created_at DESC)`)
+}
+
 module.exports = {
   pool,
   query,
@@ -353,6 +373,7 @@ module.exports = {
   initAffiliateTables,
   initOrderTables,
   initTrainingTables,
+  initContactTable,
   createReferralCode,
   ensureReferralCodes,
 }

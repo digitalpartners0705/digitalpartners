@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import AnimatedAmount from '../../components/AnimatedAmount'
 import { useAuth } from '../../context/AuthContext'
 import { getAffiliateEarnings } from '../../services/api'
 
@@ -14,7 +15,7 @@ const PACKAGE_NAMES = ['Social Expert', 'Ads Expert', 'AI Premium Expert']
 
 const EMPTY_LEVELS = [
   { incomeType: 'active', level: 1, label: 'Active', sales: 0, amount: 0 },
-  { incomeType: 'passive', level: 2, label: 'Passive', sales: 0, amount: 0 },
+  { incomeType: 'passive', level: 2, label: 'First level', sales: 0, amount: 0 },
   { incomeType: 'second', level: 3, label: 'Second level', sales: 0, amount: 0 },
 ]
 
@@ -27,7 +28,7 @@ const LEVEL_META = {
     bar: 'bg-teal-400',
   },
   passive: {
-    label: 'Passive',
+    label: 'First level',
     note: 'Someone your referral brought in bought a package',
     tone: 'text-sky-200',
     badge: 'bg-sky-400/15 text-sky-200 ring-sky-300/25',
@@ -171,24 +172,28 @@ function AffiliateEarnings() {
     {
       id: 'today',
       label: "Today's earnings",
+      amount: totals.today,
       value: rupees(totals.today),
       hint: totals.today > 0 ? 'Credited today' : 'No sales yet today',
     },
     {
       id: '7d',
       label: 'Last 7 days',
+      amount: totals.last7Days,
       value: rupees(totals.last7Days),
       hint: totals.last7Days > 0 ? 'Rolling 7-day total' : 'Quiet week so far',
     },
     {
       id: '30d',
       label: 'Last 30 days',
+      amount: totals.last30Days,
       value: rupees(totals.last30Days),
       hint: totals.last30Days > 0 ? 'Last 30 days total' : 'No payouts this month',
     },
     {
       id: 'all',
       label: 'All time',
+      amount: totals.allTime,
       value: rupees(totals.allTime),
       hint:
         totals.allTime > 0
@@ -248,7 +253,7 @@ function AffiliateEarnings() {
               >
                 <p className="text-sm text-slate-400">{stat.label}</p>
                 <p className={`mt-3 text-2xl font-bold ${selected ? 'text-teal-200' : 'text-white'}`}>
-                  {loading ? '…' : stat.value}
+                  {loading ? '…' : <AnimatedAmount value={stat.amount} />}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">{stat.hint}</p>
               </button>
@@ -266,8 +271,10 @@ function AffiliateEarnings() {
                 <span className="font-semibold text-white">{user?.knowledgePackage || 'a starter plan'}</span>.
                 Commission is credited on every purchase in your chain at the fixed plan amounts.
               </p>
-              <p className="mt-5 text-3xl font-extrabold text-teal-300">{loading ? '…' : rupees(totals.allTime)}</p>
-              <p className="mt-1 text-xs text-slate-500">All-time income across active, passive, and second level.</p>
+              <p className="mt-5 text-3xl font-extrabold text-teal-300">
+                {loading ? '…' : <AnimatedAmount value={totals.allTime} />}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">All-time income across active, first level, and second level.</p>
             </div>
             <Link
               to="/dashboard/upgrade"
@@ -290,7 +297,9 @@ function AffiliateEarnings() {
                   Level {item.level}
                 </span>
               </div>
-              <p className={`mt-3 text-2xl font-bold ${meta.tone}`}>{loading ? '…' : rupees(item.amount)}</p>
+              <p className={`mt-3 text-2xl font-bold ${meta.tone}`}>
+                {loading ? '…' : <AnimatedAmount value={item.amount} />}
+              </p>
               <p className="mt-2 text-xs text-slate-500">{meta.note}</p>
               <p className="mt-1 text-xs text-slate-500">
                 {item.sales} commission{item.sales === 1 ? '' : 's'} · {rangeLabel.toLowerCase()}
@@ -422,7 +431,9 @@ function AffiliateEarnings() {
                           {meta.label}
                         </span>
                       </td>
-                      <td className="px-4 py-4 font-semibold text-teal-200 sm:px-5">{rupees(row.amount)}</td>
+                      <td className="px-4 py-4 font-semibold text-teal-200 sm:px-5">
+                        <AnimatedAmount value={row.amount} duration={1000} />
+                      </td>
                     </tr>
                   )
                 })

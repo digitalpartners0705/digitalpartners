@@ -82,21 +82,21 @@ function SiteFooter() {
 
       <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-8 lg:px-8">
         <div className="md:col-span-2 lg:col-span-1">
-          <Link to="/" className="inline-flex items-center gap-2" aria-label="Digital Arambh home">
-            <img src="/assets/logo-removebg.png" alt="" className="h-12 w-auto object-contain" />
+          <Link to="/" className="inline-flex items-center gap-2" aria-label="Digital Vidhya home">
+            <img src="/assets/Digital-Vidhya-logo.png" alt="Digital Vidhya" className="h-12 w-auto object-contain" />
             <span className="brand-wordmark brand-wordmark-on-dark">
               <span className="brand-wordmark-digital">Digital</span>
-              <span className="brand-wordmark-arambh">Arambh</span>
+              <span className="brand-wordmark-vidhya">Vidhya</span>
             </span>
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
             An online learning platform for career-ready skills, expert mentors, and real-world projects.
           </p>
           <a
-            href="mailto:support@digitalarambh.com"
+            href="mailto:support@digitalvidhya.com"
             className="mt-5 inline-flex text-sm font-medium text-gold-300 transition hover:text-gold-200"
           >
-            support@digitalarambh.com
+            support@digitalvidhya.com
           </a>
         </div>
 
@@ -149,7 +149,7 @@ function SiteFooter() {
 
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>© {new Date().getFullYear()} Digital Arambh. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Digital Vidhya. All rights reserved.</p>
           <p className="text-slate-500">Learn · Build · Earn</p>
         </div>
       </div>

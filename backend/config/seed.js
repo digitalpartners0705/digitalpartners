@@ -30,7 +30,7 @@ const seedCatalog = async () => {
 const ensureAdmin = async () => {
   const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
   const password = String(process.env.ADMIN_PASSWORD || '')
-  const fullName = String(process.env.ADMIN_NAME || 'Digital Arambh Admin').trim()
+  const fullName = String(process.env.ADMIN_NAME || 'Digital Vidhya Admin').trim()
 
   if (!email || !password) {
     console.warn('ADMIN_EMAIL or ADMIN_PASSWORD is missing. Admin login is not configured.')

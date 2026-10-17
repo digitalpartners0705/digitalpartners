@@ -4,7 +4,7 @@ const FEATURED = {
   id: 'partner-kit',
   title: 'Partner kit',
   text: 'One file for the first conversation: the offer, the three packages, and how a referral joins.',
-  fileName: 'digital-arambh-partner-kit.txt',
+  fileName: 'digital-vidhya-partner-kit.txt',
   keywords: 'partner kit brief overview starter',
 }
 
@@ -52,13 +52,13 @@ const DOCUMENTS = [
     kind: 'Assets',
     bar: '#fb7185',
     glow: 'rgba(251,113,133,0.4)',
-    summary: 'Name, colors, and a simple way to talk about Digital Arambh.',
+    summary: 'Name, colors, and a simple way to talk about Digital Vidhya.',
   },
 ]
 
 function downloadSheet(doc) {
   const lines = [
-    'Digital Arambh',
+    'Digital Vidhya',
     doc.title,
     '',
     doc.summary || doc.text,
@@ -133,7 +133,7 @@ function Cover({ doc }) {
         <div className="relative flex h-36 w-24 flex-col overflow-hidden rounded-lg bg-[#1c2230] ring-1 ring-white/15 shadow-lg shadow-black/30">
           <span className="h-1.5 w-full" style={{ background: doc.bar }} />
           <div className="flex flex-1 flex-col px-2.5 pb-3 pt-3">
-            <span className="text-[8px] font-semibold uppercase tracking-[0.16em] text-slate-500">Digital Arambh</span>
+            <span className="text-[8px] font-semibold uppercase tracking-[0.16em] text-slate-500">Digital Vidhya</span>
             <span className="mt-auto text-[13px] font-bold leading-4 text-white">{doc.cover}</span>
             <span className="mt-1 text-[10px] text-slate-400">{doc.kind}</span>
           </div>
@@ -170,7 +170,7 @@ function AffiliateDownloads() {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-200/70">Resources</p>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">Downloads</h1>
           <p className="mt-1.5 max-w-md text-sm text-slate-400">
-            Files you can send while you talk about Digital Arambh.
+            Files you can send while you talk about Digital Vidhya.
           </p>
         </div>
 

@@ -52,7 +52,7 @@ function AffiliateCommunity() {
   return (
     <div className="-mx-4 -my-8 min-h-[calc(100vh-4.25rem)] bg-[#10131c] px-4 py-8 text-slate-100 sm:-mx-8 sm:px-8">
       <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Community</h1>
-      <p className="mt-2 max-w-xl text-sm text-slate-400">English and Hindi rooms for updates, webinar links, and files you can share.</p>
+      <p className="mt-2 max-w-xl text-sm text-slate-400">WhatsApp and Hindi rooms for updates, webinar links, and files you can share.</p>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         {COMMUNITIES.map((room) => (

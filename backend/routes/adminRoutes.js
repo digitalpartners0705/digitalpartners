@@ -45,6 +45,11 @@ const {
   reverseCommission,
   createAdjustment,
 } = require('../controllers/adminCommissionController')
+const {
+  listContactRequests,
+  updateContactRequest,
+  deleteContactRequest,
+} = require('../controllers/adminContactController')
 const { requireAdmin } = require('../middleware/auth')
 
 const router = express.Router()
@@ -98,5 +103,9 @@ router.post('/courses/:id/lessons', createLesson)
 router.post('/courses/:id/lessons/reorder', reorderLessons)
 router.patch('/lessons/:id', updateLesson)
 router.delete('/lessons/:id', deleteLesson)
+
+router.get('/contact-requests', listContactRequests)
+router.patch('/contact-requests/:id', updateContactRequest)
+router.delete('/contact-requests/:id', deleteContactRequest)
 
 module.exports = router

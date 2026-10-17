@@ -10,6 +10,7 @@ import OrdersPage from './pages/OrdersPage'
 import TrainingEditor from './pages/TrainingEditor'
 import TrainingVideos from './pages/TrainingVideos'
 import TrainingsPage from './pages/TrainingsPage'
+import ContactRequestsPage from './pages/ContactRequestsPage'
 import Login from './pages/Login'
 import { getToken } from './services/api'
 
@@ -43,6 +44,8 @@ function App() {
         <Route path="trainings/new" element={<Navigate to="/trainings" replace />} />
         <Route path="trainings/:id/edit" element={<TrainingEditor />} />
         <Route path="trainings/:id" element={<TrainingVideos />} />
+        <Route path="contact" element={<ContactRequestsPage />} />
+        <Route path="contact-requests" element={<ContactRequestsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -50,6 +50,7 @@ function App() {
         <Route path="browse" element={<BrowseCourses />} />
         <Route path="certificates" element={<Certificates />} />
         <Route path="updates" element={<RecentUpdates />} />
+        <Route path="community" element={<RecentUpdates />} />
         <Route path="upgrade" element={<Upgrade />} />
       </Route>
       <Route

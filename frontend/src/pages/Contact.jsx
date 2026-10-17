@@ -2,8 +2,9 @@ import { useState } from 'react'
 import AuthModal from '../components/AuthModal'
 import Navbar from '../components/Navbar'
 import SiteFooter from '../components/SiteFooter'
- import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext'
 import { SOCIALS } from '../data/community'
+import { sendContactMessage } from '../services/api'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -13,8 +14,8 @@ const fieldClass =
 const contactDetails = [
   {
     label: 'Email',
-    value: 'support@digitalarambh.com',
-    href: 'mailto:support@digitalarambh.com',
+    value: 'support@digitalvidhya.com',
+    href: 'mailto:support@digitalvidhya.com',
     icon: 'mail',
   },
   {
@@ -137,18 +138,22 @@ function Contact() {
     return next
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const nextErrors = validate()
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
     setSubmitting(true)
-    window.setTimeout(() => {
-      setSubmitting(false)
+    try {
+      await sendContactMessage(form)
       setSent(true)
       setForm({ name: '', email: '', phone: '', message: '' })
-    }, 700)
+    } catch (error) {
+      setErrors({ form: error.response?.data?.message || 'Could not send your message. Please try again later.' })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -176,7 +181,7 @@ function Contact() {
               <div className="rounded-2xl bg-ink-950 p-6 text-white shadow-lg ring-1 ring-white/10 sm:p-7">
                 <h2 className="text-xl font-bold">Contact details</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Reach Digital Arambh through any of the channels below. We usually reply within one business day.
+                  Reach Digital Vidhya through any of the channels below. We usually reply within one business day.
                 </p>
 
                 <ul className="mt-6 space-y-4">
@@ -217,7 +222,7 @@ function Contact() {
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-500">Visit</h3>
-                <p className="mt-3 text-base font-semibold text-slate-900">Digital Arambh HQ</p>
+                <p className="mt-3 text-base font-semibold text-slate-900">Digital Vidhya HQ</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">
                   Learning & Growth Hub
                   <br />

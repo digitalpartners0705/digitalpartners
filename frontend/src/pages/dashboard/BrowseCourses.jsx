@@ -40,7 +40,7 @@ function BrowseCourses() {
     <div>
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">Catalog</p>
       <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">Browse courses</h1>
-      <p className="mt-1 text-slate-500">Explore the full Digital Arambh catalog.</p>
+      <p className="mt-1 text-slate-500">Explore the full Digital Vidhya catalog.</p>
 
       <label className="relative mt-6 block w-full max-w-md">
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-500">
