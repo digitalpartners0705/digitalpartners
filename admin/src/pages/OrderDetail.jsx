@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useParams } from 'react-router-dom'
+import { ApproveOrderModal, RejectOrderModal } from '../components/OrderRequestModals'
 import api from '../services/api'
 import {
   INCOME_LABEL,
@@ -181,6 +182,8 @@ function OrderDetail() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [payingOpen, setPayingOpen] = useState(false)
+  const [approving, setApproving] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -230,6 +233,7 @@ function OrderDetail() {
   const { order, commissions, history } = data
   const credited = commissions.filter((item) => item.status === 'credited')
   const creditedTotal = credited.reduce((sum, item) => sum + item.amount, 0)
+  const awaitingOfflinePayment = order.status === 'pending' && order.payment.provider === 'offline'
 
   return (
     <div>
@@ -254,14 +258,39 @@ function OrderDetail() {
             {order.createdByName ? ` · recorded by ${order.createdByName}` : ''}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setPayingOpen(true)}
-          className="cursor-pointer rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
-        >
-          Edit payment details
-        </button>
+        {awaitingOfflinePayment ? (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setRejecting(true)}
+              className="cursor-pointer rounded-lg border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+            >
+              Reject
+            </button>
+            <button
+              type="button"
+              onClick={() => setApproving(true)}
+              className="cursor-pointer rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+            >
+              Approve & start subscription
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setPayingOpen(true)}
+            className="cursor-pointer rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+          >
+            Edit payment details
+          </button>
+        )}
       </div>
+
+      {awaitingOfflinePayment ? (
+        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          This user is waiting for a call. Collect the payment by cash or UPI, then approve to start their subscription.
+        </p>
+      ) : null}
 
       {notice ? (
         <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{notice}</p>
@@ -416,6 +445,30 @@ function OrderDetail() {
           </Card>
         </div>
       </div>
+
+      {approving ? (
+        <ApproveOrderModal
+          order={order}
+          onClose={() => setApproving(false)}
+          onApproved={() => {
+            setApproving(false)
+            setNotice('Payment confirmed. The subscription is now active.')
+            load()
+          }}
+        />
+      ) : null}
+
+      {rejecting ? (
+        <RejectOrderModal
+          order={order}
+          onClose={() => setRejecting(false)}
+          onRejected={() => {
+            setRejecting(false)
+            setNotice('Order request rejected. The subscription was not started.')
+            load()
+          }}
+        />
+      ) : null}
 
       {payingOpen ? (
         <PaymentModal

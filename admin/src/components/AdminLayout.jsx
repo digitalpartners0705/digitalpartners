@@ -31,6 +31,15 @@ function NavIcon({ name }) {
     )
   }
 
+  if (name === 'requests') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 6h11M8 12h11M8 18h11" />
+        <path strokeLinecap="round" d="M4 6h.01M4 12h.01M4 18h.01" />
+      </svg>
+    )
+  }
+
   if (name === 'orders') {
     return (
       <svg {...common}>
@@ -74,6 +83,7 @@ function NavIcon({ name }) {
 function pageCrumb(pathname) {
   if (pathname.startsWith('/commissions/earners/')) return 'Earner history'
   if (pathname.startsWith('/commissions')) return 'Commissions'
+  if (pathname.startsWith('/order-requests')) return 'Order requests'
   if (pathname.startsWith('/orders')) {
     return pathname === '/orders' ? 'Orders' : 'Order details'
   }
@@ -95,6 +105,7 @@ function AdminLayout() {
   const { pathname } = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState(null)
+  const [pendingRequests, setPendingRequests] = useState(0)
 
   useEffect(() => {
     api
@@ -105,6 +116,18 @@ function AdminLayout() {
 
   useEffect(() => {
     setSidebarOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    const loadCount = () => {
+      api
+        .get('/api/admin/order-requests/stats')
+        .then((response) => setPendingRequests(response.data.pending || 0))
+        .catch(() => setPendingRequests(0))
+    }
+    loadCount()
+    window.addEventListener('order-requests-changed', loadCount)
+    return () => window.removeEventListener('order-requests-changed', loadCount)
   }, [pathname])
 
   const logout = () => {
@@ -161,7 +184,12 @@ function AdminLayout() {
                     }
                   >
                     <NavIcon name={item.icon} />
-                    {item.label}
+                    <span className="truncate">{item.label}</span>
+                    {item.to === '/order-requests' && pendingRequests > 0 ? (
+                      <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-800">
+                        {pendingRequests > 99 ? '99+' : pendingRequests}
+                      </span>
+                    ) : null}
                   </NavLink>
                 ))}
               </div>

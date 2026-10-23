@@ -35,6 +35,10 @@ const {
   createManualOrder,
   recordPayment,
   updateOrder,
+  listOrderRequests,
+  getOrderRequestStats,
+  approveOrderRequest,
+  rejectOrderRequest,
 } = require('../controllers/adminOrderController')
 const {
   listCommissions,
@@ -69,6 +73,10 @@ const receiveFile = (req, res, next) => {
 
 router.use(requireAdmin)
 router.get('/meta', getMeta)
+router.get('/order-requests/stats', getOrderRequestStats)
+router.get('/order-requests', listOrderRequests)
+router.post('/order-requests/:id/approve', approveOrderRequest)
+router.post('/order-requests/:id/reject', rejectOrderRequest)
 router.get('/orders', listOrders)
 router.post('/orders', createManualOrder)
 router.get('/orders/meta', getOrderMeta)

@@ -17,26 +17,32 @@ const PACKAGES = {
     id: 'ads-expert',
     listedPrice: 14999,
     netAmount: 12300,
-    activePercent: 52.85,
+    activePercent: 60.98,
     passivePercent: 9.76,
     secondPercent: 4.07,
+    activeAmount: 7500,
+    passiveAmount: 1200,
+    secondAmount: 500,
     rank: 2,
   },
   'AI Premium Expert': {
     id: 'ai-premium-expert',
     listedPrice: 21999,
     netAmount: 18040,
-    activePercent: 55.43,
+    activePercent: 66.52,
     passivePercent: 9.98,
     secondPercent: 4.16,
+    activeAmount: 12000,
+    passiveAmount: 1800,
+    secondAmount: 750,
     rank: 3,
   },
 }
 
 const INCOME_LEVELS = [
-  { level: 1, incomeType: 'active', percentKey: 'activePercent', label: 'Active' },
-  { level: 2, incomeType: 'passive', percentKey: 'passivePercent', label: 'Passive' },
-  { level: 3, incomeType: 'second', percentKey: 'secondPercent', label: 'Second level' },
+  { level: 1, incomeType: 'active', percentKey: 'activePercent', amountKey: 'activeAmount', label: 'Active' },
+  { level: 2, incomeType: 'passive', percentKey: 'passivePercent', amountKey: 'passiveAmount', label: 'Passive' },
+  { level: 3, incomeType: 'second', percentKey: 'secondPercent', amountKey: 'secondAmount', label: 'Second level' },
 ]
 
 const MAX_LEVEL = INCOME_LEVELS.length
@@ -63,6 +69,7 @@ const commissionForLevel = (packageValue, level) => {
   if (!pkg || !config) return null
 
   const percent = pkg[config.percentKey]
+  const plannedAmount = pkg[config.amountKey]
   return {
     packageName: pkg.name,
     packageId: pkg.id,
@@ -71,7 +78,7 @@ const commissionForLevel = (packageValue, level) => {
     level: config.level,
     incomeType: config.incomeType,
     commissionPercent: percent,
-    amount: roundMoney((pkg.netAmount * percent) / 100),
+    amount: plannedAmount != null ? roundMoney(plannedAmount) : roundMoney((pkg.netAmount * percent) / 100),
     rank: pkg.rank,
   }
 }

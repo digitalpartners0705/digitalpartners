@@ -13,6 +13,7 @@ const {
   syncCommissionTotal,
   mapOrder,
   loadBuyer,
+  OFFLINE_PROVIDER,
 } = require('../services/orders')
 
 const MAX_PAGE_SIZE = 100
@@ -306,6 +307,28 @@ const getOrderMeta = async (_req, res) => {
   }
 }
 
+const startSubscription = async (order) => {
+  if (!order?.user_id || !order.package_name) return false
+  const buyer = await loadBuyer(order.user_id)
+  if (!buyer) return false
+  const check = canPurchasePackage(buyer.knowledge_package, order.package_name)
+  if (!check.ok) return false
+  await query(`UPDATE users SET knowledge_package = $1 WHERE id = $2`, [check.package.name, buyer.id])
+  return true
+}
+
+const mapOrderRequest = (row) => ({
+  ...mapOrder(row),
+  buyerPinCode: row.pin_code || null,
+  buyerManagerName: row.manager_name || null,
+  buyerManagerPhone: row.manager_phone || null,
+  buyerReferralCode: row.buyer_referral_code || null,
+  buyerCurrentPackage: row.current_package || null,
+  sponsorName: row.sponsor_name || null,
+  sponsorPhone: row.sponsor_phone || null,
+  sponsorCode: row.sponsor_code || null,
+})
+
 const findBuyer = async (identifier) => {
   const value = trimmed(identifier)
   if (!value) return null
@@ -475,6 +498,10 @@ const recordPayment = async (req, res) => {
 
     const order = updated.rows[0]
 
+    if (captured) {
+      await startSubscription(order)
+    }
+
     // A pending order pays no commission until the money lands.
     if (captured && Number(order.commission_total) === 0 && order.user_id) {
       await creditUplineCommissions({
@@ -522,6 +549,211 @@ const updateOrder = async (req, res) => {
   }
 }
 
+const getOrderRequestStats = async (_req, res) => {
+  try {
+    const result = await query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+         COUNT(*) FILTER (WHERE status = 'paid')::int AS approved,
+         COUNT(*) FILTER (WHERE status = 'cancelled')::int AS cancelled
+       FROM orders
+       WHERE payment_provider = $1`,
+      [OFFLINE_PROVIDER],
+    )
+    const row = result.rows[0]
+    return res.json({
+      pending: row.pending,
+      approved: row.approved,
+      cancelled: row.cancelled,
+    })
+  } catch (error) {
+    console.error('Order request stats error:', error.message)
+    return res.status(500).json({ message: 'Could not load order requests' })
+  }
+}
+
+const listOrderRequests = async (req, res) => {
+  try {
+    const params = [OFFLINE_PROVIDER]
+    const clauses = ['o.payment_provider = $1']
+
+    const status = trimmed(req.query.status).toLowerCase()
+    if (status && status !== 'all' && ORDER_STATUSES.includes(status)) {
+      params.push(status)
+      clauses.push(`o.status = $${params.length}`)
+    }
+
+    const search = trimmed(req.query.search)
+    if (search) {
+      params.push(`%${search.toLowerCase()}%`)
+      const token = `$${params.length}`
+      clauses.push(`(
+        LOWER(o.order_number) LIKE ${token}
+        OR LOWER(COALESCE(o.buyer_name, '')) LIKE ${token}
+        OR LOWER(COALESCE(o.buyer_email, '')) LIKE ${token}
+        OR LOWER(COALESCE(o.buyer_phone, '')) LIKE ${token}
+        OR LOWER(COALESCE(u.referral_code, '')) LIKE ${token}
+      )`)
+    }
+
+    const where = `WHERE ${clauses.join(' AND ')}`
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(5, Number(req.query.pageSize) || 20))
+
+    const totals = await query(
+      `SELECT COUNT(*)::int AS count
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       ${where}`,
+      params,
+    )
+
+    const rows = await query(
+      `SELECT ${ORDER_FIELDS},
+              u.pin_code, u.manager_name, u.manager_phone,
+              u.referral_code AS buyer_referral_code,
+              u.knowledge_package AS current_package,
+              s.full_name AS sponsor_name, s.phone AS sponsor_phone, s.referral_code AS sponsor_code
+       FROM orders o
+       LEFT JOIN users u ON u.id = o.user_id
+       LEFT JOIN users s ON s.id = o.sponsor_id
+       ${where}
+       ORDER BY o.created_at DESC
+       LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`,
+      params,
+    )
+
+    const count = totals.rows[0].count
+    return res.json({
+      orders: rows.rows.map(mapOrderRequest),
+      page,
+      pageSize,
+      total: count,
+      totalPages: Math.max(1, Math.ceil(count / pageSize)),
+    })
+  } catch (error) {
+    console.error('List order requests error:', error.message)
+    return res.status(500).json({ message: 'Could not load order requests' })
+  }
+}
+
+const approveOrderRequest = async (req, res) => {
+  try {
+    if (!isUuid(req.params.id)) return res.status(404).json({ message: 'Order not found' })
+
+    const paymentMethod = trimmed(req.body.paymentMethod).toLowerCase()
+    if (!['cash', 'upi'].includes(paymentMethod)) {
+      return res.status(400).json({ message: 'Choose cash or UPI' })
+    }
+
+    const existing = await query(`SELECT ${ORDER_FIELDS} FROM orders o WHERE o.id = $1`, [req.params.id])
+    const current = existing.rows[0]
+    if (!current) return res.status(404).json({ message: 'Order not found' })
+    if (current.payment_provider !== OFFLINE_PROVIDER || current.status !== 'pending') {
+      return res.status(400).json({ message: 'This order is not waiting for approval' })
+    }
+
+    const buyer = current.user_id ? await loadBuyer(current.user_id) : null
+    if (!buyer) return res.status(400).json({ message: 'The buyer account no longer exists' })
+
+    const check = canPurchasePackage(buyer.knowledge_package, current.package_name)
+    if (!check.ok) return res.status(400).json({ message: check.message })
+
+    const paymentReference = trimmed(req.body.paymentReference) || null
+    const extraNote = trimmed(req.body.notes)
+    const notes = [current.notes, extraNote].filter(Boolean).join('\n') || null
+
+    const updated = await query(
+      `UPDATE orders
+       SET status = 'paid',
+           payment_status = 'captured',
+           payment_method = $1,
+           payment_reference = $2,
+           paid_at = NOW(),
+           notes = $3,
+           updated_at = NOW()
+       WHERE id = $4
+         AND status = 'pending'
+         AND payment_provider = $5
+       RETURNING ${ORDER_RETURNING}`,
+      [paymentMethod, paymentReference, notes, req.params.id, OFFLINE_PROVIDER],
+    )
+
+    const order = updated.rows[0]
+    if (!order) return res.status(409).json({ message: 'This order was already handled' })
+
+    try {
+      await query(`UPDATE users SET knowledge_package = $1 WHERE id = $2`, [check.package.name, buyer.id])
+    } catch (error) {
+      await query(
+        `UPDATE orders
+         SET status = 'pending',
+             payment_status = 'pending',
+             payment_method = NULL,
+             payment_reference = NULL,
+             paid_at = NULL,
+             notes = $2,
+             updated_at = NOW()
+         WHERE id = $1`,
+        [order.id, current.notes],
+      )
+      throw error
+    }
+
+    try {
+      await creditUplineCommissions({
+        buyerId: buyer.id,
+        packageName: order.package_name,
+        country: order.buyer_country || buyer.country,
+        orderId: order.id,
+      })
+      order.commission_total = await syncCommissionTotal(order.id)
+    } catch (error) {
+      console.error('Commission credit failed after approval:', error.message)
+    }
+
+    return res.json({ order: mapOrder(order), subscriptionStarted: true })
+  } catch (error) {
+    console.error('Approve order request error:', error.message)
+    return res.status(500).json({ message: 'Could not approve the order' })
+  }
+}
+
+const rejectOrderRequest = async (req, res) => {
+  try {
+    if (!isUuid(req.params.id)) return res.status(404).json({ message: 'Order not found' })
+
+    const existing = await query(`SELECT id, status, payment_provider, notes FROM orders WHERE id = $1`, [req.params.id])
+    const current = existing.rows[0]
+    if (!current) return res.status(404).json({ message: 'Order not found' })
+    if (current.payment_provider !== OFFLINE_PROVIDER || current.status !== 'pending') {
+      return res.status(400).json({ message: 'This order is not waiting for approval' })
+    }
+
+    const reason = trimmed(req.body.reason || req.body.notes)
+    const notes = [current.notes, reason ? `Rejected: ${reason}` : 'Rejected by admin'].filter(Boolean).join('\n')
+
+    const updated = await query(
+      `UPDATE orders
+       SET status = 'cancelled',
+           payment_status = 'failed',
+           notes = $2,
+           updated_at = NOW()
+       WHERE id = $1
+         AND status = 'pending'
+         AND payment_provider = $3
+       RETURNING ${ORDER_RETURNING}`,
+      [req.params.id, notes, OFFLINE_PROVIDER],
+    )
+
+    if (!updated.rows[0]) return res.status(409).json({ message: 'This order was already handled' })
+    return res.json({ order: mapOrder(updated.rows[0]) })
+  } catch (error) {
+    console.error('Reject order request error:', error.message)
+    return res.status(500).json({ message: 'Could not reject the order' })
+  }
+}
+
 module.exports = {
   listOrders,
   getOrder,
@@ -530,4 +762,8 @@ module.exports = {
   createManualOrder,
   recordPayment,
   updateOrder,
+  listOrderRequests,
+  getOrderRequestStats,
+  approveOrderRequest,
+  rejectOrderRequest,
 }

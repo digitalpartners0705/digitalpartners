@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './context/AuthContext'
+import { hasSubscription } from './utils/subscription'
 import AffiliateLayout from './components/AffiliateLayout'
 import DashboardLayout from './components/DashboardLayout'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -27,6 +29,12 @@ import Landing from './pages/Landing'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import PackageDetail from './pages/PackageDetail'
+
+function RequireSubscription({ children }) {
+  const { user } = useAuth()
+  if (!hasSubscription(user)) return <Navigate to="/dashboard/upgrade" replace />
+  return children
+}
 
 function App() {
   return (
@@ -57,7 +65,9 @@ function App() {
         path="/affiliate"
         element={
           <ProtectedRoute>
-            <AffiliateLayout />
+            <RequireSubscription>
+              <AffiliateLayout />
+            </RequireSubscription>
           </ProtectedRoute>
         }
       >

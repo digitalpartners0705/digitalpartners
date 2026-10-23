@@ -2,6 +2,7 @@ export const adminNav = [
   {
     label: 'Sales',
     items: [
+      { to: '/order-requests', label: 'Order requests', icon: 'requests' },
       { to: '/orders', label: 'Orders', icon: 'orders' },
       { to: '/commissions', label: 'Commissions', icon: 'commissions' },
     ],

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getCourse, getPlayUrl } from '../../services/courses'
+import { getCourse, getPlayUrl, recordWatchTime } from '../../services/courses'
 import { canViewCourse } from '../../utils/courses'
 
 function CourseWatch() {
@@ -12,6 +12,8 @@ function CourseWatch() {
   const [status, setStatus] = useState('loading')
   const [activeId, setActiveId] = useState(null)
   const [playUrl, setPlayUrl] = useState('')
+  const videoRef = useRef(null)
+  const watchRef = useRef({ lastTime: null, pending: 0 })
 
   useEffect(() => {
     let cancelled = false
@@ -60,6 +62,60 @@ function CourseWatch() {
     }
   }, [activeId, courseId, status])
 
+  useEffect(() => {
+    watchRef.current = { lastTime: null, pending: 0 }
+  }, [activeId])
+
+  useEffect(() => {
+    const flush = (keepalive = false) => {
+      const pending = Math.floor(watchRef.current.pending)
+      if (pending < 1 || !courseId || !activeId) return
+      watchRef.current.pending -= pending
+      recordWatchTime(courseId, activeId, pending, { keepalive }).catch(() => {
+        if (!keepalive) watchRef.current.pending += pending
+      })
+    }
+
+    const onTime = () => {
+      const video = videoRef.current
+      if (!video || video.paused || video.seeking) return
+      const now = video.currentTime
+      const last = watchRef.current.lastTime
+      watchRef.current.lastTime = now
+      if (last == null) return
+      const delta = now - last
+      if (delta > 0 && delta < 2) {
+        watchRef.current.pending += delta
+      }
+      if (watchRef.current.pending >= 10) flush(false)
+    }
+
+    const onSeeking = () => {
+      watchRef.current.lastTime = videoRef.current?.currentTime ?? null
+    }
+
+    const onLeave = () => flush(true)
+    const video = videoRef.current
+    if (video) {
+      video.addEventListener('timeupdate', onTime)
+      video.addEventListener('seeking', onSeeking)
+      video.addEventListener('pause', onLeave)
+      video.addEventListener('ended', onLeave)
+    }
+    window.addEventListener('pagehide', onLeave)
+
+    return () => {
+      if (video) {
+        video.removeEventListener('timeupdate', onTime)
+        video.removeEventListener('seeking', onSeeking)
+        video.removeEventListener('pause', onLeave)
+        video.removeEventListener('ended', onLeave)
+      }
+      window.removeEventListener('pagehide', onLeave)
+      flush(true)
+    }
+  }, [activeId, courseId, playUrl])
+
   if (status === 'missing' || status === 'locked') {
     return <Navigate to={status === 'locked' ? '/dashboard/upgrade' : '/dashboard/browse'} replace />
   }
@@ -101,7 +157,14 @@ function CourseWatch() {
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <div className="aspect-video bg-[#111827]">
             {playUrl ? (
-              <video key={activeVideo?.id} className="h-full w-full bg-black" controls playsInline src={playUrl}>
+              <video
+                key={activeVideo?.id}
+                ref={videoRef}
+                className="h-full w-full bg-black"
+                controls
+                playsInline
+                src={playUrl}
+              >
                 Your browser does not support video playback.
               </video>
             ) : (

@@ -7,6 +7,8 @@ const ORDER_STATUSES = ['pending', 'paid', 'failed', 'cancelled']
 const PAYMENT_STATUSES = ['pending', 'captured', 'failed']
 const ORDER_SOURCES = ['signup', 'upgrade', 'manual', 'legacy']
 const PAYMENT_METHODS = ['upi', 'card', 'netbanking', 'wallet', 'bank_transfer', 'cash', 'other']
+// Checkout requests collected by the team until the payment gateway is live.
+const OFFLINE_PROVIDER = 'offline'
 
 const ORDER_COLUMNS = [
   'id',
@@ -253,6 +255,7 @@ module.exports = {
   ORDER_SOURCES,
   PAYMENT_STATUSES,
   PAYMENT_METHODS,
+  OFFLINE_PROVIDER,
   ORDER_COLUMNS,
   ORDER_FIELDS,
   ORDER_RETURNING,

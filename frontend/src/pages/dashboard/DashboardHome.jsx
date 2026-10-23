@@ -1,12 +1,22 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CourseCover from '../../components/CourseCover'
 import { useAuth } from '../../context/AuthContext'
 import { useCatalog } from '../../hooks/useCatalog'
+import { getLearningStats } from '../../services/courses'
 import { canViewCourse, getEnrolledCourses } from '../../utils/courses'
+
+function formatHours(hours) {
+  if (hours == null) return '—'
+  const value = Number(hours)
+  if (!Number.isFinite(value) || value <= 0) return '0'
+  return String(value)
+}
 
 function DashboardHome() {
   const { user } = useAuth()
   const { courses, loading } = useCatalog()
+  const [hoursThisWeek, setHoursThisWeek] = useState(null)
   const firstName = user?.fullName?.split(' ')[0] || 'there'
   const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1)
   const enrolled = getEnrolledCourses(courses, user)
@@ -14,6 +24,25 @@ function DashboardHome() {
   const recommended = user?.knowledgePackage
     ? courses.filter((course) => course.packageName === user.knowledgePackage).slice(0, 3)
     : courses.slice(0, 3)
+
+  useEffect(() => {
+    let active = true
+    const load = () => {
+      getLearningStats()
+        .then((data) => {
+          if (active) setHoursThisWeek(data.hoursThisWeek ?? 0)
+        })
+        .catch(() => {
+          if (active) setHoursThisWeek(0)
+        })
+    }
+    load()
+    window.addEventListener('focus', load)
+    return () => {
+      active = false
+      window.removeEventListener('focus', load)
+    }
+  }, [])
 
   return (
     <div className="space-y-8">
@@ -69,7 +98,7 @@ function DashboardHome() {
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: 'Courses enrolled', value: loading ? '—' : enrolled.length, tint: 'bg-gold-400/15 text-[#8f5f08]' },
-          { label: 'Hours this week', value: '3.5', tint: 'bg-sky-50 text-sky-700' },
+          { label: 'Hours this week', value: formatHours(hoursThisWeek), tint: 'bg-sky-50 text-sky-700' },
           { label: 'Certificates', value: '0', tint: 'bg-slate-100 text-slate-600' },
         ].map((stat) => (
           <div key={stat.label} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80">

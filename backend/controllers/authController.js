@@ -3,8 +3,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { query, createReferralCode } = require('../config/db')
 const { PACKAGE_NAMES, canPurchasePackage } = require('../data/commissions')
-const { creditUplineCommissions } = require('../services/affiliateCommission')
-const { createOrder, syncCommissionTotal } = require('../services/orders')
+const { OFFLINE_PROVIDER, createOrder, mapOrder } = require('../services/orders')
 const storage = require('../services/storage')
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -32,6 +31,8 @@ const publicUser = async (row) => {
     referredByLabel = row.promo_code
   }
 
+  const pendingOrder = await loadPendingOrder(row.id)
+
   return {
     id: row.id,
     fullName: row.full_name,
@@ -53,7 +54,27 @@ const publicUser = async (row) => {
     referredBy: row.referred_by || null,
     referredByLabel,
     avatarUrl: await storage.signedGet(row.avatar_key),
+    pendingOrder,
     createdAt: row.created_at,
+  }
+}
+
+const loadPendingOrder = async (userId) => {
+  const result = await query(
+    `SELECT order_number, package_name, gross_amount, created_at
+     FROM orders
+     WHERE user_id = $1 AND status = 'pending' AND payment_provider = $2
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [userId, OFFLINE_PROVIDER],
+  )
+  const pending = result.rows[0]
+  if (!pending) return null
+  return {
+    orderNumber: pending.order_number,
+    packageName: pending.package_name,
+    amount: Number(pending.gross_amount),
+    createdAt: pending.created_at,
   }
 }
 
@@ -247,35 +268,40 @@ const purchasePackage = async (req, res) => {
       return res.status(400).json({ message: check.message })
     }
 
-    const updated = await query(
-      `UPDATE users SET knowledge_package = $1 WHERE id = $2 RETURNING ${USER_FIELDS}`,
-      [check.package.name, row.id],
+    const existing = await query(
+      `SELECT order_number, package_name
+       FROM orders
+       WHERE user_id = $1 AND status = 'pending' AND payment_provider = $2
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [row.id, OFFLINE_PROVIDER],
     )
+    if (existing.rows[0]) {
+      const open = existing.rows[0]
+      return res.status(409).json({
+        message: `You already have an order waiting (${open.order_number} for ${open.package_name}). Our team will contact you to complete the payment.`,
+      })
+    }
 
+    // Interim checkout: record the request only. Access and commission start after admin approval.
     const order = await createOrder({
       userId: row.id,
+      buyer: row,
       packageName: check.package.name,
       source: row.knowledge_package ? 'upgrade' : 'signup',
-      status: 'paid',
-      paymentStatus: 'captured',
+      status: 'pending',
+      paymentStatus: 'pending',
+      paymentProvider: OFFLINE_PROVIDER,
+      paidAt: null,
+      notes: 'Placed from checkout. Collect payment by cash or UPI, then approve to start the subscription.',
     })
+    if (!order) return res.status(500).json({ message: 'Could not place the order' })
 
-    const credited = await creditUplineCommissions({
-      buyerId: row.id,
-      packageName: check.package.name,
-      country: row.country,
-      orderId: order?.id || null,
-    })
-    await syncCommissionTotal(order?.id)
-
-    return res.json({
-      user: await publicUser(updated.rows[0]),
-      purchase: {
-        orderNumber: order?.order_number || null,
-        packageName: check.package.name,
-        commissionCredited: credited.length > 0,
-        levelsPaid: credited.map((earning) => earning.income_type),
-      },
+    return res.status(201).json({
+      message:
+        'Your order has been received. Our team will contact you shortly to complete the payment. Your subscription will start once the payment is confirmed.',
+      user: await publicUser(row),
+      order: mapOrder(order),
     })
   } catch (error) {
     console.error('Purchase error:', error.message)

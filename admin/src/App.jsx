@@ -6,6 +6,7 @@ import CoursesPage from './pages/CoursesPage'
 import CommissionsPage from './pages/CommissionsPage'
 import EarnerDetail from './pages/EarnerDetail'
 import OrderDetail from './pages/OrderDetail'
+import OrderRequestsPage from './pages/OrderRequestsPage'
 import OrdersPage from './pages/OrdersPage'
 import TrainingEditor from './pages/TrainingEditor'
 import TrainingVideos from './pages/TrainingVideos'
@@ -32,6 +33,7 @@ function App() {
         }
       >
         <Route index element={<Navigate to="orders" replace />} />
+        <Route path="order-requests" element={<OrderRequestsPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/:id" element={<OrderDetail />} />
         <Route path="commissions" element={<CommissionsPage />} />

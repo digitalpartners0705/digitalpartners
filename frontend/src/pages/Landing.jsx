@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { getStoredToken } from '../services/api'
 import { captureReferralFromSearch } from '../utils/referral'
+import { hasSubscription } from '../utils/subscription'
 import Home from './Home'
 
 function Landing() {
@@ -15,7 +16,7 @@ function Landing() {
   }, [])
 
   if (user || getStoredToken()) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to={user && !hasSubscription(user) ? '/dashboard/upgrade' : '/dashboard'} replace />
   }
 
   return (

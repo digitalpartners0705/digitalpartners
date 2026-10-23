@@ -14,6 +14,7 @@ function AuthProvider({ children }) {
   const [authMode, setAuthMode] = useState('login')
   const [signupDefaults, setSignupDefaults] = useState({})
   const [pendingCheckout, setPendingCheckout] = useState(null)
+  const [receivedOrder, setReceivedOrder] = useState(null)
   const [paying, setPaying] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
 
@@ -35,6 +36,15 @@ function AuthProvider({ children }) {
         clearSession()
         setUser(null)
       })
+  }, [])
+
+  useEffect(() => {
+    const refreshOnFocus = () => {
+      if (!getStoredToken()) return
+      getCurrentUser().then(setUser).catch(() => {})
+    }
+    window.addEventListener('focus', refreshOnFocus)
+    return () => window.removeEventListener('focus', refreshOnFocus)
   }, [])
 
   const openAuth = useCallback((mode, defaults = {}) => {
@@ -65,7 +75,7 @@ function AuthProvider({ children }) {
         setPendingCheckout(null)
       }
 
-      navigate('/dashboard', { replace: true })
+      navigate(nextUser?.knowledgePackage ? '/dashboard' : '/dashboard/upgrade', { replace: true })
     },
     [navigate],
   )
@@ -73,23 +83,27 @@ function AuthProvider({ children }) {
   const closeCheckout = useCallback(() => {
     if (paying) return
     setPendingCheckout(null)
+    setReceivedOrder(null)
     setCheckoutError('')
   }, [paying])
 
   const payPendingCheckout = useCallback(async () => {
-    if (!pendingCheckout) return
+    if (!pendingCheckout || receivedOrder) return
     setPaying(true)
     setCheckoutError('')
     try {
       const data = await purchasePackage(pendingCheckout.name)
       setUser(data.user)
-      setPendingCheckout(null)
+      setReceivedOrder({
+        orderNumber: data.order?.orderNumber,
+        packageName: data.order?.packageName || pendingCheckout.name,
+      })
     } catch (error) {
-      setCheckoutError(error.response?.data?.message || 'Could not complete the purchase')
+      setCheckoutError(error.response?.data?.message || 'Could not place the order')
     } finally {
       setPaying(false)
     }
-  }, [pendingCheckout])
+  }, [pendingCheckout, receivedOrder])
 
   const updateUser = useCallback((nextUser) => setUser(nextUser), [])
 
@@ -97,6 +111,7 @@ function AuthProvider({ children }) {
     clearSession()
     setUser(null)
     setPendingCheckout(null)
+    setReceivedOrder(null)
     navigate('/')
   }, [navigate])
 
@@ -121,15 +136,11 @@ function AuthProvider({ children }) {
           <CheckoutModal
             pkg={pendingCheckout}
             paying={paying}
-            closeLabel="Pay later"
+            error={checkoutError}
+            received={receivedOrder}
             onClose={closeCheckout}
             onPay={payPendingCheckout}
           />
-          {checkoutError ? (
-            <p className="fixed bottom-6 left-1/2 z-[70] w-[min(24rem,calc(100%-2rem))] -translate-x-1/2 rounded-xl border border-red-300/50 bg-red-50 px-4 py-3 text-center text-sm text-red-700 shadow-lg">
-              {checkoutError}
-            </p>
-          ) : null}
         </>
       ) : null}
     </AuthContext.Provider>

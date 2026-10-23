@@ -49,27 +49,24 @@ function Upgrade() {
   const currentPackage = user?.knowledgePackage || null
   const currentRank = PACKAGE_RANK[currentPackage] || 0
   const [checkoutPkg, setCheckoutPkg] = useState(null)
+  const [receivedOrder, setReceivedOrder] = useState(null)
   const [paying, setPaying] = useState(false)
-  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const hasPendingOrder = Boolean(user?.pendingOrder)
 
   const handlePay = async () => {
-    if (!checkoutPkg) return
+    if (!checkoutPkg || receivedOrder) return
     setError('')
-    setMessage('')
     setPaying(true)
     try {
       const data = await purchasePackage(checkoutPkg.name)
       updateUser(data.user)
-      setCheckoutPkg(null)
-      const levelsPaid = data.purchase?.levelsPaid?.length || 0
-      setMessage(
-        levelsPaid > 0
-          ? `${checkoutPkg.name} unlocked. Commission was credited to ${levelsPaid} level${levelsPaid === 1 ? '' : 's'} of your referral chain.`
-          : `${checkoutPkg.name} unlocked.`,
-      )
+      setReceivedOrder({
+        orderNumber: data.order?.orderNumber,
+        packageName: data.order?.packageName || checkoutPkg.name,
+      })
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not complete the purchase')
+      setError(err.response?.data?.message || 'Could not place the order')
     } finally {
       setPaying(false)
     }
@@ -92,10 +89,7 @@ function Upgrade() {
         </div>
       </section>
 
-      {message ? (
-        <p className="rounded-xl border border-emerald-300/50 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{message}</p>
-      ) : null}
-      {error ? (
+      {error && !checkoutPkg ? (
         <p className="rounded-xl border border-red-300/50 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
       ) : null}
 
@@ -104,7 +98,7 @@ function Upgrade() {
           const styles = accentStyles[pkg.accent]
           const isCurrent = currentPackage === pkg.name
           const isLower = (PACKAGE_RANK[pkg.name] || 0) <= currentRank
-          const disabled = isCurrent || isLower || paying
+          const disabled = isCurrent || isLower || paying || hasPendingOrder
           const highlighted = pkg.accent === 'gold'
 
           return (
@@ -139,12 +133,12 @@ function Upgrade() {
                 disabled={disabled}
                 onClick={() => {
                   setError('')
-                  setMessage('')
+                  setReceivedOrder(null)
                   setCheckoutPkg(pkg)
                 }}
                 className={`mt-7 w-full rounded-xl py-3 text-sm font-bold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${styles.button}`}
               >
-                {isCurrent ? 'Current plan' : isLower ? 'Included in your plan' : 'Buy Now'}
+                {isCurrent ? 'Current plan' : isLower ? 'Included in your plan' : hasPendingOrder ? 'Order pending' : 'Buy Now'}
               </button>
             </article>
           )
@@ -155,8 +149,14 @@ function Upgrade() {
         <CheckoutModal
           pkg={checkoutPkg}
           paying={paying}
+          error={error}
+          received={receivedOrder}
           onClose={() => {
-            if (!paying) setCheckoutPkg(null)
+            if (!paying) {
+              setCheckoutPkg(null)
+              setReceivedOrder(null)
+              setError('')
+            }
           }}
           onPay={handlePay}
         />

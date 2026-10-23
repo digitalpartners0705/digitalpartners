@@ -182,6 +182,19 @@ const initCatalogTables = async () => {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `)
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS lesson_watch_time (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+      watched_on DATE NOT NULL,
+      watched_seconds INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (user_id, lesson_id, watched_on)
+    )
+  `)
+  await query(`CREATE INDEX IF NOT EXISTS lesson_watch_time_user_day_idx ON lesson_watch_time (user_id, watched_on)`)
 }
 
 const initAffiliateTables = async () => {
