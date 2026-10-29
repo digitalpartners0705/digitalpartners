@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SiteFooter from '../components/SiteFooter'
 import { packagePath } from '../data/packages'
@@ -185,6 +185,7 @@ function PackageBox({ label, accent }) {
           style={{ background: accent.spine }}
         />
         <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100 group-focus-within:opacity-100" />
         <div className="flex h-full flex-col justify-between p-4 pl-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">Digital Vidhya</p>
           <p
@@ -205,12 +206,12 @@ function BuyNowButton({ onClick, dark }) {
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-sm font-bold transition hover:brightness-110 ${
+      className={`inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-sm font-bold transition duration-300 hover:brightness-110 group-hover:gap-3.5 group-focus-within:gap-3.5 ${
         dark ? 'bg-[#10203c] text-white' : 'bg-ink-950 text-white'
       }`}
     >
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#10203c]">
-        <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#10203c] transition duration-300 group-hover:translate-x-0.5 group-focus-within:translate-x-0.5">
+        <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 transition duration-300 group-hover:translate-x-px group-hover:-translate-y-px group-focus-within:translate-x-px group-focus-within:-translate-y-px" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 15 15 5M8 5h7v7" />
         </svg>
       </span>
@@ -321,13 +322,44 @@ function StatIcon({ name }) {
 
 function Home() {
   const navigate = useNavigate()
+  const packsRef = useRef(null)
+  const mentorsRef = useRef(null)
   const [openFaq, setOpenFaq] = useState(0)
   const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [packsVisible, setPacksVisible] = useState(false)
+  const [mentorsVisible, setMentorsVisible] = useState(false)
 
   const visibleTestimonials = [
     testimonials[activeTestimonial],
     testimonials[(activeTestimonial + 1) % testimonials.length],
   ]
+
+  useEffect(() => {
+    const node = packsRef.current
+    if (!node) return undefined
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) {
+      setPacksVisible(true)
+      setMentorsVisible(true)
+      return undefined
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return
+          if (entry.target === packsRef.current) setPacksVisible(true)
+          if (entry.target === mentorsRef.current) setMentorsVisible(true)
+        })
+      },
+      { threshold: 0.22 },
+    )
+
+    observer.observe(node)
+    if (mentorsRef.current) observer.observe(mentorsRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   const handleBuy = (packageId) => {
     navigate(packagePath(packageId))
@@ -340,55 +372,118 @@ function Home() {
         <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-28 sm:px-6 sm:pt-32 lg:px-8 lg:pb-16">
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-6">
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-[#2c4d7c] bg-[#0c1c34] px-4 py-1.5 text-sm font-medium text-white">
+              <p className="hero-rise inline-flex items-center gap-2 rounded-full border border-[#2c4d7c] bg-[#0c1c34] px-4 py-1.5 text-sm font-medium text-white">
                 <svg viewBox="0 0 24 24" className="h-4 w-4 text-sky-300" fill="currentColor" aria-hidden="true">
                   <path d="M12 3 1.5 8.2 12 13.4 20 9.3v6.2h1.6V8.6L12 3Zm-5.2 9.1v3.2c0 1.6 2.3 3.2 5.2 3.2s5.2-1.6 5.2-3.2v-3.2L12 14.7l-5.2-2.6Z" />
                 </svg>
                 Practical Skills for a Better Tomorrow
               </p>
               <h1 className="mt-6 font-[Plus_Jakarta_Sans,Inter,sans-serif] text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.45rem]">
-                Learn Skills.
-                <br />
-                Build <span className="gold-text">Your Career.</span>
-                <br />
-                <span className="gold-text">Earn Online.</span>
+                <span className="hero-rise block" style={{ animationDelay: '0.12s' }}>Learn Skills.</span>
+                <span className="hero-rise block" style={{ animationDelay: '0.24s' }}>
+                  Build <span className="gold-text hero-gold-live">Your Career.</span>
+                </span>
+                <span className="hero-rise block" style={{ animationDelay: '0.36s' }}>
+                  <span className="gold-text hero-gold-live">Earn Online.</span>
+                </span>
               </h1>
-              <p className="mt-5 max-w-xl text-base leading-7 text-slate-300 sm:text-[17px]">
+              <p className="hero-rise mt-5 max-w-xl text-base leading-7 text-slate-300 sm:text-[17px]" style={{ animationDelay: '0.48s' }}>
                 Learn practical digital skills from industry experts and turn your knowledge into real career
                 opportunities, freelance projects and online income.
               </p>
 
-              <a
-                href="#courses"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-6 py-3 text-sm font-bold text-[#1a1203] shadow-[0_10px_28px_rgba(245,193,74,0.32)] transition hover:brightness-105"
-              >
-                Explore Courses
-                <span aria-hidden="true">→</span>
-              </a>
+              <div className="hero-rise" style={{ animationDelay: '0.6s' }}>
+                <a
+                  href="#courses"
+                  className="hero-cta mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-6 py-3 text-sm font-bold text-[#1a1203] shadow-[0_10px_28px_rgba(245,193,74,0.32)] transition hover:brightness-105"
+                >
+                  Explore Courses
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
             </div>
 
             <div className="relative">
-              <img
-                src="/assets/hero.png"
-                alt="Digital Vidhya platform on a laptop, with courses, mentors, and certificates"
-                className="w-full object-contain"
-              />
+              <div className="pointer-events-none absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
+                <div className="hero-glow h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" />
+              </div>
+              <div className="pointer-events-none absolute left-[64%] top-[18%] -translate-x-1/2" aria-hidden="true">
+                <div className="hero-glow h-44 w-44 rounded-full bg-gold-400/25 blur-3xl" style={{ animationDelay: '1.1s' }} />
+              </div>
+
+              <span className="hero-particle pointer-events-none absolute left-[6%] top-[10%] h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(125,211,252,0.95)]" aria-hidden="true" />
+              <span className="hero-particle pointer-events-none absolute right-[8%] top-[6%] h-1.5 w-1.5 rounded-full bg-gold-300 shadow-[0_0_14px_rgba(245,193,74,0.95)]" style={{ animationDelay: '0.7s' }} aria-hidden="true" />
+              <span className="hero-particle pointer-events-none absolute bottom-[16%] left-[4%] h-1.5 w-1.5 rounded-full bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.8)]" style={{ animationDelay: '1.3s' }} aria-hidden="true" />
+              <span className="hero-particle pointer-events-none absolute right-[3%] top-[46%] h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_14px_rgba(56,189,248,0.9)]" style={{ animationDelay: '0.4s' }} aria-hidden="true" />
+
+              <div className="hero-float relative">
+                <div
+                  className="pointer-events-none absolute z-20"
+                  style={{ left: '40%', top: '1%', width: '36%', aspectRatio: '1 / 1' }}
+                  aria-hidden="true"
+                >
+                  <div className="hero-orbit relative h-full w-full">
+                    <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-300 shadow-[0_0_16px_5px_rgba(245,193,74,0.9)]" />
+                    <span className="absolute bottom-[4%] right-[6%] h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_4px_rgba(56,189,248,0.9)]" />
+                  </div>
+                  <div className="hero-orbit-slow absolute inset-[10%]">
+                    <span className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-white shadow-[0_0_10px_3px_rgba(255,255,255,0.8)]" />
+                  </div>
+                </div>
+
+                <img
+                  src="/assets/hero.png"
+                  alt="Digital Vidhya platform on a laptop, with courses, mentors, and certificates"
+                  className="relative z-10 w-full object-contain"
+                />
+
+                <div className="hero-bob absolute left-[6%] top-[2%] z-30 flex items-center gap-2.5 rounded-2xl border border-white/15 bg-[#07111f]/80 px-3 py-2 shadow-[0_14px_32px_rgba(0,0,0,0.4)] backdrop-blur-md sm:left-[8%] sm:px-3.5 lg:left-[2%]" aria-hidden="true">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold-400/15 text-gold-300">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                      <path d="m12 3.2 2.4 5.2 5.7.5-4.3 3.7 1.3 5.5L12 15.4 6.9 18.1l1.3-5.5L3.9 8.9l5.7-.5L12 3.2Z" />
+                    </svg>
+                  </span>
+                  <span>
+                    <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-300">Trending</span>
+                    <span className="block text-xs font-bold text-white sm:text-sm">AI & Ads tracks</span>
+                  </span>
+                </div>
+
+                <div className="hero-bob-alt absolute bottom-[8%] right-0 z-30 rounded-2xl border border-sky-400/30 bg-[#071428]/85 px-3.5 py-2.5 shadow-[0_14px_32px_rgba(14,165,233,0.28)] backdrop-blur-md sm:right-[1%]" aria-hidden="true">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="hero-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                    </span>
+                    <p className="text-xs font-bold text-white sm:text-sm">Mentor session live</p>
+                  </div>
+                  <div className="mt-2 h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
+                    <div className="hero-progress h-full w-full rounded-full bg-gradient-to-r from-sky-400 to-gold-400" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-white/10 bg-[#07111f]/80 px-4 py-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur sm:px-6">
-            <div className="grid grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-white/10">
-              {heroStats.map((stat) => (
-                <div key={stat.label} className="flex items-center justify-center gap-3 px-2">
-                  <span className={stat.tone}>
-                    <StatIcon name={stat.icon} />
-                  </span>
-                  <div>
-                    <p className="text-xl font-extrabold text-white sm:text-2xl">{stat.value}</p>
-                    <p className="text-xs text-slate-400 sm:text-sm">{stat.label}</p>
+          <div className="hero-rise mt-6 rounded-2xl border border-white/10 bg-[#07111f]/80 py-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur" style={{ animationDelay: '0.45s' }}>
+            <div className="hero-marquee-viewport">
+              <div className="hero-marquee">
+                {[0, 1].map((copy) => (
+                  <div key={copy} className="hero-marquee-group" aria-hidden={copy === 1}>
+                    {heroStats.map((stat) => (
+                      <div key={`${stat.label}-${copy}`} className="flex min-w-0 flex-1 items-center justify-center gap-3 border-r border-white/10 px-4">
+                        <span className={stat.tone}>
+                          <StatIcon name={stat.icon} />
+                        </span>
+                        <div>
+                          <p className="text-xl font-extrabold text-white sm:text-2xl">{stat.value}</p>
+                          <p className="whitespace-nowrap text-xs text-slate-400 sm:text-sm">{stat.label}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -420,12 +515,14 @@ function Home() {
         </div>
       </section>
 
-      <section id="courses" className="relative overflow-hidden bg-[#0b1220] text-white">
+      <section id="courses" ref={packsRef} className="relative overflow-hidden bg-[#0b1220] text-white">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(245,193,74,0.08),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(15,23,42,0.9),transparent_50%)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="pack-orb pointer-events-none absolute -left-16 top-24 h-56 w-56 rounded-full bg-gold-400/10 blur-3xl" aria-hidden="true" />
+        <div className="pack-orb pointer-events-none absolute -right-10 bottom-10 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" style={{ animationDelay: '1.4s' }} aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:48px_48px]" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
+            <div className={`max-w-2xl ${packsVisible ? 'pack-rise' : 'motion-safe:translate-y-6 motion-safe:opacity-0'}`}>
               <h2 className="font-[Plus_Jakarta_Sans,Inter,sans-serif] text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
                 Knowledge Packs
               </h2>
@@ -434,10 +531,10 @@ function Home() {
               </p>
             </div>
 
-            <div className="inline-flex w-fit items-center rounded-full bg-white/10 p-1 ring-1 ring-white/10">
+            <div className={`inline-flex w-fit items-center rounded-full bg-white/10 p-1 ring-1 ring-white/10 ${packsVisible ? 'pack-rise' : 'motion-safe:translate-y-6 motion-safe:opacity-0'}`} style={{ animationDelay: '0.12s' }}>
               <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#10203c]">
                 Knowledge Packages
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink-950 text-xs font-bold text-white">
+                <span className="pack-count flex h-6 w-6 items-center justify-center rounded-full bg-ink-950 text-xs font-bold text-white">
                   {knowledgePackages.length}
                 </span>
               </span>
@@ -445,35 +542,50 @@ function Home() {
           </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-            {knowledgePackages.map((pkg) => {
+            {knowledgePackages.map((pkg, index) => {
               const theme = packageThemes[pkg.theme]
               const lightText = pkg.theme === 'ink'
 
               return (
-                <article
+                <div
                   key={pkg.id}
-                  className={`group flex flex-col overflow-hidden rounded-[1.75rem] p-6 transition duration-300 hover:-translate-y-1 sm:p-7 lg:min-h-[34rem] ${theme.card} ${
-                    theme.glow || ''
-                  }`}
+                  className="pack-card group h-full"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                <article
+                  className={`relative flex h-full flex-col overflow-hidden rounded-[1.75rem] p-6 sm:p-7 lg:min-h-[34rem] ${theme.card} ${
+                    pkg.featured ? 'pack-glow' : ''
+                  } ${packsVisible ? 'pack-rise' : 'motion-safe:translate-y-8 motion-safe:opacity-0'}`}
+                  style={{ animationDelay: `${0.16 + index * 0.12}s` }}
+                >
+                  <span
+                    className="pointer-events-none absolute inset-x-6 top-0 z-10 h-1 origin-left scale-x-0 rounded-full transition duration-500 group-hover:scale-x-100 group-focus-within:scale-x-100"
+                    style={{ background: theme.spine }}
+                    aria-hidden="true"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.2),transparent_52%)] opacity-0 transition duration-500 group-hover:opacity-100 group-focus-within:opacity-100" aria-hidden="true" />
+                  <div className="relative z-10 flex items-start justify-between gap-3">
                     <h3 className="font-[Plus_Jakarta_Sans,Inter,sans-serif] text-2xl font-extrabold tracking-tight sm:text-3xl">
                       {pkg.name}
                     </h3>
                     {pkg.badge ? (
-                      <span className="shrink-0 rounded-full bg-[#10203c]/12 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#10203c]">
+                      <span className="pack-badge shrink-0 rounded-full bg-[#10203c]/12 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#10203c]">
                         {pkg.badge}
                       </span>
                     ) : null}
                   </div>
 
-                  <div className="my-8 flex flex-1 items-center justify-center transition duration-500 group-hover:-translate-y-1 group-hover:scale-[1.05]">
-                    <PackageBox label={pkg.shortLabel} accent={theme} />
+                  <div
+                    className="pack-float relative z-10 my-8 flex flex-1 items-center justify-center"
+                    style={{ animationDelay: `${index * 0.45}s`, animationDuration: `${4.4 + index * 0.45}s` }}
+                  >
+                    <div className="pack-book">
+                      <PackageBox label={pkg.shortLabel} accent={theme} />
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="relative z-10">
                     <p className={`text-sm leading-6 ${theme.muted}`}>{pkg.description}</p>
-                    <p className={`mt-3 text-lg font-extrabold ${lightText ? 'text-gold-300' : 'text-[#10203c]'}`}>
+                    <p className={`mt-3 origin-left text-lg font-extrabold transition duration-300 group-hover:scale-105 group-focus-within:scale-105 ${lightText ? 'text-gold-300' : 'text-[#10203c]'}`}>
                       {rupees(pkg.price)}
                     </p>
                     <div className="mt-5">
@@ -481,16 +593,17 @@ function Home() {
                     </div>
                   </div>
                 </article>
+                </div>
               )
             })}
           </div>
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#f4f6f9]">
+      <section ref={mentorsRef} className="relative overflow-hidden bg-[#f4f6f9]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,rgba(245,193,74,0.12),transparent_60%)]" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className={`mx-auto max-w-2xl text-center ${mentorsVisible ? 'pack-rise' : 'motion-safe:translate-y-6 motion-safe:opacity-0'}`}>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#c48a09]">Mentors</p>
             <h2 className="mt-3 font-[Plus_Jakarta_Sans,Inter,sans-serif] text-3xl font-extrabold tracking-tight text-[#10203c] sm:text-4xl">
               Learn from industry instructors
@@ -501,35 +614,42 @@ function Home() {
           </div>
 
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {instructors.map((person) => (
-              <article
+            {instructors.map((person, index) => (
+              <div
                 key={person.name}
-                className="group relative overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(16,32,60,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(16,32,60,0.1)]"
+                className="mentor-card h-full"
               >
-                <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${person.tone}`} />
-                <div className="flex items-start justify-between gap-3">
-                  <div className={`relative h-16 w-16 overflow-hidden rounded-2xl bg-gradient-to-br shadow-md ring-2 ring-white ${person.tone}`}>
-                    {person.photo ? (
-                      <img
-                        src={person.photo}
-                        alt={person.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center text-lg font-extrabold text-white">
-                        {person.initials}
-                      </span>
-                    )}
+                <article
+                  className={`group relative h-full overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(16,32,60,0.06)] transition duration-300 hover:shadow-[0_22px_44px_rgba(16,32,60,0.14)] ${
+                    mentorsVisible ? 'pack-rise' : 'motion-safe:translate-y-8 motion-safe:opacity-0'
+                  }`}
+                  style={{ animationDelay: `${0.12 + index * 0.1}s` }}
+                >
+                  <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r transition duration-500 group-hover:h-2 ${person.tone}`} />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className={`relative h-16 w-16 overflow-hidden rounded-2xl bg-gradient-to-br shadow-md ring-2 ring-white transition duration-500 group-hover:ring-4 group-hover:shadow-lg ${person.tone}`}>
+                      {person.photo ? (
+                        <img
+                          src={person.photo}
+                          alt={person.name}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-lg font-extrabold text-white">
+                          {person.initials}
+                        </span>
+                      )}
+                    </div>
+                    <span className="rounded-full bg-[#10203c]/5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#10203c] transition duration-300 group-hover:-translate-y-0.5 group-hover:bg-[#10203c] group-hover:text-white">
+                      {person.chip}
+                    </span>
                   </div>
-                  <span className="rounded-full bg-[#10203c]/5 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#10203c]">
-                    {person.chip}
-                  </span>
-                </div>
-                <h3 className="mt-5 text-lg font-bold tracking-tight text-[#10203c]">{person.name}</h3>
-                <p className="mt-1 text-sm font-semibold text-[#c48a09]">{person.title}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{person.focus}</p>
-              </article>
+                  <h3 className="mt-5 text-lg font-bold tracking-tight text-[#10203c]">{person.name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-[#c48a09]">{person.title}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{person.focus}</p>
+                </article>
+              </div>
             ))}
           </div>
         </div>
