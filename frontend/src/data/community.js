@@ -6,16 +6,16 @@ export const COMMUNITIES = [
     language: 'WhatsApp',
     members: '12.4k',
     description: 'Daily updates, live doubts, and course announcements in our official WhatsApp community.',
-    href: 'https://chat.whatsapp.com',
+    href: 'https://chat.whatsapp.com/DhDC2QyE5PKEU7ULljDNoF',
   },
   {
-    id: 'hindi',
+    id: 'telegram',
     platform: 'telegram',
-    name: 'Hindi community',
-    language: 'हिंदी',
+    name: 'Telegram community',
+    language: 'Telegram',
     members: '15.6k',
-    description: 'Hindi-first discussions, weekly recaps, and mentor notes from the team.',
-    href: 'https://t.me/digitalexpert',
+    description: 'Weekly recaps, mentor notes, and files from the team in our official Telegram group.',
+    href: 'https://t.me/+DdlhDYEuaTowZTU1',
   },
 ]
 
@@ -23,22 +23,24 @@ export const SOCIALS = [
   {
     id: 'facebook',
     name: 'Facebook',
-    handle: '@digitalexpert',
-    href: 'https://facebook.com',
+    handle: 'Digital Vidhya',
+    href: 'https://www.facebook.com/share/1K5YBDXPXL/',
     description: 'Announcements and learner stories.',
   },
   {
     id: 'instagram',
     name: 'Instagram',
-    handle: '@digitalexpert',
-    href: 'https://instagram.com',
+    handle: '@digital.vidhya',
+    href: 'https://www.instagram.com/digital.vidhya?dlrf=MXh5MzQ2bmQwYTVlcw==',
     description: 'Short lessons, reels, and behind-the-scenes.',
   },
   {
     id: 'youtube',
     name: 'YouTube',
-    handle: 'Digital Vidhya',
-    href: 'https://youtube.com',
+    handle: '@Digitalvidhyaofficall',
+    href: 'https://www.youtube.com/@Digitalvidhyaofficall',
     description: 'Longer walkthroughs and weekly recaps.',
   },
 ]
+
+export const communityLink = (id) => COMMUNITIES.find((room) => room.id === id)?.href

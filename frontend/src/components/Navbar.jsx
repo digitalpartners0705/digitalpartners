@@ -19,7 +19,7 @@ const packageLinks = KNOWLEDGE_PACKAGES.map((name) => ({
 function Logo() {
   return (
     <Link to="/" className="shrink-0" aria-label="Digital Vidhya home">
-      <img src="/assets/Digital-Vidhya-logo.png" alt="Digital Vidhya" className="h-16 w-auto sm:h-20" />
+      <img src="/assets/Digital-Vidhya-logo-trim.png" alt="Digital Vidhya" className="h-10 w-auto sm:h-12" />
     </Link>
   )
 }
@@ -121,7 +121,7 @@ function Navbar() {
           closeMenus()
           openAuth('login')
         }}
-        className={`${fullWidth ? 'w-full' : ''} rounded-full border border-white/25 px-5 py-2 text-sm font-semibold text-white transition hover:border-white/50 hover:bg-white/5`}
+        className={`${fullWidth ? 'w-full' : ''} rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:border-white/50 hover:bg-white/5`}
       >
         Login
       </button>
@@ -131,7 +131,7 @@ function Navbar() {
           closeMenus()
           openAuth('signup')
         }}
-        className={`${fullWidth ? 'w-full' : ''} rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-5 py-2 text-sm font-bold text-[#1a1203] shadow-[0_8px_20px_rgba(245,193,74,0.28)] transition hover:brightness-105`}
+        className={`${fullWidth ? 'w-full' : ''} rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-5 py-2.5 text-sm font-bold text-[#1a1203] shadow-[0_8px_20px_rgba(245,193,74,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(245,193,74,0.42)] hover:brightness-105`}
       >
         Register
       </button>
@@ -139,15 +139,18 @@ function Navbar() {
   )
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-40 transition-colors ${
-        solidHeader ? 'bg-ink-950' : 'bg-transparent'
-      }`}
-    >
-      <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
+    <header className="fixed inset-x-0 top-0 z-40 px-3 pt-3 sm:px-6 sm:pt-5 lg:px-8">
+      <div className="relative mx-auto max-w-7xl">
+      <nav
+        className={`relative flex items-center justify-between rounded-2xl border px-4 py-2.5 transition-all duration-300 sm:px-5 ${
+          solidHeader
+            ? 'border-white/10 bg-ink-950/90 shadow-[0_18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl'
+            : 'border-transparent bg-transparent shadow-none'
+        }`}
+      >
         <Logo />
 
-        <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-12 lg:flex xl:gap-20">
+        <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex xl:gap-2">
           {links.map((link) => {
             const active = isActive(link)
             if (link.dropdown) {
@@ -158,10 +161,10 @@ function Navbar() {
                     aria-expanded={packagesOpen}
                     aria-haspopup="menu"
                     onClick={() => setPackagesOpen((open) => !open)}
-                    className={`inline-flex items-center gap-1.5 text-sm font-medium transition ${
+                    className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition duration-300 xl:px-5 ${
                       active || packagesOpen
-                        ? 'border-b-2 border-gold-400 pb-1 text-gold-400'
-                        : 'text-white/75 hover:text-white'
+                        ? 'bg-white/10 text-gold-300 shadow-[inset_0_0_0_1px_rgba(245,193,74,0.3)]'
+                        : 'text-white/75 hover:bg-white/5 hover:text-white'
                     }`}
                   >
                     {link.label}
@@ -170,7 +173,7 @@ function Navbar() {
                   {packagesOpen ? (
                     <div
                       role="menu"
-                      className="absolute left-1/2 top-full z-50 mt-3 w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-white/10 bg-ink-950 py-2 shadow-2xl"
+                      className="absolute left-1/2 top-full z-50 mt-4 w-60 -translate-x-1/2 overflow-hidden rounded-2xl border border-white/10 bg-ink-950/95 p-2 shadow-[0_20px_44px_rgba(0,0,0,0.5)] backdrop-blur-xl"
                     >
                       {packageLinks.map((item) => (
                         <Link
@@ -178,7 +181,7 @@ function Navbar() {
                           to={linkHref(item)}
                           role="menuitem"
                           onClick={() => handleSectionClick(item)}
-                          className="block px-4 py-2.5 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-gold-400"
+                          className="block rounded-xl px-4 py-2.5 text-sm font-medium text-white/80 transition duration-200 hover:translate-x-0.5 hover:bg-white/5 hover:text-gold-300"
                         >
                           {item.label}
                         </Link>
@@ -195,10 +198,10 @@ function Navbar() {
                   to={linkHref(link)}
                   aria-current={active ? 'page' : undefined}
                   onClick={() => handleSectionClick(link)}
-                  className={`text-sm font-medium transition ${
+                  className={`inline-flex rounded-full px-4 py-2 text-sm font-medium transition duration-300 xl:px-5 ${
                     active
-                      ? 'border-b-2 border-gold-400 pb-1 text-gold-400'
-                      : 'text-white/75 hover:text-white'
+                      ? 'bg-white/10 text-gold-300 shadow-[inset_0_0_0_1px_rgba(245,193,74,0.3)]'
+                      : 'text-white/75 hover:bg-white/5 hover:text-white'
                   }`}
                 >
                   {link.label}
@@ -231,8 +234,8 @@ function Navbar() {
       </nav>
 
       <div
-        className={`absolute inset-x-0 top-full z-40 overflow-hidden border-white/10 bg-ink-950 shadow-2xl transition-all duration-300 lg:hidden ${
-          menuOpen ? 'max-h-[40rem] border-t opacity-100' : 'pointer-events-none max-h-0 opacity-0'
+        className={`absolute inset-x-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border-white/10 bg-ink-950/95 shadow-[0_20px_44px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-300 lg:hidden ${
+          menuOpen ? 'max-h-[40rem] border opacity-100' : 'pointer-events-none max-h-0 opacity-0'
         }`}
       >
         <ul className="flex flex-col gap-1 px-4 py-3">
@@ -289,6 +292,7 @@ function Navbar() {
           })}
         </ul>
         <div className="flex flex-col gap-2 border-t border-white/10 px-4 py-3">{authButtons(true)}</div>
+      </div>
       </div>
     </header>
   )

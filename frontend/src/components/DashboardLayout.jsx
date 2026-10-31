@@ -101,12 +101,8 @@ function DashboardLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Link to={subscribed ? '/dashboard' : '/dashboard/upgrade'} className="flex items-center gap-2.5 border-b border-white/10 px-4 py-4" aria-label="Digital Vidhya home">
-          <img src="/assets/Digital-Vidhya-logo.png" alt="Digital Vidhya" className="h-12 w-auto shrink-0 object-contain" />
-          <span className="brand-wordmark brand-wordmark-on-dark">
-            <span className="brand-wordmark-digital">Digital</span>
-            <span className="brand-wordmark-vidhya">Vidhya</span>
-          </span>
+        <Link to={subscribed ? '/dashboard' : '/dashboard/upgrade'} className="flex items-center border-b border-white/10 px-4 py-4" aria-label="Digital Vidhya home">
+          <img src="/assets/Digital-Vidhya-logo-trim.png" alt="Digital Vidhya" className="h-12 w-auto shrink-0 object-contain" />
         </Link>
 
         <nav className="flex-1 space-y-2 px-3 py-5">

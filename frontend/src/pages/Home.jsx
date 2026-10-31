@@ -46,6 +46,8 @@ const whyChoose = [
     title: 'Learn What Matters Today, Lead What’s Next',
     detail: 'Industry-focused packages designed to keep you ahead in a fast-changing digital world.',
     tone: 'bg-[#e7f6ef]',
+    accent: 'bg-[#1f9d6a]',
+    glow: 'bg-[#1f9d6a]',
     icon: 'rocket',
   },
   {
@@ -53,6 +55,8 @@ const whyChoose = [
     title: 'Not Just Certificates, Real Transformation',
     detail: 'Build practical skills that open real career opportunities — not just paper achievements.',
     tone: 'bg-[#fff4e8]',
+    accent: 'bg-[#e09a12]',
+    glow: 'bg-[#e09a12]',
     icon: 'certificate',
   },
   {
@@ -60,6 +64,8 @@ const whyChoose = [
     title: 'Mentorship That Moves You Forward',
     detail: 'Get personal guidance from experienced mentors who care about your progress.',
     tone: 'bg-[#fdecec]',
+    accent: 'bg-[#e11d48]',
+    glow: 'bg-[#e11d48]',
     icon: 'mentor',
   },
   {
@@ -67,6 +73,8 @@ const whyChoose = [
     title: 'Built for Dreamers & Doers',
     detail: 'Whether you’re starting out or leveling up, Digital Vidhya supports every phase.',
     tone: 'bg-[#eef1fb]',
+    accent: 'bg-[#2563eb]',
+    glow: 'bg-[#2563eb]',
     icon: 'flag',
   },
 ]
@@ -161,6 +169,19 @@ function Stars({ count }) {
         <span key={index}>{index < count ? '★' : '☆'}</span>
       ))}
     </div>
+  )
+}
+
+function TestimonialCard({ item }) {
+  return (
+    <blockquote className="h-full rounded-2xl bg-white/5 p-6 ring-1 ring-white/10">
+      <Stars count={item.rating} />
+      <p className="mt-4 text-lg leading-8 text-slate-100">&ldquo;{item.quote}&rdquo;</p>
+      <footer className="mt-5">
+        <p className="font-semibold">{item.name}</p>
+        <p className="text-sm text-indigo-200">{item.role}</p>
+      </footer>
+    </blockquote>
   )
 }
 
@@ -324,15 +345,81 @@ function Home() {
   const navigate = useNavigate()
   const packsRef = useRef(null)
   const mentorsRef = useRef(null)
+  const whyRef = useRef(null)
+  const faqRef = useRef(null)
   const [openFaq, setOpenFaq] = useState(0)
   const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [quoteMotion, setQuoteMotion] = useState('idle')
+  const [quoteSliding, setQuoteSliding] = useState(false)
+  const quoteSlidingRef = useRef(false)
+  const quoteDirectionRef = useRef('next')
+  const quoteSwipeRef = useRef({ x: 0, y: 0, active: false })
   const [packsVisible, setPacksVisible] = useState(false)
   const [mentorsVisible, setMentorsVisible] = useState(false)
+  const [whyVisible, setWhyVisible] = useState(false)
+  const [faqVisible, setFaqVisible] = useState(false)
 
   const visibleTestimonials = [
     testimonials[activeTestimonial],
     testimonials[(activeTestimonial + 1) % testimonials.length],
   ]
+  const upcomingTestimonials = [
+    testimonials[(activeTestimonial + 2) % testimonials.length],
+    testimonials[(activeTestimonial + 3) % testimonials.length],
+  ]
+  const previousTestimonials = [
+    testimonials[(activeTestimonial - 2 + testimonials.length) % testimonials.length],
+    testimonials[(activeTestimonial - 1 + testimonials.length) % testimonials.length],
+  ]
+  const quotePages = quoteMotion === 'prev'
+    ? [previousTestimonials, visibleTestimonials]
+    : [visibleTestimonials, upcomingTestimonials]
+  const quoteShifted = quoteMotion === 'prev' ? !quoteSliding : quoteSliding
+
+  const startQuoteSlide = (direction) => {
+    if (quoteSlidingRef.current) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const step = direction === 'prev' ? -2 : 2
+      setActiveTestimonial((index) => (index + step + testimonials.length) % testimonials.length)
+      return
+    }
+    quoteSlidingRef.current = true
+    quoteDirectionRef.current = direction
+    if (direction === 'next') {
+      setQuoteMotion('next')
+      setQuoteSliding(true)
+      return
+    }
+    setQuoteMotion('prev')
+    setQuoteSliding(false)
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setQuoteSliding(true))
+    })
+  }
+
+  const finishQuoteSlide = (event) => {
+    if (event.target !== event.currentTarget || event.propertyName !== 'transform') return
+    if (!quoteSlidingRef.current) return
+    const step = quoteDirectionRef.current === 'prev' ? -2 : 2
+    quoteSlidingRef.current = false
+    setActiveTestimonial((index) => (index + step + testimonials.length) % testimonials.length)
+    setQuoteMotion('idle')
+    setQuoteSliding(false)
+  }
+
+  const handleQuotePointerDown = (event) => {
+    quoteSwipeRef.current = { x: event.clientX, y: event.clientY, active: true }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const handleQuotePointerUp = (event) => {
+    if (!quoteSwipeRef.current.active) return
+    const dx = event.clientX - quoteSwipeRef.current.x
+    const dy = event.clientY - quoteSwipeRef.current.y
+    quoteSwipeRef.current.active = false
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return
+    startQuoteSlide(dx < 0 ? 'next' : 'prev')
+  }
 
   useEffect(() => {
     const node = packsRef.current
@@ -342,6 +429,8 @@ function Home() {
     if (reduceMotion) {
       setPacksVisible(true)
       setMentorsVisible(true)
+      setWhyVisible(true)
+      setFaqVisible(true)
       return undefined
     }
 
@@ -351,6 +440,8 @@ function Home() {
           if (!entry.isIntersecting) return
           if (entry.target === packsRef.current) setPacksVisible(true)
           if (entry.target === mentorsRef.current) setMentorsVisible(true)
+          if (entry.target === whyRef.current) setWhyVisible(true)
+          if (entry.target === faqRef.current) setFaqVisible(true)
         })
       },
       { threshold: 0.22 },
@@ -358,7 +449,17 @@ function Home() {
 
     observer.observe(node)
     if (mentorsRef.current) observer.observe(mentorsRef.current)
+    if (whyRef.current) observer.observe(whyRef.current)
+    if (faqRef.current) observer.observe(faqRef.current)
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      startQuoteSlide('next')
+    }, 3000)
+
+    return () => window.clearInterval(intervalId)
   }, [])
 
   const handleBuy = (packageId) => {
@@ -448,19 +549,6 @@ function Home() {
                     <span className="block text-xs font-bold text-white sm:text-sm">AI & Ads tracks</span>
                   </span>
                 </div>
-
-                <div className="hero-bob-alt absolute bottom-[8%] right-0 z-30 rounded-2xl border border-sky-400/30 bg-[#071428]/85 px-3.5 py-2.5 shadow-[0_14px_32px_rgba(14,165,233,0.28)] backdrop-blur-md sm:right-[1%]" aria-hidden="true">
-                  <div className="flex items-center gap-2">
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="hero-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400" />
-                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                    </span>
-                    <p className="text-xs font-bold text-white sm:text-sm">Mentor session live</p>
-                  </div>
-                  <div className="mt-2 h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
-                    <div className="hero-progress h-full w-full rounded-full bg-gradient-to-r from-sky-400 to-gold-400" />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -489,27 +577,39 @@ function Home() {
         </div>
       </section>
 
-      <section id="about" className="bg-[#f7f8fa]">
+      <section id="about" ref={whyRef} className="relative overflow-hidden bg-[#f7f8fa]">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-          <div className="mx-auto mb-12 max-w-3xl text-center">
+          <div className={`mx-auto mb-12 max-w-3xl text-center ${whyVisible ? 'pack-rise' : 'motion-safe:translate-y-6 motion-safe:opacity-0'}`}>
             <h2 className="font-[Plus_Jakarta_Sans,Inter,sans-serif] text-3xl font-extrabold tracking-tight text-[#10203c] sm:text-4xl">
               Why Learners Choose Digital Vidhya
             </h2>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {whyChoose.map((item) => (
-              <article
-                key={item.id}
-                className={`flex flex-col items-center rounded-2xl px-5 py-8 text-center ${item.tone}`}
-              >
-                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
-                  <WhyIcon name={item.icon} />
-                </span>
-                <h3 className="mt-5 text-base font-bold leading-snug text-[#10203c] sm:text-[17px]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{item.detail}</p>
-              </article>
+            {whyChoose.map((item, index) => (
+              <div key={item.id} className="why-card h-full">
+                <article
+                  className={`group relative h-full overflow-hidden rounded-[1.75rem] bg-white p-1.5 shadow-[0_16px_40px_rgba(16,32,60,0.08)] transition duration-300 hover:shadow-[0_28px_50px_rgba(16,32,60,0.16)] ${
+                    whyVisible ? 'pack-rise' : 'motion-safe:translate-y-8 motion-safe:opacity-0'
+                  }`}
+                  style={{ animationDelay: `${0.1 + index * 0.1}s` }}
+                >
+                  <div className={`relative flex h-full flex-col items-center overflow-hidden rounded-[1.4rem] px-5 pb-8 pt-7 text-center ${item.tone}`}>
+                    <span className={`why-glow pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full blur-2xl ${item.glow}`} aria-hidden="true" />
+                    <span className={`absolute inset-x-6 top-0 h-1.5 origin-center scale-x-40 rounded-full transition duration-500 group-hover:scale-x-100 ${item.accent}`} aria-hidden="true" />
+                    <p className="text-[11px] font-extrabold tracking-[0.2em] text-[#10203c]/35">0{index + 1}</p>
+                    <span className="why-icon relative mt-4" style={{ animationDelay: `${index * 0.35}s` }}>
+                      <span className={`absolute inset-0 scale-90 rounded-full opacity-30 blur-md transition duration-500 group-hover:scale-125 group-hover:opacity-70 ${item.accent}`} aria-hidden="true" />
+                      <span className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-white shadow-[0_10px_24px_rgba(16,32,60,0.12)] ring-4 ring-white transition duration-500 group-hover:scale-110 group-hover:shadow-[0_16px_30px_rgba(16,32,60,0.18)]">
+                        <WhyIcon name={item.icon} />
+                      </span>
+                    </span>
+                    <h3 className="relative mt-5 text-base font-bold leading-snug text-[#10203c] sm:text-[17px]">
+                      {item.title}
+                    </h3>
+                    <p className="relative mt-3 text-sm leading-6 text-slate-600">{item.detail}</p>
+                  </div>
+                </article>
+              </div>
             ))}
           </div>
         </div>
@@ -657,50 +757,42 @@ function Home() {
 
       <section className="bg-slate-900 py-16 text-white lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-indigo-300">Testimonials</p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">What learners say</h2>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                aria-label="Previous testimonial"
-                onClick={() =>
-                  setActiveTestimonial((index) => (index === 0 ? testimonials.length - 1 : index - 1))
-                }
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                aria-label="Next testimonial"
-                onClick={() => setActiveTestimonial((index) => (index + 1) % testimonials.length)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
-              >
-                ›
-              </button>
-            </div>
+          <div className="mb-10">
+            <p className="text-sm font-semibold text-indigo-300">Testimonials</p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">What learners say</h2>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {visibleTestimonials.map((item) => (
-              <blockquote key={item.name} className="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10">
-                <Stars count={item.rating} />
-                <p className="mt-4 text-lg leading-8 text-slate-100">&ldquo;{item.quote}&rdquo;</p>
-                <footer className="mt-5">
-                  <p className="font-semibold">{item.name}</p>
-                  <p className="text-sm text-indigo-200">{item.role}</p>
-                </footer>
-              </blockquote>
-            ))}
+          <div
+            className="cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing"
+            aria-live="polite"
+            onPointerDown={handleQuotePointerDown}
+            onPointerUp={handleQuotePointerUp}
+            onPointerCancel={() => {
+              quoteSwipeRef.current.active = false
+            }}
+          >
+            <div
+              className="flex w-[200%]"
+              style={{
+                transform: quoteShifted ? 'translateX(-50%)' : 'translateX(0)',
+                transition: quoteSliding ? 'transform 0.75s cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+              }}
+              onTransitionEnd={finishQuoteSlide}
+            >
+              {quotePages.map((pair, page) => (
+                <div key={page} className="grid w-1/2 shrink-0 grid-cols-1 gap-6 md:grid-cols-2">
+                  {pair.map((item) => (
+                    <TestimonialCard key={item.name} item={item} />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="blog" className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:py-20">
-        <div className="mb-8 text-center">
+      <section id="blog" ref={faqRef} className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:py-20">
+        <div className={`mb-8 text-center ${faqVisible ? 'faq-grow' : 'motion-safe:scale-75 motion-safe:opacity-0'}`}>
           <p className="text-sm font-semibold text-brand-600">FAQ</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Common questions
@@ -710,7 +802,11 @@ function Home() {
           {faqs.map((faq, index) => {
             const isOpen = openFaq === index
             return (
-              <div key={faq.question}>
+              <div
+                key={faq.question}
+                className={faqVisible ? 'faq-grow' : 'motion-safe:scale-75 motion-safe:opacity-0'}
+                style={{ animationDelay: `${0.12 + index * 0.08}s` }}
+              >
                 <button
                   type="button"
                   onClick={() => setOpenFaq(isOpen ? -1 : index)}
@@ -719,7 +815,7 @@ function Home() {
                   <span className="font-semibold text-slate-900">{faq.question}</span>
                   <span className="text-xl text-brand-600">{isOpen ? '−' : '+'}</span>
                 </button>
-                {isOpen ? <p className="px-5 pb-5 text-sm leading-6 text-slate-600">{faq.answer}</p> : null}
+                {isOpen ? <p className="faq-grow px-5 pb-5 text-sm leading-6 text-slate-600">{faq.answer}</p> : null}
               </div>
             )
           })}

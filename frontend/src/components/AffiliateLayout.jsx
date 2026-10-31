@@ -165,13 +165,9 @@ function AffiliateLayout() {
           className="flex items-center gap-2.5 border-b border-white/10 px-4 py-4"
           aria-label="Digital Vidhya affiliate home"
         >
-          <img src="/assets/Digital-Vidhya-logo.png" alt="Digital Vidhya" className="h-12 w-auto shrink-0 object-contain" />
           <span>
-            <span className="brand-wordmark brand-wordmark-on-dark">
-              <span className="brand-wordmark-digital">Digital</span>
-              <span className="brand-wordmark-vidhya">Vidhya</span>
-            </span>
-            <span className="mt-1 block text-[11px] font-medium tracking-wide text-slate-500">Affiliate</span>
+            <img src="/assets/Digital-Vidhya-logo-trim.png" alt="Digital Vidhya" className="h-11 w-auto object-contain" />
+            <span className="mt-1.5 block text-[11px] font-medium tracking-wide text-slate-500">Affiliate</span>
           </span>
         </Link>
 

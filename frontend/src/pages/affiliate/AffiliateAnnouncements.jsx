@@ -20,7 +20,7 @@ const FEATURED = [
 const NOTICES = [
   {
     id: 'rooms',
-    title: 'WhatsApp and Hindi rooms only',
+    title: 'WhatsApp and Telegram rooms only',
     text: 'Community calls stay in those two rooms. Share the one your referral will actually join.',
     date: '22 Sep',
     icon: 'rooms',

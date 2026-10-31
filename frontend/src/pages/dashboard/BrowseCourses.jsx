@@ -159,3 +159,4 @@ function BrowseCourses() {
 }
 
 export default BrowseCourses
+
