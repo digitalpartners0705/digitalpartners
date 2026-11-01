@@ -5,10 +5,12 @@ import { getAffiliateRefInfo } from '../../services/api'
 const PACKAGE_TONE = {
   'Social Expert': 'bg-violet-400/15 text-violet-200',
   'Ads Expert': 'bg-sky-400/15 text-sky-200',
+  'Ads & Creative Expert': 'bg-sky-400/15 text-sky-200',
   'AI Premium Expert': 'bg-teal-300/15 text-teal-200',
+  'AI & Business Expert': 'bg-teal-300/15 text-teal-200',
 }
 
-const FALLBACK_PACKAGES = ['Social Expert', 'Ads Expert', 'AI Premium Expert']
+const FALLBACK_PACKAGES = ['Social Expert', 'Ads & Creative Expert', 'AI & Business Expert']
 
 function formatDay(value) {
   if (!value) return '—'

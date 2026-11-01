@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CourseCover from '../../components/CourseCover'
+import { ComingSoonButton, CoursesComingSoonBanner } from '../../components/CoursesComingSoon'
 import { useAuth } from '../../context/AuthContext'
 import { useCatalog } from '../../hooks/useCatalog'
-import { canViewCourse } from '../../utils/courses'
+import { canViewCourse, COURSES_COMING_SOON } from '../../utils/courses'
 
 function BrowseCourses() {
   const { user } = useAuth()
@@ -41,6 +42,8 @@ function BrowseCourses() {
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">Catalog</p>
       <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">Browse courses</h1>
       <p className="mt-1 text-slate-500">Explore the full Digital Vidhya catalog.</p>
+
+      {COURSES_COMING_SOON ? <CoursesComingSoonBanner className="mt-6" /> : null}
 
       <label className="relative mt-6 block w-full max-w-md">
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-500">
@@ -108,7 +111,7 @@ function BrowseCourses() {
                 key={course.id}
                 className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80 transition hover:-translate-y-0.5 hover:ring-sky-200 hover:shadow-md"
               >
-                <CourseCover course={course} locked={!unlocked} />
+                <CourseCover course={course} locked={!unlocked} comingSoon={COURSES_COMING_SOON} />
                 <div className="flex flex-1 flex-col p-5">
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span className="w-fit rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
@@ -128,14 +131,7 @@ function BrowseCourses() {
                     <span className="rounded-lg bg-slate-50 px-2 py-1 ring-1 ring-slate-100">{course.hours} hours</span>
                   </div>
                   <div className="mt-4">
-                    {unlocked ? (
-                      <Link
-                        to={`/dashboard/courses/${course.id}`}
-                        className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-4 py-2.5 text-sm font-bold text-[#1a1203] shadow-[0_8px_18px_rgba(245,193,74,0.25)] transition hover:brightness-105"
-                      >
-                        View course
-                      </Link>
-                    ) : (
+                    {!unlocked ? (
                       <Link
                         to="/dashboard/upgrade"
                         className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0c1528]"
@@ -145,6 +141,15 @@ function BrowseCourses() {
                           <path d="M8 11V8a4 4 0 0 1 8 0v3" strokeLinecap="round" />
                         </svg>
                         Upgrade to unlock
+                      </Link>
+                    ) : COURSES_COMING_SOON ? (
+                      <ComingSoonButton />
+                    ) : (
+                      <Link
+                        to={`/dashboard/courses/${course.id}`}
+                        className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-4 py-2.5 text-sm font-bold text-[#1a1203] shadow-[0_8px_18px_rgba(245,193,74,0.25)] transition hover:brightness-105"
+                      >
+                        View course
                       </Link>
                     )}
                   </div>

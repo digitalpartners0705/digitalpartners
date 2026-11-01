@@ -32,26 +32,46 @@ function accentClass(accent) {
   return ACCENT_FALLBACKS[accent] || ACCENT_FALLBACKS['from-indigo-500 to-violet-500']
 }
 
-function LockBadge({ compact = false }) {
+function CoverBadge({ compact = false, label, children }) {
   return (
     <span
       className={`absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-[#1b2140]/92 font-semibold text-white shadow-lg ring-1 ring-white/25 ${
         compact ? 'px-2 py-1' : 'px-2.5 py-1.5 text-xs'
       }`}
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2">
-        <rect x="5" y="11" width="14" height="9" rx="2" />
-        <path d="M8 11V8a4 4 0 0 1 8 0v3" strokeLinecap="round" />
-      </svg>
-      {compact ? null : 'Locked'}
+      {children}
+      {compact ? null : label}
     </span>
   )
 }
 
-function CourseCover({ course, compact = false, locked = false, short = false, fill = false }) {
+function LockBadge({ compact = false }) {
+  return (
+    <CoverBadge compact={compact} label="Locked">
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2">
+        <rect x="5" y="11" width="14" height="9" rx="2" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" strokeLinecap="round" />
+      </svg>
+    </CoverBadge>
+  )
+}
+
+function ComingSoonBadge({ compact = false }) {
+  return (
+    <CoverBadge compact={compact} label="Coming soon">
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2">
+        <circle cx="12" cy="12" r="8.5" />
+        <path strokeLinecap="round" d="M12 7.5v5l3 2" />
+      </svg>
+    </CoverBadge>
+  )
+}
+
+function CourseCover({ course, compact = false, locked = false, comingSoon = false, short = false, fill = false }) {
   const [imageFailed, setImageFailed] = useState(false)
   const hasImage = Boolean(course.thumbnailUrl) && !imageFailed
   const gradient = accentClass(course.accent)
+  const showComingSoon = comingSoon && !locked
 
   if (compact) {
     return (
@@ -66,7 +86,7 @@ function CourseCover({ course, compact = false, locked = false, short = false, f
         ) : (
           <div className={`absolute inset-0 ${gradient}`} />
         )}
-        {locked ? <LockBadge compact /> : null}
+        {locked ? <LockBadge compact /> : showComingSoon ? <ComingSoonBadge compact /> : null}
       </div>
     )
   }
@@ -89,8 +109,8 @@ function CourseCover({ course, compact = false, locked = false, short = false, f
           <div className="absolute -bottom-8 left-6 h-16 w-16 rounded-full bg-white/10" />
         </>
       )}
-      {locked ? <div className="pointer-events-none absolute inset-0 bg-slate-950/20" /> : null}
-      {locked ? <LockBadge /> : null}
+      {locked || showComingSoon ? <div className="pointer-events-none absolute inset-0 bg-slate-950/20" /> : null}
+      {locked ? <LockBadge /> : showComingSoon ? <ComingSoonBadge /> : null}
     </div>
   )
 }

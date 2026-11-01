@@ -2,14 +2,16 @@ const STORAGE_KEY = 'de_referral'
 
 const PACKAGE_BY_ID = {
   'social-expert': 'Social Expert',
-  'ads-expert': 'Ads Expert',
-  'ai-premium-expert': 'AI Premium Expert',
+  'ads-expert': 'Ads & Creative Expert',
+  'ai-premium-expert': 'AI & Business Expert',
 }
 
 export const PACKAGE_SLUGS = {
   'Social Expert': 'social-expert',
   'Ads Expert': 'ads-expert',
+  'Ads & Creative Expert': 'ads-expert',
   'AI Premium Expert': 'ai-premium-expert',
+  'AI & Business Expert': 'ai-premium-expert',
 }
 
 export function packageNameFromSlug(slug) {

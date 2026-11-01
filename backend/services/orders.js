@@ -60,15 +60,19 @@ const roundMoney = (value) => Math.round((Number(value || 0) + Number.EPSILON) *
 const toNumber = (value) => (value === null || value === undefined ? null : Number(value))
 
 /**
- * The commission plan fixes each package's net amount, so an undiscounted order must
- * reuse that exact figure or the commission rows will not tie back to the order total.
+ * MRP is the catalogue price. The marketing-plan promo price (pkg.listedPrice) already
+ * includes 18% GST; its fixed netAmount is used whenever the buyer pays that promo total.
  */
 const buildAmounts = ({ pkg, discountAmount = 0, gstRate = GST_RATE }) => {
-  const listedPrice = roundMoney(pkg.listedPrice)
+  const listedPrice = roundMoney(pkg.mrp != null ? pkg.mrp : pkg.listedPrice)
+  const promoPrice = roundMoney(pkg.listedPrice)
   const discount = Math.min(Math.max(roundMoney(discountAmount), 0), listedPrice)
   const grossAmount = roundMoney(listedPrice - discount)
   const rate = Number(gstRate)
-  const netAmount = discount === 0 ? roundMoney(pkg.netAmount) : roundMoney((grossAmount * (100 - rate)) / 100)
+  const payingPromo = Math.abs(grossAmount - promoPrice) < 0.01
+  const netAmount = payingPromo
+    ? roundMoney(pkg.netAmount)
+    : roundMoney((grossAmount * (100 - rate)) / 100)
 
   return {
     listedPrice,

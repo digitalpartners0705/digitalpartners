@@ -11,7 +11,7 @@ const RANGES = [
   { id: 'all', label: 'All time' },
 ]
 
-const PACKAGE_NAMES = ['Social Expert', 'Ads Expert', 'AI Premium Expert']
+const PACKAGE_NAMES = ['Social Expert', 'Ads & Creative Expert', 'AI & Business Expert']
 
 const EMPTY_LEVELS = [
   { incomeType: 'active', level: 1, label: 'Active', sales: 0, amount: 0 },
@@ -46,7 +46,9 @@ const LEVEL_META = {
 const PACKAGE_TONE = {
   'Social Expert': 'bg-sky-400',
   'Ads Expert': 'bg-amber-400',
+  'Ads & Creative Expert': 'bg-amber-400',
   'AI Premium Expert': 'bg-violet-400',
+  'AI & Business Expert': 'bg-violet-400',
 }
 
 function rupees(value) {

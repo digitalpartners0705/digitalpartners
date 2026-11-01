@@ -60,6 +60,14 @@ function SocialMark({ id }) {
     )
   }
 
+  if (id === 'linkedin') {
+    return (
+      <svg className="h-7 w-7" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden="true">
+        <path d="M6.5 9h2.2v9H6.5V9Zm1.1-3.4a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6ZM10.8 9h2.1v1.2h.1c.3-.6 1.1-1.3 2.3-1.3 2.4 0 2.9 1.6 2.9 3.7V18h-2.2v-4.5c0-1.1 0-2.5-1.5-2.5s-1.8 1.2-1.8 2.4V18h-2.2V9Z" />
+      </svg>
+    )
+  }
+
   return (
     <svg className="h-7 w-7" viewBox="0 0 24 24" fill="#FF0000" aria-hidden="true">
       <path d="M21.6 7.2a2.7 2.7 0 0 0-1.9-1.9C18.1 4.8 12 4.8 12 4.8s-6.1 0-7.7.5A2.7 2.7 0 0 0 2.4 7.2 28 28 0 0 0 2 12a28 28 0 0 0 .4 4.8 2.7 2.7 0 0 0 1.9 1.9c1.6.5 7.7.5 7.7.5s6.1 0 7.7-.5a2.7 2.7 0 0 0 1.9-1.9A28 28 0 0 0 22 12a28 28 0 0 0-.4-4.8ZM10 15.2V8.8L15.2 12 10 15.2Z" />
@@ -136,7 +144,7 @@ function RecentUpdates() {
           })}
         </div>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {SOCIALS.map((social) => (
             <a
               key={social.id}

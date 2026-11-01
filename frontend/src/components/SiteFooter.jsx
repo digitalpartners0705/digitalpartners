@@ -10,8 +10,8 @@ const QUICK_LINKS = [
 
 const PACKAGE_LINKS = [
   { label: 'Social Expert', to: '/packages/social-expert' },
-  { label: 'Ads Expert', to: '/packages/ads-expert' },
-  { label: 'AI Premium Expert', to: '/packages/ai-premium-expert' },
+  { label: 'Ads & Creative Expert', to: '/packages/ads-expert' },
+  { label: 'AI & Business Expert', to: '/packages/ai-premium-expert' },
 ]
 
 const SOCIALS = SOCIAL_PAGES.map((social) => ({ id: social.id, label: social.name, href: social.href }))
@@ -36,6 +36,14 @@ function SocialIcon({ id }) {
     return (
       <svg {...common}>
         <path d="M22.5 7.2a2.7 2.7 0 0 0-1.9-1.9C18.9 5 12 5 12 5s-6.9 0-8.6.3A2.7 2.7 0 0 0 1.5 7.2 28.4 28.4 0 0 0 1.2 12a28.4 28.4 0 0 0 .3 4.8 2.7 2.7 0 0 0 1.9 1.9C5.1 19 12 19 12 19s6.9 0 8.6-.3a2.7 2.7 0 0 0 1.9-1.9A28.4 28.4 0 0 0 22.8 12a28.4 28.4 0 0 0-.3-4.8ZM10 15.2V8.8l5.6 3.2L10 15.2Z" />
+      </svg>
+    )
+  }
+
+  if (id === 'linkedin') {
+    return (
+      <svg {...common}>
+        <path d="M6.5 9h2.2v9H6.5V9Zm1.1-3.4a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6ZM10.8 9h2.1v1.2h.1c.3-.6 1.1-1.3 2.3-1.3 2.4 0 2.9 1.6 2.9 3.7V18h-2.2v-4.5c0-1.1 0-2.5-1.5-2.5s-1.8 1.2-1.8 2.4V18h-2.2V9Z" />
       </svg>
     )
   }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { signupUser } from '../services/api'
+import { signupUser, verifyInviteCode } from '../services/api'
 import {
   COUNTRIES,
   COUNTRY_NAMES,
@@ -76,8 +76,11 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [verifyingInvite, setVerifyingInvite] = useState(false)
   const [promoStatus, setPromoStatus] = useState('')
   const [couponStatus, setCouponStatus] = useState('')
+  const [inviteOk, setInviteOk] = useState(false)
+  const [inviteType, setInviteType] = useState('')
 
   useEffect(() => {
     setForm((prev) => ({
@@ -90,6 +93,7 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
 
   const states = form.country ? COUNTRIES[form.country] || [] : []
   const packageLocked = Boolean(defaults.knowledgePackage)
+  const hasLinkReferral = Boolean(form.referralCode.trim())
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target
@@ -99,7 +103,11 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
       return next
     })
     setErrors((prev) => ({ ...prev, [name]: '', form: '' }))
-    if (name === 'promoCode') setPromoStatus('')
+    if (name === 'promoCode') {
+      setPromoStatus('')
+      setInviteOk(false)
+      setInviteType('')
+    }
     if (name === 'couponCode') setCouponStatus('')
   }
 
@@ -117,6 +125,11 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
   const validateStepTwo = () => {
     const next = {}
     if (!form.knowledgePackage) next.knowledgePackage = 'Please select a knowledge package'
+    const typed = form.promoCode.trim()
+    const localPromo = Boolean(VALID_PROMO_CODES[typed.toUpperCase()])
+    if (!hasLinkReferral && !localPromo && !inviteOk) {
+      next.promoCode = 'Enter a valid promo or referral code (or open a referral link)'
+    }
     if (!form.password) next.password = 'Password is required'
     else if (form.password.length < 6) next.password = 'Password must be at least 6 characters'
     return next
@@ -130,13 +143,40 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
     setStep(2)
   }
 
-  const verifyPromo = () => {
-    const code = form.promoCode.trim().toUpperCase()
+  const verifyPromo = async () => {
+    const code = form.promoCode.trim()
     if (!code) {
-      setPromoStatus('Enter a promo code')
+      setInviteOk(false)
+      setInviteType('')
+      setPromoStatus('Enter a promo or referral code')
       return
     }
-    setPromoStatus(VALID_PROMO_CODES[code] || 'Invalid promo code')
+
+    const asPromo = code.toUpperCase()
+    if (VALID_PROMO_CODES[asPromo]) {
+      setInviteOk(true)
+      setInviteType('promo')
+      setPromoStatus(VALID_PROMO_CODES[asPromo])
+      return
+    }
+
+    setVerifyingInvite(true)
+    setPromoStatus('Checking code…')
+    try {
+      const result = await verifyInviteCode(code)
+      setInviteOk(true)
+      setInviteType(result.type || 'referral')
+      setPromoStatus(result.message || 'Code applied — discounted pricing unlocked')
+      if (result.type === 'referral' && result.code) {
+        setForm((prev) => ({ ...prev, referralCode: result.code }))
+      }
+    } catch (error) {
+      setInviteOk(false)
+      setInviteType('')
+      setPromoStatus(error.response?.data?.message || 'Invalid promo or referral code')
+    } finally {
+      setVerifyingInvite(false)
+    }
   }
 
   const applyCoupon = () => {
@@ -150,9 +190,47 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const nextErrors = validateStepTwo()
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length > 0) return
+    const typed = form.promoCode.trim()
+    const localPromo = Boolean(VALID_PROMO_CODES[typed.toUpperCase()])
+    let resolvedReferral = form.referralCode.trim()
+    let resolvedInviteType = inviteType
+    let resolvedInviteOk = inviteOk || localPromo || Boolean(resolvedReferral)
+
+    if (!resolvedInviteOk && typed && !localPromo) {
+      setVerifyingInvite(true)
+      try {
+        const result = await verifyInviteCode(typed)
+        resolvedInviteOk = true
+        resolvedInviteType = result.type || 'referral'
+        setInviteOk(true)
+        setInviteType(resolvedInviteType)
+        setPromoStatus(result.message || 'Code applied')
+        if (result.type === 'referral' && result.code) {
+          resolvedReferral = result.code
+          setForm((prev) => ({ ...prev, referralCode: result.code }))
+        }
+      } catch (error) {
+        setInviteOk(false)
+        setInviteType('')
+        setErrors({
+          promoCode: error.response?.data?.message || 'Invalid promo or referral code',
+        })
+        setVerifyingInvite(false)
+        return
+      } finally {
+        setVerifyingInvite(false)
+      }
+    }
+
+    const freshErrors = {}
+    if (!form.knowledgePackage) freshErrors.knowledgePackage = 'Please select a knowledge package'
+    if (!form.password) freshErrors.password = 'Password is required'
+    else if (form.password.length < 6) freshErrors.password = 'Password must be at least 6 characters'
+    if (!resolvedInviteOk && !localPromo && !resolvedReferral) {
+      freshErrors.promoCode = 'Enter a valid promo or referral code (or open a referral link)'
+    }
+    setErrors(freshErrors)
+    if (Object.keys(freshErrors).length > 0) return
 
     setSubmitting(true)
     try {
@@ -163,11 +241,12 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
         country: form.country,
         state: form.state,
         knowledgePackage: form.knowledgePackage,
-        promoCode: form.promoCode.trim().toUpperCase() || null,
+        // Backend accepts promo OR referral in promoCode
+        promoCode: localPromo || resolvedInviteType === 'promo' ? typed.toUpperCase() : typed || null,
         couponCode: form.couponCode.trim().toUpperCase() || null,
         password: form.password,
         hasGst: form.hasGst,
-        referralCode: form.referralCode.trim() || null,
+        referralCode: resolvedReferral || null,
         referralSource: referralSource(defaults),
       })
       onSuccess(data.user, { pendingPackage: form.knowledgePackage })
@@ -178,7 +257,8 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
     }
   }
 
-  const promoValid = Boolean(VALID_PROMO_CODES[form.promoCode.trim().toUpperCase()])
+  const inviteLooksValid =
+    inviteOk || Boolean(VALID_PROMO_CODES[form.promoCode.trim().toUpperCase()]) || hasLinkReferral
   const couponValid = Boolean(VALID_COUPON_CODES[form.couponCode.trim().toUpperCase()])
 
   return (
@@ -326,20 +406,27 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
             ) : null}
           </Field>
 
-          {form.referralCode ? (
-            <p className="rounded-lg border border-[#f3e2b3] bg-[#fff8e8] px-3 py-2 text-xs text-slate-600">
-              Referred with code <span className="font-semibold text-slate-800">{form.referralCode}</span>
+          {hasLinkReferral ? (
+            <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              Referral code applied: <span className="font-semibold">{form.referralCode}</span>. Promo package pricing
+              will be used at checkout.
             </p>
-          ) : null}
+          ) : (
+            <p className="rounded-lg border border-[#f3e2b3] bg-[#fff8e8] px-3 py-2 text-xs text-slate-600">
+              Enter a promo code or someone&apos;s referral code to unlock the discounted package price.
+            </p>
+          )}
 
           <div className="grid gap-3.5 sm:grid-cols-2">
             <div className="min-w-0">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Promo code</span>
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">
+                Promo / referral code {hasLinkReferral ? '(optional)' : '(required)'}
+              </span>
               <div className="flex items-stretch gap-2">
                 <input
                   type="text"
                   name="promoCode"
-                  placeholder="Optional"
+                  placeholder={hasLinkReferral ? 'Optional' : 'Promo or referral code'}
                   value={form.promoCode}
                   onChange={updateField}
                   className={fieldClass}
@@ -347,13 +434,18 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
                 <button
                   type="button"
                   onClick={verifyPromo}
-                  className="shrink-0 rounded-lg border border-[#e8a317] bg-[#fff8e8] px-4 text-sm font-semibold text-[#1a1404] transition hover:bg-[#f6e2ad]"
+                  disabled={verifyingInvite}
+                  className="shrink-0 rounded-lg border border-[#e8a317] bg-[#fff8e8] px-4 text-sm font-semibold text-[#1a1404] transition hover:bg-[#f6e2ad] disabled:opacity-70"
                 >
-                  Verify
+                  {verifyingInvite ? '…' : 'Verify'}
                 </button>
               </div>
-              {promoStatus ? (
-                <p className={`mt-1.5 text-xs ${promoValid ? 'text-emerald-600' : 'text-red-600'}`}>{promoStatus}</p>
+              {errors.promoCode ? (
+                <p className="mt-1.5 text-xs text-red-600">{errors.promoCode}</p>
+              ) : promoStatus ? (
+                <p className={`mt-1.5 text-xs ${inviteLooksValid ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {promoStatus}
+                </p>
               ) : null}
             </div>
 
@@ -422,7 +514,11 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
             >
               Back
             </button>
-            <button type="submit" disabled={submitting} className={`${primaryButtonClass} min-w-0 flex-1`}>
+            <button
+              type="submit"
+              disabled={submitting || verifyingInvite}
+              className={`${primaryButtonClass} min-w-0 flex-1`}
+            >
               {submitting ? 'Creating account...' : 'Create account'}
             </button>
           </div>

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CourseCover from '../../components/CourseCover'
+import { ComingSoonButton, CoursesComingSoonBanner } from '../../components/CoursesComingSoon'
 import { useAuth } from '../../context/AuthContext'
 import { useCatalog } from '../../hooks/useCatalog'
-import { getEnrolledCourses } from '../../utils/courses'
+import { COURSES_COMING_SOON, getEnrolledCourses } from '../../utils/courses'
 
 function MyCourses() {
   const { user } = useAuth()
@@ -35,7 +36,11 @@ function MyCourses() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">Your library</p>
           <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">My courses</h1>
-          <p className="mt-2 max-w-xl text-slate-500">Courses included in your access. Pick one up and keep going.</p>
+          <p className="mt-2 max-w-xl text-slate-500">
+            {COURSES_COMING_SOON
+              ? 'Courses in your package are listed here. Videos will unlock when content goes live.'
+              : 'Courses included in your access. Pick one up and keep going.'}
+          </p>
         </div>
         <label className="relative block w-full lg:max-w-xs">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-500">
@@ -54,6 +59,8 @@ function MyCourses() {
           />
         </label>
       </div>
+
+      {COURSES_COMING_SOON ? <CoursesComingSoonBanner className="mt-6" /> : null}
 
       {!loading && !error && enrolled.length > 0 ? (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -103,11 +110,13 @@ function MyCourses() {
         <article className="mt-8 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <div className="relative min-h-52 bg-slate-100 lg:min-h-full">
             <div className="lg:absolute lg:inset-0">
-              <CourseCover course={featured} fill />
+              <CourseCover course={featured} fill comingSoon={COURSES_COMING_SOON} />
             </div>
           </div>
           <div className="flex flex-col justify-center px-6 py-7 sm:px-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">Continue learning</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">
+              {COURSES_COMING_SOON ? 'In your package' : 'Continue learning'}
+            </p>
             <span className="mt-4 w-fit rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
               {featured.tag}
             </span>
@@ -118,15 +127,25 @@ function MyCourses() {
               <span className="rounded-lg bg-slate-50 px-2.5 py-1 ring-1 ring-slate-100">{featured.lessons} lessons</span>
               <span className="rounded-lg bg-slate-50 px-2.5 py-1 ring-1 ring-slate-100">{featured.hours} hours</span>
               <span className="rounded-lg bg-gold-400/15 px-2.5 py-1 text-[#8f5f08] ring-1 ring-gold-400/25">
-                {featured.progress > 0 ? `${featured.progress}% complete` : 'Ready to start'}
+                {COURSES_COMING_SOON
+                  ? 'Coming soon'
+                  : featured.progress > 0
+                    ? `${featured.progress}% complete`
+                    : 'Ready to start'}
               </span>
             </div>
-            <Link
-              to={`/dashboard/courses/${featured.id}`}
-              className="mt-6 inline-flex w-fit rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-5 py-2.5 text-sm font-bold text-[#1a1203] shadow-[0_8px_18px_rgba(245,193,74,0.25)] transition hover:brightness-105"
-            >
-              Continue
-            </Link>
+            {COURSES_COMING_SOON ? (
+              <div className="mt-6 max-w-xs">
+                <ComingSoonButton />
+              </div>
+            ) : (
+              <Link
+                to={`/dashboard/courses/${featured.id}`}
+                className="mt-6 inline-flex w-fit rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-5 py-2.5 text-sm font-bold text-[#1a1203] shadow-[0_8px_18px_rgba(245,193,74,0.25)] transition hover:brightness-105"
+              >
+                Continue
+              </Link>
+            )}
           </div>
         </article>
       ) : null}
@@ -138,7 +157,7 @@ function MyCourses() {
               key={course.id}
               className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition hover:ring-1 hover:ring-sky-200"
             >
-              <CourseCover course={course} />
+              <CourseCover course={course} comingSoon={COURSES_COMING_SOON} />
               <div className="flex flex-1 flex-col p-4">
                 <span className="w-fit rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
                   {course.tag}
@@ -149,12 +168,18 @@ function MyCourses() {
                 <p className="mt-3 text-xs text-slate-500">
                   {course.lessons} lessons · {course.hours} hours
                 </p>
-                <Link
-                  to={`/dashboard/courses/${course.id}`}
-                  className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-ink-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#0c1528]"
-                >
-                  Continue
-                </Link>
+                {COURSES_COMING_SOON ? (
+                  <div className="mt-3">
+                    <ComingSoonButton />
+                  </div>
+                ) : (
+                  <Link
+                    to={`/dashboard/courses/${course.id}`}
+                    className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-ink-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#0c1528]"
+                  >
+                    Continue
+                  </Link>
+                )}
               </div>
             </article>
           ))}

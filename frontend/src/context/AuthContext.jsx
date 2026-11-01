@@ -138,6 +138,7 @@ function AuthProvider({ children }) {
             paying={paying}
             error={checkoutError}
             received={receivedOrder}
+            applyPromo={Boolean(user?.referredBy || user?.promoCode)}
             onClose={closeCheckout}
             onPay={payPendingCheckout}
           />

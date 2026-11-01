@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CourseCover from '../../components/CourseCover'
+import { CoursesComingSoonBanner } from '../../components/CoursesComingSoon'
 import { useAuth } from '../../context/AuthContext'
 import { useCatalog } from '../../hooks/useCatalog'
 import { getLearningStats } from '../../services/courses'
-import { canViewCourse, getEnrolledCourses } from '../../utils/courses'
+import { canViewCourse, COURSES_COMING_SOON, getEnrolledCourses } from '../../utils/courses'
 
 function formatHours(hours) {
   if (hours == null) return '—'
@@ -55,14 +56,16 @@ function DashboardHome() {
             Welcome, <span className="text-sky-600">{displayName}</span>
           </h1>
           <p className="mt-2 max-w-lg text-slate-500">
-            Pick up where you left off and keep building your skills.
+            {COURSES_COMING_SOON
+              ? 'Your account is ready. Course videos are coming soon — explore your package meanwhile.'
+              : 'Pick up where you left off and keep building your skills.'}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to="/dashboard/courses"
               className="rounded-full bg-gradient-to-b from-gold-300 via-gold-400 to-gold-500 px-5 py-2.5 text-sm font-bold text-[#1a1203] shadow-[0_8px_20px_rgba(245,193,74,0.28)] transition hover:brightness-105"
             >
-              Continue learning
+              {COURSES_COMING_SOON ? 'View my courses' : 'Continue learning'}
             </Link>
             <Link
               to="/dashboard/browse"
@@ -75,16 +78,24 @@ function DashboardHome() {
         <div className="relative overflow-hidden bg-ink-950 px-6 py-7 text-white sm:px-8">
           <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gold-400/20 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-12 right-6 h-28 w-28 rounded-full bg-sky-400/25 blur-2xl" />
-          <p className="relative text-xs font-semibold uppercase tracking-[0.14em] text-gold-300">Today’s focus</p>
+          <p className="relative text-xs font-semibold uppercase tracking-[0.14em] text-gold-300">
+            {COURSES_COMING_SOON ? 'Status' : 'Today’s focus'}
+          </p>
           <p className="relative mt-2 text-lg font-semibold">
-            {continueCourse ? continueCourse.title : 'Explore a new course'}
+            {COURSES_COMING_SOON
+              ? 'Course videos coming soon'
+              : continueCourse
+                ? continueCourse.title
+                : 'Explore a new course'}
           </p>
           <p className="relative mt-2 text-sm text-slate-300">
-            {continueCourse
-              ? `${continueCourse.progress}% complete · keep the streak going`
-              : 'Find a path that matches your goal'}
+            {COURSES_COMING_SOON
+              ? 'Your package access is saved. Lessons will appear here when published.'
+              : continueCourse
+                ? `${continueCourse.progress}% complete · keep the streak going`
+                : 'Find a path that matches your goal'}
           </p>
-          {continueCourse ? (
+          {!COURSES_COMING_SOON && continueCourse ? (
             <div className="relative mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-gold-300 to-sky-400"
@@ -94,6 +105,8 @@ function DashboardHome() {
           ) : null}
         </div>
       </section>
+
+      {COURSES_COMING_SOON ? <CoursesComingSoonBanner /> : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
@@ -108,7 +121,7 @@ function DashboardHome() {
         ))}
       </div>
 
-      {continueCourse ? (
+      {!COURSES_COMING_SOON && continueCourse ? (
         <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/80 sm:flex sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-sky-600">Continue learning</p>
@@ -132,7 +145,9 @@ function DashboardHome() {
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">Recommended for you</h2>
+          <h2 className="text-xl font-bold text-slate-900">
+            {COURSES_COMING_SOON ? 'Courses in your path' : 'Recommended for you'}
+          </h2>
           <Link to="/dashboard/browse" className="text-sm font-semibold text-sky-600 hover:text-sky-700">
             View all
           </Link>
@@ -144,7 +159,11 @@ function DashboardHome() {
               key={course.id}
               className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80 transition hover:ring-sky-200"
             >
-              <CourseCover course={course} locked={!canViewCourse(course, user)} />
+              <CourseCover
+                course={course}
+                locked={!canViewCourse(course, user)}
+                comingSoon={COURSES_COMING_SOON}
+              />
               <div className="p-5">
                 <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
                   {course.tag}

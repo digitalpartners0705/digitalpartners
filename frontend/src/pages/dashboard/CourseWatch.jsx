@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { CoursesComingSoonPanel } from '../../components/CoursesComingSoon'
 import { useAuth } from '../../context/AuthContext'
 import { getCourse, getPlayUrl, recordWatchTime } from '../../services/courses'
-import { canViewCourse } from '../../utils/courses'
+import { canViewCourse, COURSES_COMING_SOON } from '../../utils/courses'
 
 function CourseWatch() {
   const { courseId } = useParams()
@@ -16,6 +17,11 @@ function CourseWatch() {
   const watchRef = useRef({ lastTime: null, pending: 0 })
 
   useEffect(() => {
+    if (COURSES_COMING_SOON) {
+      setStatus('coming-soon')
+      return undefined
+    }
+
     let cancelled = false
     setStatus('loading')
     setCourse(null)
@@ -115,6 +121,10 @@ function CourseWatch() {
       flush(true)
     }
   }, [activeId, courseId, playUrl])
+
+  if (status === 'coming-soon') {
+    return <CoursesComingSoonPanel title="This course is coming soon" />
+  }
 
   if (status === 'missing' || status === 'locked') {
     return <Navigate to={status === 'locked' ? '/dashboard/upgrade' : '/dashboard/browse'} replace />

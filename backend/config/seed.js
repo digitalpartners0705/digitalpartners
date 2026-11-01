@@ -54,7 +54,7 @@ const ensureAdmin = async () => {
 
 const TRAINING_DAYS = [
   { day: 1, title: 'Introduction', videos: [['What this work is', 6], ['Who you are talking to', 5], ['What a good week looks like', 4]] },
-  { day: 2, title: 'The packages', videos: [['Social Expert', 7], ['Ads Expert', 6], ['AI Premium Expert', 8]] },
+  { day: 2, title: 'The packages', videos: [['Social Expert', 7], ['Ads & Creative Expert', 6], ['AI & Business Expert', 8]] },
   { day: 3, title: 'Your link', videos: [['Where the link lives', 4], ['Send the link with the brochure', 5]] },
   { day: 4, title: 'The first conversation', videos: [['How to open', 6], ['Match one package', 7], ['What to send after', 4]] },
   { day: 5, title: 'The files', videos: [['Partner kit', 5], ['Which brochure to send', 6]] },

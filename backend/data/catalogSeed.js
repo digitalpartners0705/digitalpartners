@@ -18,12 +18,12 @@ const PACKAGES = [
   },
   {
     slug: 'ads-expert',
-    name: 'Ads Expert',
+    name: 'Ads & Creative Expert',
     summary: 'Paid ads, funnels, and conversion-focused courses',
   },
   {
     slug: 'ai-premium-expert',
-    name: 'AI Premium Expert',
+    name: 'AI & Business Expert',
     summary: 'AI, freelancing, and advanced monetization courses',
   },
 ]

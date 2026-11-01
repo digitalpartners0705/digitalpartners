@@ -20,8 +20,8 @@ const DOCUMENTS = [
   },
   {
     id: 'ads-expert',
-    title: 'Ads Expert brochure',
-    cover: 'Ads Expert',
+    title: 'Ads & Creative Expert brochure',
+    cover: 'Ads & Creative',
     kind: 'Brochure',
     bar: '#38bdf8',
     glow: 'rgba(56,189,248,0.45)',
@@ -29,8 +29,8 @@ const DOCUMENTS = [
   },
   {
     id: 'ai-premium',
-    title: 'AI Premium Expert brochure',
-    cover: 'AI Premium',
+    title: 'AI & Business Expert brochure',
+    cover: 'AI Business',
     kind: 'Brochure',
     bar: '#2dd4bf',
     glow: 'rgba(45,212,191,0.45)',

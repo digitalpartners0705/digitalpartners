@@ -7,6 +7,7 @@ const { OFFLINE_PROVIDER, createOrder, mapOrder } = require('../services/orders'
 const storage = require('../services/storage')
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const VALID_PROMO_CODES = new Set(['WELCOME10', 'DIGITAL25', 'VIDHYA'])
 
 const USER_FIELDS = `id, full_name, email, phone, country, state, pin_code, manager_name, manager_phone,
   knowledge_package, promo_code, coupon_code, has_gst, role, avatar_key, referral_code, referred_by, created_at`
@@ -107,11 +108,45 @@ const findSponsorByCode = async (rawCode) => {
   const result = await query(
     `SELECT id, referral_code, knowledge_package
      FROM users
-     WHERE referral_code = $1
+     WHERE LOWER(referral_code) = LOWER($1)
      LIMIT 1`,
     [referralCode],
   )
   return result.rows[0] || null
+}
+
+const verifyInviteCode = async (req, res) => {
+  try {
+    const code = String(req.body.code || req.query.code || '').trim()
+    if (!code) {
+      return res.status(400).json({ ok: false, message: 'Enter a promo or referral code' })
+    }
+
+    const asPromo = code.toUpperCase()
+    if (VALID_PROMO_CODES.has(asPromo)) {
+      return res.json({
+        ok: true,
+        type: 'promo',
+        code: asPromo,
+        message: 'Promo discount unlocked',
+      })
+    }
+
+    const sponsor = await findSponsorByCode(code)
+    if (sponsor) {
+      return res.json({
+        ok: true,
+        type: 'referral',
+        code: sponsor.referral_code,
+        message: 'Referral code applied — discounted package pricing unlocked',
+      })
+    }
+
+    return res.status(400).json({ ok: false, message: 'Invalid promo or referral code' })
+  } catch (error) {
+    console.error('Verify invite error:', error.message)
+    return res.status(500).json({ ok: false, message: 'Could not verify the code' })
+  }
 }
 
 const signup = async (req, res) => {
@@ -122,7 +157,7 @@ const signup = async (req, res) => {
     const country = String(req.body.country || '').trim()
     const state = String(req.body.state || '').trim()
     const knowledgePackage = String(req.body.knowledgePackage || '').trim()
-    const promoCode = String(req.body.promoCode || '').trim().toUpperCase() || null
+    const inviteRaw = String(req.body.promoCode || req.body.inviteCode || '').trim()
     const couponCode = String(req.body.couponCode || '').trim().toUpperCase() || null
     const password = String(req.body.password || '')
     const hasGst = Boolean(req.body.hasGst)
@@ -139,13 +174,36 @@ const signup = async (req, res) => {
     if (password.length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' })
 
     // Package is chosen at signup for checkout intent only — access is granted after purchase.
-    if (knowledgePackage && !PACKAGE_NAMES.includes(knowledgePackage)) {
-      return res.status(400).json({ message: 'Choose Social Expert, Ads Expert, or AI Premium Expert' })
+    const { resolvePackage } = require('../data/commissions')
+    if (knowledgePackage && !resolvePackage(knowledgePackage)) {
+      return res.status(400).json({
+        message: 'Choose Social Expert, Ads & Creative Expert, or AI & Business Expert',
+      })
     }
 
-    const sponsor = await findSponsorByCode(incomingReferral)
+    let sponsor = await findSponsorByCode(incomingReferral)
+    let promoCode = null
+
+    if (inviteRaw) {
+      const asPromo = inviteRaw.toUpperCase()
+      if (VALID_PROMO_CODES.has(asPromo)) {
+        promoCode = asPromo
+      } else {
+        const inviteSponsor = await findSponsorByCode(inviteRaw)
+        if (!inviteSponsor) {
+          return res.status(400).json({ message: 'Promo or referral code is invalid' })
+        }
+        if (!sponsor) sponsor = inviteSponsor
+      }
+    }
+
     if (incomingReferral && !sponsor) {
       return res.status(400).json({ message: 'Referral code is invalid' })
+    }
+    if (!sponsor && !promoCode) {
+      return res.status(400).json({
+        message: 'A valid referral code or promo code is required to create an account',
+      })
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
@@ -283,16 +341,21 @@ const purchasePackage = async (req, res) => {
       })
     }
 
+    const pkg = check.package
+    const hasPromo = Boolean(row.referred_by || row.promo_code)
+    const discountAmount = hasPromo ? Math.max(0, Number(pkg.mrp || pkg.listedPrice) - Number(pkg.listedPrice)) : 0
+
     // Interim checkout: record the request only. Access and commission start after admin approval.
     const order = await createOrder({
       userId: row.id,
       buyer: row,
-      packageName: check.package.name,
+      packageName: pkg.name,
       source: row.knowledge_package ? 'upgrade' : 'signup',
       status: 'pending',
       paymentStatus: 'pending',
       paymentProvider: OFFLINE_PROVIDER,
       paidAt: null,
+      discountAmount,
       notes: 'Placed from checkout. Collect payment by cash or UPI, then approve to start the subscription.',
     })
     if (!order) return res.status(500).json({ message: 'Could not place the order' })
@@ -422,4 +485,13 @@ const updateProfile = async (req, res) => {
   }
 }
 
-module.exports = { signup, login, me, purchasePackage, updateAvatar, updateProfile, changePassword }
+module.exports = {
+  signup,
+  login,
+  me,
+  purchasePackage,
+  updateAvatar,
+  updateProfile,
+  changePassword,
+  verifyInviteCode,
+}

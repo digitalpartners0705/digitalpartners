@@ -363,7 +363,9 @@ const createManualOrder = async (req, res) => {
 
     const pkg = resolvePackage(req.body.packageName)
     if (!pkg) {
-      return res.status(400).json({ message: 'Choose Social Expert, Ads Expert, or AI Premium Expert' })
+      return res.status(400).json({
+        message: 'Choose Social Expert, Ads & Creative Expert, or AI & Business Expert',
+      })
     }
 
     const grantAccess = req.body.grantAccess !== false

@@ -48,6 +48,7 @@ function Upgrade() {
   const { user, updateUser } = useAuth()
   const currentPackage = user?.knowledgePackage || null
   const currentRank = PACKAGE_RANK[currentPackage] || 0
+  const applyPromo = Boolean(user?.referredBy || user?.promoCode)
   const [checkoutPkg, setCheckoutPkg] = useState(null)
   const [receivedOrder, setReceivedOrder] = useState(null)
   const [paying, setPaying] = useState(false)
@@ -117,7 +118,15 @@ function Upgrade() {
               <h2 className="text-xl font-bold">{pkg.name}</h2>
               <p className="mt-2 min-h-[2.75rem] text-sm leading-6 text-slate-400">{pkg.tagline}</p>
 
-              <p className={`mt-5 text-4xl font-extrabold ${styles.price}`}>{formatRupees(pkg.price)}</p>
+              {applyPromo ? (
+                <div className="mt-5">
+                  <p className="text-sm text-slate-500 line-through">{formatRupees(pkg.mrp)}</p>
+                  <p className={`text-4xl font-extrabold ${styles.price}`}>{formatRupees(pkg.price)}</p>
+                  <p className="mt-1 text-xs font-medium text-emerald-300">Promo / referral price</p>
+                </div>
+              ) : (
+                <p className={`mt-5 text-4xl font-extrabold ${styles.price}`}>{formatRupees(pkg.mrp)}</p>
+              )}
 
               <ul className="mt-6 flex-1 space-y-3">
                 {pkg.features.map((feature) => (
@@ -151,6 +160,7 @@ function Upgrade() {
           paying={paying}
           error={error}
           received={receivedOrder}
+          applyPromo={applyPromo}
           onClose={() => {
             if (!paying) {
               setCheckoutPkg(null)

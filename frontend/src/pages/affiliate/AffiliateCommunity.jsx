@@ -46,6 +46,13 @@ function SocialIcon({ id }) {
       </svg>
     )
   }
+  if (id === 'linkedin') {
+    return (
+      <svg {...common} fill="currentColor">
+        <path d="M6.5 9h2.2v9H6.5V9Zm1.1-3.4a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6ZM10.8 9h2.1v1.2h.1c.3-.6 1.1-1.3 2.3-1.3 2.4 0 2.9 1.6 2.9 3.7V18h-2.2v-4.5c0-1.1 0-2.5-1.5-2.5s-1.8 1.2-1.8 2.4V18h-2.2V9Z" />
+      </svg>
+    )
+  }
   return (
     <svg {...common} fill="currentColor">
       <path d="M21.5 4.6 2.8 11.2c-1.3.5-1.2 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.7.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.2-.4-1.8-1.4-1.5ZM8.6 13.7l9.3-5.8c.5-.3.9-.1.5.2l-7.6 6.9-.3 3.3-1.9-4.6Z" />
@@ -57,6 +64,7 @@ const TONE = {
   youtube: 'bg-red-500/15 text-red-400',
   facebook: 'bg-sky-500/15 text-sky-300',
   instagram: 'bg-pink-500/15 text-pink-300',
+  linkedin: 'bg-[#0A66C2]/15 text-[#70b5f9]',
   telegram: 'bg-teal-300/15 text-teal-200',
   whatsapp: 'bg-emerald-400/15 text-emerald-300',
 }

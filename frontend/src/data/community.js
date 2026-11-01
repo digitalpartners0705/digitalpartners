@@ -26,6 +26,7 @@ export const SOCIALS = [
     handle: 'Digital Vidhya',
     href: 'https://www.facebook.com/share/1K5YBDXPXL/',
     description: 'Announcements and learner stories.',
+    tone: 'bg-[#1877F2]/10 text-[#1877F2]',
   },
   {
     id: 'instagram',
@@ -33,6 +34,7 @@ export const SOCIALS = [
     handle: '@digital.vidhya',
     href: 'https://www.instagram.com/digital.vidhya?dlrf=MXh5MzQ2bmQwYTVlcw==',
     description: 'Short lessons, reels, and behind-the-scenes.',
+    tone: 'bg-pink-500/10 text-pink-600',
   },
   {
     id: 'youtube',
@@ -40,6 +42,15 @@ export const SOCIALS = [
     handle: '@Digitalvidhyaofficall',
     href: 'https://www.youtube.com/@Digitalvidhyaofficall',
     description: 'Longer walkthroughs and weekly recaps.',
+    tone: 'bg-red-500/10 text-red-600',
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    handle: 'Digital Vidhya',
+    href: 'https://www.linkedin.com/in/digital-vidhya-629375447/',
+    description: 'Company updates and professional posts.',
+    tone: 'bg-[#0A66C2]/10 text-[#0A66C2]',
   },
 ]
 

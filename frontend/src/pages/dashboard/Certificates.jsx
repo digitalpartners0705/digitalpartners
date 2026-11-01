@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import CourseCover from '../../components/CourseCover'
+import { ComingSoonButton, CoursesComingSoonBanner } from '../../components/CoursesComingSoon'
 import { useAuth } from '../../context/AuthContext'
 import { useCatalog } from '../../hooks/useCatalog'
-import { canViewCourse } from '../../utils/courses'
+import { canViewCourse, COURSES_COMING_SOON } from '../../utils/courses'
 
 const PACKAGE_FILTERS = [
   { id: 'all', label: 'All packages' },
   { id: 'Social Expert', label: 'Social Expert' },
-  { id: 'Ads Expert', label: 'Ads Expert' },
-  { id: 'AI Premium Expert', label: 'AI Premium Expert' },
+  { id: 'Ads & Creative Expert', label: 'Ads & Creative Expert' },
+  { id: 'AI & Business Expert', label: 'AI & Business Expert' },
 ]
 
 function Certificates() {
@@ -50,6 +51,8 @@ function Certificates() {
       <p className="mt-1 text-slate-500">
         Certificates are available for courses in your purchased package.
       </p>
+
+      {COURSES_COMING_SOON ? <CoursesComingSoonBanner className="mt-6" /> : null}
 
       <input
         type="search"
@@ -100,7 +103,7 @@ function Certificates() {
                 key={course.id}
                 className="flex flex-col overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200"
               >
-                <CourseCover course={course} locked={!unlocked} />
+                <CourseCover course={course} locked={!unlocked} comingSoon={COURSES_COMING_SOON} />
                 <div className="flex flex-1 flex-col p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
@@ -124,6 +127,8 @@ function Certificates() {
                       >
                         Upgrade to unlock
                       </Link>
+                    ) : COURSES_COMING_SOON ? (
+                      <ComingSoonButton className="rounded-xl" />
                     ) : isClaimed ? (
                       <span className="inline-flex rounded-xl bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
                         Certificate ready

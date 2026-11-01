@@ -1,8 +1,9 @@
-export const KNOWLEDGE_PACKAGES = ['Social Expert', 'Ads Expert', 'AI Premium Expert']
+export const KNOWLEDGE_PACKAGES = ['Social Expert', 'Ads & Creative Expert', 'AI & Business Expert']
 
 export const VALID_PROMO_CODES = {
-  WELCOME10: '10% off applied',
-  DIGITAL25: '25% off applied',
+  WELCOME10: 'Promo discount unlocked',
+  DIGITAL25: 'Promo discount unlocked',
+  VIDHYA: 'Promo discount unlocked',
 }
 
 export const VALID_COUPON_CODES = {

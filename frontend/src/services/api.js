@@ -57,6 +57,11 @@ export const signupUser = async (payload) => {
   return response.data
 }
 
+export const verifyInviteCode = async (code) => {
+  const response = await api.post('/api/auth/verify-invite', { code })
+  return response.data
+}
+
 export const loginUser = async (payload) => {
   const response = await api.post('/api/auth/login', payload)
   saveSession(response.data)

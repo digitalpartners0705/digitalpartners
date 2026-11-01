@@ -20,7 +20,7 @@ const PACKAGES = [
   },
   {
     id: 'ads-expert',
-    name: 'Ads Expert',
+    name: 'Ads & Creative Expert',
     short: 'Ads',
     price: 14999,
     accent: 'gold',
@@ -28,7 +28,7 @@ const PACKAGES = [
   },
   {
     id: 'ai-premium-expert',
-    name: 'AI Premium Expert',
+    name: 'AI & Business Expert',
     short: 'AI Premium',
     price: 21999,
     accent: 'violet',

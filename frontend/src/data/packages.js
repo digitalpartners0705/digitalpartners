@@ -40,9 +40,9 @@ export const PACKAGES = [
   },
   {
     id: 'ads-expert',
-    name: 'Ads Expert',
+    name: 'Ads & Creative Expert',
     shortLabel: 'ADS',
-    price: 19999,
+    price: 19900,
     badge: 'Most Popular',
     theme: 'silver',
     headline: 'Scale reach with paid ads and lead generation.',
@@ -79,8 +79,8 @@ export const PACKAGES = [
   },
   {
     id: 'ai-premium-expert',
-    name: 'AI Premium Expert',
-    shortLabel: 'AI PREMIUM',
+    name: 'AI & Business Expert',
+    shortLabel: 'AI BUSINESS',
     price: 29999,
     badge: 'Best Value',
     theme: 'gold',
@@ -99,7 +99,7 @@ export const PACKAGES = [
       { title: 'Monetization Systems', short: 'MONETIZE', subtitle: 'Multiple income streams' },
     ],
     inclusions: [
-      'Everything in Ads Expert',
+      'Everything in Ads & Creative Expert',
       'AI tools & automation for marketing',
       'Advanced monetization & freelancing playbook',
       '1:1 priority mentorship',

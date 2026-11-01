@@ -1,7 +1,16 @@
 const os = require('os')
 const express = require('express')
 const multer = require('multer')
-const { signup, login, me, purchasePackage, updateAvatar, updateProfile, changePassword } = require('../controllers/authController')
+const {
+  signup,
+  login,
+  me,
+  purchasePackage,
+  updateAvatar,
+  updateProfile,
+  changePassword,
+  verifyInviteCode,
+} = require('../controllers/authController')
 const { requireAuth } = require('../middleware/auth')
 
 const router = express.Router()
@@ -11,6 +20,8 @@ const upload = multer({
 })
 
 router.post('/signup', signup)
+router.post('/verify-invite', verifyInviteCode)
+router.get('/verify-invite', verifyInviteCode)
 router.post('/login', login)
 router.get('/me', requireAuth, me)
 router.post('/purchase', requireAuth, purchasePackage)

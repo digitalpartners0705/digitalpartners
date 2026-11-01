@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { formatRupees, priceBreakdown } from '../data/checkoutPackages'
 
-function CheckoutModal({ pkg, onClose, onPay, paying, error = '', received = null }) {
-  const breakdown = useMemo(() => priceBreakdown(pkg.price), [pkg.price])
+function CheckoutModal({ pkg, onClose, onPay, paying, error = '', received = null, applyPromo = true }) {
+  const breakdown = useMemo(() => priceBreakdown(pkg, { applyPromo }), [pkg, applyPromo])
 
   useEffect(() => {
     const onKey = (event) => {
@@ -78,6 +78,16 @@ function CheckoutModal({ pkg, onClose, onPay, paying, error = '', received = nul
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Amount breakdown</p>
               <dl className="mt-3 space-y-2.5 text-sm">
                 <div className="flex items-center justify-between gap-3">
+                  <dt className="text-slate-400">Total price (MRP)</dt>
+                  <dd className="font-semibold text-white">{formatRupees(breakdown.mrp)}</dd>
+                </div>
+                {breakdown.discount > 0 ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-emerald-300">Promo / referral discount</dt>
+                    <dd className="font-semibold text-emerald-300">−{formatRupees(breakdown.discount)}</dd>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3">
                   <dt className="text-slate-400">Package price (before GST)</dt>
                   <dd className="font-semibold text-white">{formatRupees(breakdown.net)}</dd>
                 </div>

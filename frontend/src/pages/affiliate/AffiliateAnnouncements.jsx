@@ -3,7 +3,7 @@ const FEATURED = [
     id: 'ai-window',
     tag: 'This month',
     title: 'Talk about AI Premium first',
-    text: 'AI Premium Expert is the package to open with. The brochure is in Downloads. A real sale shows on Earnings after it is recorded.',
+    text: 'AI & Business Expert is the package to open with. The brochure is in Downloads. A real sale shows on Earnings after it is recorded.',
     date: '27 Sep 2026',
     panel: 'courses',
   },
