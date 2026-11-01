@@ -377,6 +377,66 @@ const initContactTable = async () => {
   await query(`CREATE INDEX IF NOT EXISTS idx_contact_requests_created_at ON contact_requests(created_at DESC)`)
 }
 
+const initAnnouncementTable = async () => {
+  await query(`
+    CREATE TABLE IF NOT EXISTS announcements (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      kind TEXT NOT NULL DEFAULT 'notice',
+      tag TEXT,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      panel TEXT,
+      icon TEXT,
+      display_date TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      sort_order INT NOT NULL DEFAULT 0,
+      published_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT announcements_kind_check CHECK (kind IN ('featured', 'notice')),
+      CONSTRAINT announcements_status_check CHECK (status IN ('draft', 'published')),
+      CONSTRAINT announcements_panel_check CHECK (panel IS NULL OR panel IN ('courses', 'files')),
+      CONSTRAINT announcements_icon_check CHECK (
+        icon IS NULL OR icon IN ('rooms', 'shield', 'note', 'link', 'megaphone')
+      )
+    )
+  `)
+
+  await query(`CREATE INDEX IF NOT EXISTS idx_announcements_status ON announcements(status)`)
+  await query(`CREATE INDEX IF NOT EXISTS idx_announcements_kind ON announcements(kind)`)
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_announcements_sort ON announcements(kind, sort_order ASC, published_at DESC NULLS LAST)`,
+  )
+}
+
+const initAchievementTable = async () => {
+  await query(`
+    CREATE TABLE IF NOT EXISTS achievement_milestones (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title TEXT NOT NULL,
+      amount NUMERIC(12,2) NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      reward_type TEXT NOT NULL DEFAULT 'none',
+      reward_title TEXT,
+      reward_description TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      sort_order INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      CONSTRAINT achievement_milestones_status_check CHECK (status IN ('draft', 'published')),
+      CONSTRAINT achievement_milestones_reward_type_check CHECK (
+        reward_type IN ('none', 'trip', 'gift', 'bonus', 'other')
+      ),
+      CONSTRAINT achievement_milestones_amount_check CHECK (amount > 0)
+    )
+  `)
+
+  await query(`CREATE INDEX IF NOT EXISTS idx_achievement_milestones_status ON achievement_milestones(status)`)
+  await query(
+    `CREATE INDEX IF NOT EXISTS idx_achievement_milestones_sort ON achievement_milestones(sort_order ASC, amount ASC)`,
+  )
+}
+
 module.exports = {
   pool,
   query,
@@ -387,6 +447,8 @@ module.exports = {
   initOrderTables,
   initTrainingTables,
   initContactTable,
+  initAnnouncementTable,
+  initAchievementTable,
   createReferralCode,
   ensureReferralCodes,
 }

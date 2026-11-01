@@ -10,8 +10,17 @@ const {
   initOrderTables,
   initTrainingTables,
   initContactTable,
+  initAnnouncementTable,
+  initAchievementTable,
 } = require('./config/db')
-const { seedCatalog, ensureAdmin, seedTrainingDays, backfillOrders } = require('./config/seed')
+const {
+  seedCatalog,
+  ensureAdmin,
+  seedTrainingDays,
+  seedAnnouncements,
+  seedAchievements,
+  backfillOrders,
+} = require('./config/seed')
 const healthRoutes = require('./routes/healthRoutes')
 const authRoutes = require('./routes/authRoutes')
 const courseRoutes = require('./routes/courseRoutes')
@@ -37,8 +46,12 @@ const ensureReady = () => {
       await initOrderTables()
       await initTrainingTables()
       await initContactTable()
+      await initAnnouncementTable()
+      await initAchievementTable()
       await seedCatalog()
       await seedTrainingDays()
+      await seedAnnouncements()
+      await seedAchievements()
       await ensureAdmin()
       await backfillOrders()
     })()

@@ -42,7 +42,7 @@ export const PACKAGES = [
     id: 'ads-expert',
     name: 'Ads & Creative Expert',
     shortLabel: 'ADS',
-    price: 19900,
+    price: 19999,
     badge: 'Most Popular',
     theme: 'silver',
     headline: 'Scale reach with paid ads and lead generation.',

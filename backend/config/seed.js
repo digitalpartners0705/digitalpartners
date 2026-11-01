@@ -132,4 +132,152 @@ const backfillOrders = async () => {
   }
 }
 
-module.exports = { seedCatalog, ensureAdmin, seedTrainingDays, backfillOrders }
+const ANNOUNCEMENT_SEED = [
+  {
+    kind: 'featured',
+    tag: 'This month',
+    title: 'Talk about AI Premium first',
+    body: 'AI & Business Expert is the package to open with. A real sale shows on Earnings after it is recorded.',
+    panel: 'courses',
+    icon: null,
+    displayDate: '27 Sep 2026',
+    sortOrder: 0,
+  },
+  {
+    kind: 'featured',
+    tag: 'Updated',
+    title: 'Partner kit was rewritten',
+    body: 'The starter file and the three package sheets are new. Send this version before you walk someone through the courses.',
+    panel: 'files',
+    icon: null,
+    displayDate: '24 Sep 2026',
+    sortOrder: 1,
+  },
+  {
+    kind: 'notice',
+    tag: null,
+    title: 'WhatsApp and Telegram rooms only',
+    body: 'Community calls stay in those two rooms. Share the one your referral will actually join.',
+    panel: null,
+    icon: 'rooms',
+    displayDate: '22 Sep',
+    sortOrder: 0,
+  },
+  {
+    kind: 'notice',
+    tag: null,
+    title: 'KYC before the first payout',
+    body: 'Finish verification before a commission can be sent. Earnings stay at ₹0 until a sale exists.',
+    panel: null,
+    icon: 'shield',
+    displayDate: '18 Sep',
+    sortOrder: 1,
+  },
+  {
+    kind: 'notice',
+    tag: null,
+    title: 'Weekly call notes',
+    body: 'This week’s note: lead with the package that matches the learner, then send the brochure.',
+    panel: null,
+    icon: 'note',
+    displayDate: '15 Sep',
+    sortOrder: 2,
+  },
+  {
+    kind: 'notice',
+    tag: null,
+    title: 'Check the link before you share',
+    body: 'Use your own referral link with the brochure so the signup is tied to you.',
+    panel: null,
+    icon: 'link',
+    displayDate: '09 Sep',
+    sortOrder: 3,
+  },
+]
+
+const seedAnnouncements = async () => {
+  const existing = await query('SELECT COUNT(*)::int AS count FROM announcements')
+  if (existing.rows[0].count > 0) return
+
+  for (const item of ANNOUNCEMENT_SEED) {
+    await query(
+      `INSERT INTO announcements (
+         kind, tag, title, body, panel, icon, display_date, status, sort_order, published_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'published', $8, NOW())`,
+      [
+        item.kind,
+        item.tag,
+        item.title,
+        item.body,
+        item.panel,
+        item.icon,
+        item.displayDate,
+        item.sortOrder,
+      ],
+    )
+  }
+  console.log(`Seeded ${ANNOUNCEMENT_SEED.length} affiliate announcements`)
+}
+
+const ACHIEVEMENT_SEED = [
+  {
+    title: 'First referral',
+    amount: 5000,
+    note: 'Your first solid commission from a paid signup.',
+    sortOrder: 0,
+  },
+  {
+    title: 'Working partner',
+    amount: 10000,
+    note: 'Commission crossed the first serious mark.',
+    sortOrder: 1,
+  },
+  {
+    title: 'Steady month',
+    amount: 25000,
+    note: 'A full stretch of referrals, not a single sale.',
+    sortOrder: 2,
+  },
+  {
+    title: 'Proven closer',
+    amount: 50000,
+    note: 'Enough commission to show a repeat habit.',
+    sortOrder: 3,
+  },
+  {
+    title: 'One lakh',
+    amount: 100000,
+    note: 'A six-figure commission total.',
+    sortOrder: 4,
+  },
+  {
+    title: 'Pace setter',
+    amount: 200000,
+    note: 'The highest mark on this board for now.',
+    sortOrder: 5,
+  },
+]
+
+const seedAchievements = async () => {
+  const existing = await query('SELECT COUNT(*)::int AS count FROM achievement_milestones')
+  if (existing.rows[0].count > 0) return
+
+  for (const item of ACHIEVEMENT_SEED) {
+    await query(
+      `INSERT INTO achievement_milestones (
+         title, amount, note, reward_type, status, sort_order
+       ) VALUES ($1, $2, $3, 'none', 'published', $4)`,
+      [item.title, item.amount, item.note, item.sortOrder],
+    )
+  }
+  console.log(`Seeded ${ACHIEVEMENT_SEED.length} achievement milestones`)
+}
+
+module.exports = {
+  seedCatalog,
+  ensureAdmin,
+  seedTrainingDays,
+  seedAnnouncements,
+  seedAchievements,
+  backfillOrders,
+}

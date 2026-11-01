@@ -54,6 +54,19 @@ const {
   updateContactRequest,
   deleteContactRequest,
 } = require('../controllers/adminContactController')
+const {
+  listAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+} = require('../controllers/adminAnnouncementController')
+const {
+  listMilestones,
+  createMilestone,
+  updateMilestone,
+  deleteMilestone,
+} = require('../controllers/adminAchievementController')
+const { listKycSubmissions } = require('../controllers/adminKycController')
 const { requireAdmin } = require('../middleware/auth')
 
 const router = express.Router()
@@ -115,5 +128,17 @@ router.delete('/lessons/:id', deleteLesson)
 router.get('/contact-requests', listContactRequests)
 router.patch('/contact-requests/:id', updateContactRequest)
 router.delete('/contact-requests/:id', deleteContactRequest)
+
+router.get('/announcements', listAnnouncements)
+router.post('/announcements', createAnnouncement)
+router.patch('/announcements/:id', updateAnnouncement)
+router.delete('/announcements/:id', deleteAnnouncement)
+
+router.get('/achievements', listMilestones)
+router.post('/achievements', createMilestone)
+router.patch('/achievements/:id', updateMilestone)
+router.delete('/achievements/:id', deleteMilestone)
+
+router.get('/kyc', listKycSubmissions)
 
 module.exports = router

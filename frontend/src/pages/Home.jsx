@@ -24,7 +24,7 @@ const knowledgePackages = [
     name: 'Ads & Creative Expert',
     shortLabel: 'ADS',
     description: 'Learn Meta & Google ads, funnels, and lead generation to scale your reach.',
-    price: 19900,
+    price: 19999,
     theme: 'silver',
     badge: 'Most Popular',
   },

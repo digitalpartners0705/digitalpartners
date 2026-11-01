@@ -12,6 +12,9 @@ import TrainingEditor from './pages/TrainingEditor'
 import TrainingVideos from './pages/TrainingVideos'
 import TrainingsPage from './pages/TrainingsPage'
 import ContactRequestsPage from './pages/ContactRequestsPage'
+import AnnouncementsPage from './pages/AnnouncementsPage'
+import AchievementsPage from './pages/AchievementsPage'
+import KycPage from './pages/KycPage'
 import Login from './pages/Login'
 import { getToken } from './services/api'
 
@@ -48,6 +51,9 @@ function App() {
         <Route path="trainings/:id" element={<TrainingVideos />} />
         <Route path="contact" element={<ContactRequestsPage />} />
         <Route path="contact-requests" element={<ContactRequestsPage />} />
+        <Route path="announcements" element={<AnnouncementsPage />} />
+        <Route path="achievements" element={<AchievementsPage />} />
+        <Route path="kyc" element={<KycPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

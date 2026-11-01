@@ -19,7 +19,7 @@ export const CHECKOUT_PACKAGES = [
     id: 'ads-expert',
     name: 'Ads & Creative Expert',
     tagline: 'Scale your reach with paid ads and lead generation.',
-    mrp: 19900,
+    mrp: 19999,
     price: 14999,
     accent: 'gold',
     badge: 'Most Popular',

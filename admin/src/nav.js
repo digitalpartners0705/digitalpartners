@@ -12,12 +12,15 @@ export const adminNav = [
     items: [
       { to: '/courses', label: 'Courses', icon: 'courses' },
       { to: '/trainings', label: 'Training', icon: 'trainings' },
+      { to: '/announcements', label: 'Announcements', icon: 'announcements' },
+      { to: '/achievements', label: 'Achievements', icon: 'achievements' },
     ],
   },
   {
     label: 'Support',
     items: [
-      { to: '/contact', label: 'Contact', icon: 'contact' },
+      { to: '/kyc', label: 'KYC', icon: 'kyc' },
+      { to: '/contact', label: 'Contact queries', icon: 'contact' },
     ],
   },
 ]

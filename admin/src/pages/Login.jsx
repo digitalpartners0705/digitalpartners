@@ -31,14 +31,13 @@ function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-md rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">
-            DV
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-brand-600">Digital Vidhya</p>
-            <p className="text-xs font-medium text-slate-500">Admin panel</p>
-          </div>
+        <div>
+          <img
+            src="/assets/Digital-Vidhya-logo-trim.png"
+            alt="Digital Vidhya"
+            className="h-12 w-auto object-contain"
+          />
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">Admin panel</p>
         </div>
         <h1 className="mt-5 text-2xl font-bold">Admin login</h1>
         <p className="mt-1 text-sm text-slate-500">Manage orders, commissions, courses, and training.</p>

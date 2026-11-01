@@ -16,7 +16,7 @@ const PACKAGES = {
   },
   'Ads & Creative Expert': {
     id: 'ads-expert',
-    mrp: 19900,
+    mrp: 19999,
     listedPrice: 14999,
     netAmount: 12711.02,
     activePercent: 59.0,

@@ -1,52 +1,5 @@
-const FEATURED = [
-  {
-    id: 'ai-window',
-    tag: 'This month',
-    title: 'Talk about AI Premium first',
-    text: 'AI & Business Expert is the package to open with. The brochure is in Downloads. A real sale shows on Earnings after it is recorded.',
-    date: '27 Sep 2026',
-    panel: 'courses',
-  },
-  {
-    id: 'kit-refresh',
-    tag: 'Updated',
-    title: 'Partner kit was rewritten',
-    text: 'The starter file and the three package sheets are new. Send this version before you walk someone through the courses.',
-    date: '24 Sep 2026',
-    panel: 'files',
-  },
-]
-
-const NOTICES = [
-  {
-    id: 'rooms',
-    title: 'WhatsApp and Telegram rooms only',
-    text: 'Community calls stay in those two rooms. Share the one your referral will actually join.',
-    date: '22 Sep',
-    icon: 'rooms',
-  },
-  {
-    id: 'kyc',
-    title: 'KYC before the first payout',
-    text: 'Finish verification before a commission can be sent. Earnings stay at ₹0 until a sale exists.',
-    date: '18 Sep',
-    icon: 'shield',
-  },
-  {
-    id: 'call',
-    title: 'Weekly call notes',
-    text: 'This week’s note: lead with the package that matches the learner, then send the brochure.',
-    date: '15 Sep',
-    icon: 'note',
-  },
-  {
-    id: 'link',
-    title: 'Check the link before you share',
-    text: 'Use your own referral link with the brochure so the signup is tied to you.',
-    date: '09 Sep',
-    icon: 'link',
-  },
-]
+import { useEffect, useState } from 'react'
+import { getAffiliateAnnouncements } from '../../services/api'
 
 function MegaphoneIcon() {
   return (
@@ -59,7 +12,14 @@ function MegaphoneIcon() {
 }
 
 function NoticeIcon({ name }) {
-  const common = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, className: 'h-4 w-4', 'aria-hidden': true }
+  const common = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    className: 'h-4 w-4',
+    'aria-hidden': true,
+  }
   if (name === 'rooms') {
     return (
       <svg {...common}>
@@ -82,6 +42,9 @@ function NoticeIcon({ name }) {
         <path strokeLinecap="round" d="M15 4v4h4M9 12h6M9 16h4" />
       </svg>
     )
+  }
+  if (name === 'megaphone') {
+    return <MegaphoneIcon />
   }
   return (
     <svg {...common}>
@@ -124,7 +87,47 @@ function FilesPanel() {
   )
 }
 
+function formatFallbackDate(iso) {
+  if (!iso) return ''
+  try {
+    return new Date(iso).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  } catch {
+    return ''
+  }
+}
+
 function AffiliateAnnouncements() {
+  const [featured, setFeatured] = useState([])
+  const [notices, setNotices] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    getAffiliateAnnouncements()
+      .then((data) => {
+        if (cancelled) return
+        setFeatured(data.featured || [])
+        setNotices(data.notices || [])
+        setError('')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err.response?.data?.message || 'Could not load announcements')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <div className="-mx-4 -my-8 min-h-[calc(100vh-4.25rem)] bg-[#10131c] px-4 py-8 text-slate-100 sm:-mx-8 sm:px-8">
       <div className="flex items-start gap-3">
@@ -137,34 +140,60 @@ function AffiliateAnnouncements() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
-        {FEATURED.map((item) => (
-          <article key={item.id} className="grid overflow-hidden rounded-xl border border-white/10 bg-[#171b27] sm:grid-cols-[10.5rem_1fr]">
-            {item.panel === 'courses' ? <CoursesPanel /> : <FilesPanel />}
-            <div className="px-5 py-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-teal-300">{item.tag}</p>
-              <h2 className="mt-2 text-lg font-bold tracking-tight">{item.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">{item.text}</p>
-              <p className="mt-4 text-xs text-slate-500">{item.date}</p>
-            </div>
-          </article>
-        ))}
-      </div>
+      {loading ? <p className="mt-8 text-sm text-slate-400">Loading announcements...</p> : null}
+      {error ? <p className="mt-8 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p> : null}
 
-      <div className="mt-4 space-y-3">
-        {NOTICES.map((item) => (
-          <article key={item.id} className="flex items-start gap-4 rounded-xl border border-white/10 bg-[#171b27] px-4 py-4 sm:items-center">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-teal-300 ring-1 ring-white/10">
-              <NoticeIcon name={item.icon} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-semibold">{item.title}</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-400">{item.text}</p>
-            </div>
-            <p className="hidden shrink-0 text-xs text-slate-500 sm:block">{item.date}</p>
-          </article>
-        ))}
-      </div>
+      {!loading && !error && featured.length === 0 && notices.length === 0 ? (
+        <div className="mt-8 rounded-xl border border-dashed border-white/15 bg-[#171b27] px-6 py-16 text-center">
+          <p className="text-lg font-semibold">No announcements yet</p>
+          <p className="mt-2 text-sm text-slate-400">New campaign notes will appear here when published.</p>
+        </div>
+      ) : null}
+
+      {featured.length > 0 ? (
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {featured.map((item) => (
+            <article
+              key={item.id}
+              className="grid overflow-hidden rounded-xl border border-white/10 bg-[#171b27] sm:grid-cols-[10.5rem_1fr]"
+            >
+              {item.panel === 'files' ? <FilesPanel /> : <CoursesPanel />}
+              <div className="px-5 py-5">
+                {item.tag ? (
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-teal-300">{item.tag}</p>
+                ) : null}
+                <h2 className="mt-2 text-lg font-bold tracking-tight">{item.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{item.body}</p>
+                <p className="mt-4 text-xs text-slate-500">
+                  {item.displayDate || formatFallbackDate(item.publishedAt)}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
+
+      {notices.length > 0 ? (
+        <div className={`space-y-3 ${featured.length > 0 ? 'mt-4' : 'mt-8'}`}>
+          {notices.map((item) => (
+            <article
+              key={item.id}
+              className="flex items-start gap-4 rounded-xl border border-white/10 bg-[#171b27] px-4 py-4 sm:items-center"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 text-teal-300 ring-1 ring-white/10">
+                <NoticeIcon name={item.icon || 'megaphone'} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-semibold">{item.title}</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-400">{item.body}</p>
+              </div>
+              <p className="hidden shrink-0 text-xs text-slate-500 sm:block">
+                {item.displayDate || formatFallbackDate(item.publishedAt)}
+              </p>
+            </article>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

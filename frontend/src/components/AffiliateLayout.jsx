@@ -3,9 +3,14 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import ProfileButton from './ProfileButton'
 
+// Flip to true when marketing kits are ready again.
+const AFFILIATE_DOWNLOADS_ENABLED = false
+
 const navItems = [
   { to: '/affiliate/earnings', label: 'Earnings', icon: 'earnings' },
-  { to: '/affiliate/downloads', label: 'Downloads', icon: 'downloads' },
+  ...(AFFILIATE_DOWNLOADS_ENABLED
+    ? [{ to: '/affiliate/downloads', label: 'Downloads', icon: 'downloads' }]
+    : []),
   { to: '/affiliate/announcements', label: 'Announcements', icon: 'announcements' },
   { to: '/affiliate/trainings', label: 'Trainings', icon: 'trainings' },
   { to: '/affiliate/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },

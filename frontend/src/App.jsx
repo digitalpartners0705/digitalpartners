@@ -7,7 +7,6 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AffiliateAchievements from './pages/affiliate/AffiliateAchievements'
 import AffiliateAnnouncements from './pages/affiliate/AffiliateAnnouncements'
 import AffiliateCommunity from './pages/affiliate/AffiliateCommunity'
-import AffiliateDownloads from './pages/affiliate/AffiliateDownloads'
 import AffiliateEarnings from './pages/affiliate/AffiliateEarnings'
 import AffiliateLeaderboard from './pages/affiliate/AffiliateLeaderboard'
 import AffiliateLinks from './pages/affiliate/AffiliateLinks'
@@ -74,7 +73,8 @@ function App() {
         <Route index element={<Navigate to="earnings" replace />} />
         <Route path="profile" element={<AffiliateProfile />} />
         <Route path="earnings" element={<AffiliateEarnings />} />
-        <Route path="downloads" element={<AffiliateDownloads />} />
+        {/* Downloads temporarily hidden — restore AffiliateDownloads when kits are ready */}
+        <Route path="downloads" element={<Navigate to="/affiliate/earnings" replace />} />
         <Route path="announcements" element={<AffiliateAnnouncements />} />
         <Route path="trainings" element={<AffiliateTrainings />} />
         <Route path="leaderboard" element={<AffiliateLeaderboard />} />

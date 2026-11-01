@@ -71,6 +71,35 @@ function NavIcon({ name }) {
     )
   }
 
+  if (name === 'announcements') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 10v4a1 1 0 0 0 1 1h2l4 3V6L7 9H5a1 1 0 0 0-1 1Z" />
+        <path strokeLinecap="round" d="M15 9.5a3.5 3.5 0 0 1 0 5" />
+        <path strokeLinecap="round" d="M17.5 7a6.5 6.5 0 0 1 0 10" />
+      </svg>
+    )
+  }
+
+  if (name === 'achievements') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+        <path strokeLinecap="round" d="M7 6H5.5A2.5 2.5 0 0 0 5.5 11H7M17 6h1.5A2.5 2.5 0 0 1 18.5 11H17" />
+      </svg>
+    )
+  }
+
+  if (name === 'kyc') {
+    return (
+      <svg {...common}>
+        <rect x="4" y="5" width="16" height="14" rx="2" />
+        <circle cx="10" cy="11" r="2" />
+        <path strokeLinecap="round" d="M14 10h4M14 13h3M7 16h10" />
+      </svg>
+    )
+  }
+
   return (
     <svg {...common}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10 7V5H5v14h5v-2" />
@@ -95,7 +124,10 @@ function pageCrumb(pathname) {
   if (pathname === '/courses/new') return 'New course'
   if (pathname.endsWith('/edit')) return 'Edit course'
   if (pathname.startsWith('/courses/') && pathname !== '/courses') return 'Lessons'
-  if (pathname.startsWith('/contact')) return 'Contact requests'
+  if (pathname.startsWith('/contact')) return 'Contact queries'
+  if (pathname.startsWith('/announcements')) return 'Announcements'
+  if (pathname.startsWith('/achievements')) return 'Achievements'
+  if (pathname.startsWith('/kyc')) return 'KYC submissions'
   if (pathname.startsWith('/courses')) return 'Courses'
   return 'Admin'
 }
@@ -154,16 +186,17 @@ function AdminLayout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Link to="/orders" className="flex items-center gap-3 border-b border-slate-100 px-5 py-5" aria-label="Digital Vidhya admin home">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white">
-            DV
-          </span>
-          <span>
-            <span className="block text-sm font-extrabold tracking-tight text-slate-900">Digital Vidhya</span>
-            <span className="mt-0.5 inline-flex rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+        <Link to="/orders" className="flex items-center border-b border-slate-100 px-5 py-4" aria-label="Digital Vidhya admin home">
+          <div className="min-w-0">
+            <img
+              src="/assets/Digital-Vidhya-logo-trim.png"
+              alt="Digital Vidhya"
+              className="h-11 w-auto max-w-full object-contain"
+            />
+            <span className="mt-1.5 inline-flex rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
               Admin panel
             </span>
-          </span>
+          </div>
         </Link>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">

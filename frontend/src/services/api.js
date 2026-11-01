@@ -148,6 +148,16 @@ export const getTrainings = async () => {
   return response.data
 }
 
+export const getAffiliateAnnouncements = async () => {
+  const response = await api.get('/api/affiliate/announcements')
+  return response.data
+}
+
+export const getAffiliateAchievements = async () => {
+  const response = await api.get('/api/affiliate/achievements')
+  return response.data
+}
+
 export const getTrainingPlayUrl = async (dayId, videoId) => {
   const response = await api.get(`/api/affiliate/trainings/${dayId}/videos/${videoId}/play`)
   return response.data
