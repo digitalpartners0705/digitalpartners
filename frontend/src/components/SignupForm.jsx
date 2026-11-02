@@ -4,7 +4,6 @@ import {
   COUNTRIES,
   COUNTRY_NAMES,
   KNOWLEDGE_PACKAGES,
-  VALID_COUPON_CODES,
   VALID_PROMO_CODES,
 } from '../data/signupOptions'
 import { readReferral } from '../utils/referral'
@@ -63,7 +62,6 @@ function buildInitialForm(defaults = {}) {
     state: '',
     knowledgePackage: defaults.knowledgePackage || stored.package || '',
     promoCode: '',
-    couponCode: '',
     password: '',
     hasGst: false,
     referralCode: defaults.referralCode || stored.ref || '',
@@ -78,7 +76,6 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
   const [submitting, setSubmitting] = useState(false)
   const [verifyingInvite, setVerifyingInvite] = useState(false)
   const [promoStatus, setPromoStatus] = useState('')
-  const [couponStatus, setCouponStatus] = useState('')
   const [inviteOk, setInviteOk] = useState(false)
   const [inviteType, setInviteType] = useState('')
 
@@ -108,7 +105,6 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
       setInviteOk(false)
       setInviteType('')
     }
-    if (name === 'couponCode') setCouponStatus('')
   }
 
   const validateStepOne = () => {
@@ -179,15 +175,6 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
     }
   }
 
-  const applyCoupon = () => {
-    const code = form.couponCode.trim().toUpperCase()
-    if (!code) {
-      setCouponStatus('Enter a coupon code')
-      return
-    }
-    setCouponStatus(VALID_COUPON_CODES[code] || 'Invalid coupon code')
-  }
-
   const handleSubmit = async (event) => {
     event.preventDefault()
     const typed = form.promoCode.trim()
@@ -243,7 +230,6 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
         knowledgePackage: form.knowledgePackage,
         // Backend accepts promo OR referral in promoCode
         promoCode: localPromo || resolvedInviteType === 'promo' ? typed.toUpperCase() : typed || null,
-        couponCode: form.couponCode.trim().toUpperCase() || null,
         password: form.password,
         hasGst: form.hasGst,
         referralCode: resolvedReferral || null,
@@ -259,7 +245,6 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
 
   const inviteLooksValid =
     inviteOk || Boolean(VALID_PROMO_CODES[form.promoCode.trim().toUpperCase()]) || hasLinkReferral
-  const couponValid = Boolean(VALID_COUPON_CODES[form.couponCode.trim().toUpperCase()])
 
   return (
     <form onSubmit={step === 1 ? goNext : handleSubmit} noValidate className="space-y-5">
@@ -417,61 +402,35 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
             </p>
           )}
 
-          <div className="grid gap-3.5 sm:grid-cols-2">
-            <div className="min-w-0">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">
-                Promo / referral code {hasLinkReferral ? '(optional)' : '(required)'}
-              </span>
-              <div className="flex items-stretch gap-2">
-                <input
-                  type="text"
-                  name="promoCode"
-                  placeholder={hasLinkReferral ? 'Optional' : 'Promo or referral code'}
-                  value={form.promoCode}
-                  onChange={updateField}
-                  className={fieldClass}
-                />
-                <button
-                  type="button"
-                  onClick={verifyPromo}
-                  disabled={verifyingInvite}
-                  className="shrink-0 rounded-lg border border-[#e8a317] bg-[#fff8e8] px-4 text-sm font-semibold text-[#1a1404] transition hover:bg-[#f6e2ad] disabled:opacity-70"
-                >
-                  {verifyingInvite ? '…' : 'Verify'}
-                </button>
-              </div>
-              {errors.promoCode ? (
-                <p className="mt-1.5 text-xs text-red-600">{errors.promoCode}</p>
-              ) : promoStatus ? (
-                <p className={`mt-1.5 text-xs ${inviteLooksValid ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {promoStatus}
-                </p>
-              ) : null}
+          <div className="min-w-0">
+            <span className="mb-1.5 block text-sm font-medium text-slate-700">
+              Promo / referral code {hasLinkReferral ? '(optional)' : '(required)'}
+            </span>
+            <div className="flex items-stretch gap-2">
+              <input
+                type="text"
+                name="promoCode"
+                placeholder={hasLinkReferral ? 'Optional' : 'Promo or referral code'}
+                value={form.promoCode}
+                onChange={updateField}
+                className={fieldClass}
+              />
+              <button
+                type="button"
+                onClick={verifyPromo}
+                disabled={verifyingInvite}
+                className="shrink-0 rounded-lg border border-[#e8a317] bg-[#fff8e8] px-4 text-sm font-semibold text-[#1a1404] transition hover:bg-[#f6e2ad] disabled:opacity-70"
+              >
+                {verifyingInvite ? '…' : 'Verify'}
+              </button>
             </div>
-
-            <div className="min-w-0">
-              <span className="mb-1.5 block text-sm font-medium text-slate-700">Coupon code</span>
-              <div className="flex items-stretch gap-2">
-                <input
-                  type="text"
-                  name="couponCode"
-                  placeholder="Optional"
-                  value={form.couponCode}
-                  onChange={updateField}
-                  className={fieldClass}
-                />
-                <button
-                  type="button"
-                  onClick={applyCoupon}
-                  className="shrink-0 rounded-lg border border-[#e8a317] bg-[#fff8e8] px-4 text-sm font-semibold text-[#1a1404] transition hover:bg-[#f6e2ad]"
-                >
-                  Apply
-                </button>
-              </div>
-              {couponStatus ? (
-                <p className={`mt-1.5 text-xs ${couponValid ? 'text-emerald-600' : 'text-red-600'}`}>{couponStatus}</p>
-              ) : null}
-            </div>
+            {errors.promoCode ? (
+              <p className="mt-1.5 text-xs text-red-600">{errors.promoCode}</p>
+            ) : promoStatus ? (
+              <p className={`mt-1.5 text-xs ${inviteLooksValid ? 'text-emerald-600' : 'text-red-600'}`}>
+                {promoStatus}
+              </p>
+            ) : null}
           </div>
 
           <Field label="Password" error={errors.password}>

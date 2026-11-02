@@ -6,11 +6,6 @@ export const VALID_PROMO_CODES = {
   VIDHYA: 'Promo discount unlocked',
 }
 
-export const VALID_COUPON_CODES = {
-  SAVE500: '₹500 off applied',
-  FIRST50: 'First-course discount applied',
-}
-
 export const COUNTRIES = {
   India: [
     'Andhra Pradesh',

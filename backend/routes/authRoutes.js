@@ -12,6 +12,7 @@ const {
   verifyInviteCode,
 } = require('../controllers/authController')
 const { requireAuth } = require('../middleware/auth')
+const { authPublicLimiter } = require('../middleware/rateLimit')
 
 const router = express.Router()
 const upload = multer({
@@ -19,10 +20,10 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 })
 
-router.post('/signup', signup)
-router.post('/verify-invite', verifyInviteCode)
-router.get('/verify-invite', verifyInviteCode)
-router.post('/login', login)
+router.post('/signup', authPublicLimiter, signup)
+router.post('/verify-invite', authPublicLimiter, verifyInviteCode)
+router.get('/verify-invite', authPublicLimiter, verifyInviteCode)
+router.post('/login', authPublicLimiter, login)
 router.get('/me', requireAuth, me)
 router.post('/purchase', requireAuth, purchasePackage)
 router.post('/avatar', requireAuth, upload.single('file'), updateAvatar)
