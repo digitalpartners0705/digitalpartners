@@ -316,10 +316,10 @@ function WhyIcon({ name }) {
   )
 }
 
-function StatIcon({ name }) {
+function StatIcon({ name, className = 'h-8 w-8' }) {
   if (name === 'book') {
     return (
-      <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 5.2A2.2 2.2 0 0 1 7.2 3H19v15.5H7.2A2.2 2.2 0 0 0 5 20.7V5.2Z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 5.2A2.2 2.2 0 0 1 7.2 7.4H19" />
       </svg>
@@ -328,14 +328,14 @@ function StatIcon({ name }) {
 
   if (name === 'star') {
     return (
-      <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
         <path d="m12 3.2 2.7 5.8 6.3.6-4.8 4.1 1.5 6.1L12 16.8 6.3 19.8l1.5-6.1L3 9.6l6.3-.6L12 3.2Z" />
       </svg>
     )
   }
 
   return (
-    <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
       <path d="M8.5 11a2.7 2.7 0 1 0-2.7-2.7A2.7 2.7 0 0 0 8.5 11Zm7 0a2.7 2.7 0 1 0-2.7-2.7A2.7 2.7 0 0 0 15.5 11ZM8.6 12.4c-2.6 0-5.6 1.3-5.6 3.8V18h7.4a5.4 5.4 0 0 1 .8-3.1 7.2 7.2 0 0 0-2.6-2.5Zm6.9 0c-.5 0-1 .1-1.4.2a4.8 4.8 0 0 1 2.3 4.2c.1.4.1.8.1 1.2H21v-1.4c0-2.5-3-3.8-5.5-3.8Z" />
     </svg>
   )
@@ -559,8 +559,8 @@ function Home() {
                 {[0, 1].map((copy) => (
                   <div key={copy} className="hero-marquee-group" aria-hidden={copy === 1}>
                     {heroStats.map((stat) => (
-                      <div key={`${stat.label}-${copy}`} className="flex min-w-0 flex-1 items-center justify-center gap-3 border-r border-white/10 px-4">
-                        <span className={stat.tone}>
+                      <div key={`${stat.label}-${copy}`} className="flex shrink-0 items-center gap-3 border-r border-white/10 px-5 lg:min-w-0 lg:flex-1 lg:justify-center lg:px-4">
+                        <span className={`shrink-0 ${stat.tone}`}>
                           <StatIcon name={stat.icon} />
                         </span>
                         <div>

@@ -248,17 +248,17 @@ function PackageDetail() {
                   All inclusions of this package
                 </a>
 
-                <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
                   {stats.map((stat) => (
                     <div
                       key={stat.label}
-                      className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 backdrop-blur-sm"
+                      className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 backdrop-blur-sm sm:px-4 sm:py-3.5"
                     >
                       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-gold-300 ring-1 ring-white/10">
                         <StatIcon name={stat.icon} />
                       </span>
-                      <p className="mt-3 text-xl font-extrabold text-white">{stat.value}</p>
-                      <p className="mt-0.5 text-xs text-slate-400">{stat.label}</p>
+                      <p className="mt-3 text-lg font-extrabold text-white sm:text-xl">{stat.value}</p>
+                      <p className="mt-0.5 text-xs leading-4 text-slate-400">{stat.label}</p>
                     </div>
                   ))}
                 </div>

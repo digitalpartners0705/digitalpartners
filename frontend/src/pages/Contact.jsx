@@ -20,14 +20,14 @@ const contactDetails = [
   },
   {
     label: 'Phone',
-    value: '+91 98765 43210',
-    href: 'tel:+919876543210',
+    value: '+91 7455 903 359',
+    href: 'tel:+917455903359',
     icon: 'phone',
   },
   {
     label: 'WhatsApp',
     value: 'Chat with us',
-    href: 'https://wa.me/919876543210',
+    href: 'https://wa.me/917455903359',
     icon: 'chat',
   },
 ]

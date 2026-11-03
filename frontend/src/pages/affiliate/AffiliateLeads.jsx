@@ -152,22 +152,8 @@ function AffiliateLeads() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
-                    Loading leads…
-                  </td>
-                </tr>
-              ) : visible.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
-                    {leads.length === 0
-                      ? 'No leads yet. Share a referral link and your sign-ups will appear here.'
-                      : 'No leads match this search.'}
-                  </td>
-                </tr>
-              ) : (
-                visible.map((lead, index) => {
+              {!loading && visible.length > 0
+                ? visible.map((lead, index) => {
                   const stamp = formatStamp(lead.createdAt)
                   return (
                     <tr key={lead.id} className="border-b border-white/5 transition last:border-0 hover:bg-white/[0.03]">
@@ -206,10 +192,20 @@ function AffiliateLeads() {
                     </tr>
                   )
                 })
-              )}
+                : null}
             </tbody>
           </table>
         </div>
+
+        {loading ? (
+          <p className="px-6 py-12 text-center text-sm text-slate-400">Loading leads…</p>
+        ) : visible.length === 0 ? (
+          <p className="px-6 py-12 text-center text-sm text-slate-400">
+            {leads.length === 0
+              ? 'No leads yet. Share a referral link and your sign-ups will appear here.'
+              : 'No leads match this search.'}
+          </p>
+        ) : null}
 
         {!loading && visible.length > 0 ? (
           <div className="border-t border-white/10 px-4 py-3 text-xs text-slate-500 sm:px-6">

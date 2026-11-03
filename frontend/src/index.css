@@ -180,8 +180,14 @@ button:disabled {
 
 .hero-marquee-group {
   display: flex;
-  width: 100cqi;
+  width: max-content;
   flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .hero-marquee-group {
+    width: 100cqi;
+  }
 }
 
 .hero-marquee-viewport:hover .hero-marquee {

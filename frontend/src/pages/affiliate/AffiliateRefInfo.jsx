@@ -162,22 +162,8 @@ function AffiliateRefInfo() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="px-5 py-12 text-center text-slate-400">
-                      Loading referrals…
-                    </td>
-                  </tr>
-                ) : referrals.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-5 py-12 text-center text-slate-400">
-                      {allReferrals.length === 0
-                        ? 'No referrals yet. Share a link and your buyers will appear here.'
-                        : 'No referrals match this search.'}
-                    </td>
-                  </tr>
-                ) : (
-                  referrals.map((row, index) => (
+                {!loading && referrals.length > 0
+                  ? referrals.map((row, index) => (
                     <tr key={row.id} className="border-b border-white/5 last:border-0">
                       <td className="px-4 py-4 text-slate-400 sm:px-5">{index + 1}</td>
                       <td className="px-3 py-4 font-medium">{row.name}</td>
@@ -196,7 +182,7 @@ function AffiliateRefInfo() {
                       </td>
                     </tr>
                   ))
-                )}
+                  : null}
               </tbody>
             </table>
           ) : (
@@ -212,20 +198,8 @@ function AffiliateRefInfo() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="6" className="px-5 py-12 text-center text-slate-400">
-                      Loading payouts…
-                    </td>
-                  </tr>
-                ) : payouts.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="px-5 py-12 text-center text-slate-400">
-                      No payouts yet. Payouts will show here once KYC and transfers are set up.
-                    </td>
-                  </tr>
-                ) : (
-                  payouts.map((row, index) => (
+                {!loading && payouts.length > 0
+                  ? payouts.map((row, index) => (
                     <tr key={row.id} className="border-b border-white/5 last:border-0">
                       <td className="px-4 py-4 text-slate-400 sm:px-5">{index + 1}</td>
                       <td className="px-3 py-4 font-medium">{row.invoice}</td>
@@ -239,11 +213,26 @@ function AffiliateRefInfo() {
                       </td>
                     </tr>
                   ))
-                )}
+                  : null}
               </tbody>
             </table>
           )}
         </div>
+        {loading ? (
+          <p className="px-5 py-12 text-center text-sm text-slate-400">
+            {tab === 'referrals' ? 'Loading referrals…' : 'Loading payouts…'}
+          </p>
+        ) : tab === 'referrals' && referrals.length === 0 ? (
+          <p className="px-5 py-12 text-center text-sm text-slate-400">
+            {allReferrals.length === 0
+              ? 'No referrals yet. Share a link and your buyers will appear here.'
+              : 'No referrals match this search.'}
+          </p>
+        ) : tab !== 'referrals' && payouts.length === 0 ? (
+          <p className="px-5 py-12 text-center text-sm text-slate-400">
+            No payouts yet. Payouts will show here once KYC and transfers are set up.
+          </p>
+        ) : null}
       </section>
     </div>
   )

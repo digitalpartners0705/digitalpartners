@@ -210,7 +210,7 @@ function AffiliateLayout() {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-40 flex items-center justify-between gap-4 overflow-visible bg-[#10131c]/95 px-4 py-3 backdrop-blur-sm sm:px-8">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-4 overflow-visible bg-[#10131c]/95 px-4 py-3 backdrop-blur-sm sm:px-8 lg:z-40">
           <button
             type="button"
             className="cursor-pointer rounded-lg p-2 text-slate-200 ring-1 ring-white/15 lg:hidden"
@@ -227,7 +227,7 @@ function AffiliateLayout() {
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
-              className="cursor-pointer rounded-full p-1 text-slate-300 hover:bg-white/10"
+              className="cursor-pointer rounded-full p-2 text-slate-300 hover:bg-white/10 lg:p-1"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-label="Open account menu"

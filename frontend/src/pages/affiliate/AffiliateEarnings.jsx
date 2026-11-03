@@ -408,20 +408,8 @@ function AffiliateEarnings() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="px-5 py-10 text-center text-slate-400">
-                    Loading earnings…
-                  </td>
-                </tr>
-              ) : recent.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-5 py-10 text-center text-slate-400">
-                    No commissions in this range. Share a referral link to start earning.
-                  </td>
-                </tr>
-              ) : (
-                recent.map((row) => {
+              {!loading && recent.length > 0
+                ? recent.map((row) => {
                   const meta = LEVEL_META[row.incomeType] || LEVEL_META.active
                   return (
                     <tr key={row.id} className="border-b border-white/5 transition last:border-0 hover:bg-white/[0.03]">
@@ -439,10 +427,17 @@ function AffiliateEarnings() {
                     </tr>
                   )
                 })
-              )}
+                : null}
             </tbody>
           </table>
         </div>
+        {loading ? (
+          <p className="px-5 py-10 text-center text-sm text-slate-400">Loading earnings…</p>
+        ) : recent.length === 0 ? (
+          <p className="px-5 py-10 text-center text-sm text-slate-400">
+            No commissions in this range. Share a referral link to start earning.
+          </p>
+        ) : null}
       </section>
     </div>
   )

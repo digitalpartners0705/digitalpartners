@@ -109,13 +109,14 @@ function Upgrade() {
                 highlighted ? 'lg:-translate-y-3 lg:shadow-2xl' : ''
               }`}
             >
-              {pkg.badge ? (
-                <span className={`absolute right-6 top-6 rounded-full px-3 py-1 text-xs font-bold ${styles.chip}`}>
-                  {pkg.badge}
-                </span>
-              ) : null}
-
-              <h2 className="text-xl font-bold">{pkg.name}</h2>
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="text-xl font-bold">{pkg.name}</h2>
+                {pkg.badge ? (
+                  <span className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold ${styles.chip}`}>
+                    {pkg.badge}
+                  </span>
+                ) : null}
+              </div>
               <p className="mt-2 min-h-[2.75rem] text-sm leading-6 text-slate-400">{pkg.tagline}</p>
 
               {applyPromo ? (
