@@ -20,6 +20,7 @@ export const adminNav = [
     label: 'Support',
     items: [
       { to: '/kyc', label: 'KYC', icon: 'kyc' },
+      { to: '/leaderboard-visibility', label: 'Leaderboard', icon: 'leaderboard' },
       { to: '/contact', label: 'Contact queries', icon: 'contact' },
     ],
   },

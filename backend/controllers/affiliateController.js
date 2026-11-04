@@ -5,7 +5,7 @@ const storage = require('../services/storage')
 
 const rankBoard = async (window, viewerId) => {
   const params = []
-  const filters = [`e.status = 'credited'`]
+  const filters = [`e.status = 'credited'`, `COALESCE(u.leaderboard_hidden, FALSE) = FALSE`]
 
   if (window.from) {
     params.push(window.from)

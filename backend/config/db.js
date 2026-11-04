@@ -104,8 +104,10 @@ const initUsersTable = async () => {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_code TEXT`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_name TEXT`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_phone TEXT`)
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS leaderboard_hidden BOOLEAN NOT NULL DEFAULT FALSE`)
   await query(`CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code_uidx ON users (referral_code) WHERE referral_code IS NOT NULL`)
   await query(`CREATE INDEX IF NOT EXISTS users_referred_by_idx ON users (referred_by)`)
+  await query(`CREATE INDEX IF NOT EXISTS users_leaderboard_hidden_idx ON users (leaderboard_hidden) WHERE leaderboard_hidden = TRUE`)
   await ensureReferralCodes()
 }
 

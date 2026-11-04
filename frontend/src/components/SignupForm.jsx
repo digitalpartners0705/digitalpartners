@@ -63,6 +63,7 @@ function buildInitialForm(defaults = {}) {
     knowledgePackage: defaults.knowledgePackage || stored.package || '',
     promoCode: '',
     password: '',
+    confirmPassword: '',
     hasGst: false,
     referralCode: defaults.referralCode || stored.ref || '',
   }
@@ -72,12 +73,15 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState(() => buildInitialForm(defaults))
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [verifyingInvite, setVerifyingInvite] = useState(false)
   const [promoStatus, setPromoStatus] = useState('')
   const [inviteOk, setInviteOk] = useState(false)
   const [inviteType, setInviteType] = useState('')
+  const [referrerName, setReferrerName] = useState('')
+  const [resolvingReferrer, setResolvingReferrer] = useState(false)
 
   useEffect(() => {
     setForm((prev) => ({
@@ -87,6 +91,39 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
       referralCode: defaults.referralCode || prev.referralCode || '',
     }))
   }, [defaults.country, defaults.knowledgePackage, defaults.referralCode])
+
+  useEffect(() => {
+    const code = form.referralCode.trim()
+    if (!code) {
+      setReferrerName('')
+      return undefined
+    }
+
+    let cancelled = false
+    setResolvingReferrer(true)
+    verifyInviteCode(code)
+      .then((result) => {
+        if (cancelled) return
+        if (result.type === 'referral') {
+          setReferrerName(result.referrerName || '')
+          if (result.code) {
+            setForm((prev) => (prev.referralCode === result.code ? prev : { ...prev, referralCode: result.code }))
+          }
+        } else {
+          setReferrerName('')
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setReferrerName('')
+      })
+      .finally(() => {
+        if (!cancelled) setResolvingReferrer(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [form.referralCode])
 
   const states = form.country ? COUNTRIES[form.country] || [] : []
   const packageLocked = Boolean(defaults.knowledgePackage)
@@ -99,11 +136,19 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
       if (name === 'country') next.state = ''
       return next
     })
-    setErrors((prev) => ({ ...prev, [name]: '', form: '' }))
+    setErrors((prev) => {
+      const next = { ...prev, [name]: '', form: '' }
+      if (name === 'password' || name === 'confirmPassword') {
+        next.password = name === 'password' ? '' : prev.password || ''
+        next.confirmPassword = ''
+      }
+      return next
+    })
     if (name === 'promoCode') {
       setPromoStatus('')
       setInviteOk(false)
       setInviteType('')
+      if (!hasLinkReferral) setReferrerName('')
     }
   }
 
@@ -128,6 +173,10 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
     }
     if (!form.password) next.password = 'Password is required'
     else if (form.password.length < 6) next.password = 'Password must be at least 6 characters'
+    if (!form.confirmPassword) next.confirmPassword = 'Confirm password is required'
+    else if (form.password && form.confirmPassword !== form.password) {
+      next.confirmPassword = 'Passwords do not match'
+    }
     return next
   }
 
@@ -153,6 +202,7 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
       setInviteOk(true)
       setInviteType('promo')
       setPromoStatus(VALID_PROMO_CODES[asPromo])
+      if (!hasLinkReferral) setReferrerName('')
       return
     }
 
@@ -164,11 +214,15 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
       setInviteType(result.type || 'referral')
       setPromoStatus(result.message || 'Code applied — discounted pricing unlocked')
       if (result.type === 'referral' && result.code) {
+        setReferrerName(result.referrerName || '')
         setForm((prev) => ({ ...prev, referralCode: result.code }))
+      } else if (!hasLinkReferral) {
+        setReferrerName('')
       }
     } catch (error) {
       setInviteOk(false)
       setInviteType('')
+      if (!hasLinkReferral) setReferrerName('')
       setPromoStatus(error.response?.data?.message || 'Invalid promo or referral code')
     } finally {
       setVerifyingInvite(false)
@@ -194,11 +248,13 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
         setPromoStatus(result.message || 'Code applied')
         if (result.type === 'referral' && result.code) {
           resolvedReferral = result.code
+          setReferrerName(result.referrerName || '')
           setForm((prev) => ({ ...prev, referralCode: result.code }))
         }
       } catch (error) {
         setInviteOk(false)
         setInviteType('')
+        if (!hasLinkReferral) setReferrerName('')
         setErrors({
           promoCode: error.response?.data?.message || 'Invalid promo or referral code',
         })
@@ -213,6 +269,10 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
     if (!form.knowledgePackage) freshErrors.knowledgePackage = 'Please select a knowledge package'
     if (!form.password) freshErrors.password = 'Password is required'
     else if (form.password.length < 6) freshErrors.password = 'Password must be at least 6 characters'
+    if (!form.confirmPassword) freshErrors.confirmPassword = 'Confirm password is required'
+    else if (form.password && form.confirmPassword !== form.password) {
+      freshErrors.confirmPassword = 'Passwords do not match'
+    }
     if (!resolvedInviteOk && !localPromo && !resolvedReferral) {
       freshErrors.promoCode = 'Enter a valid promo or referral code (or open a referral link)'
     }
@@ -433,6 +493,21 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
             ) : null}
           </div>
 
+          <Field label="Referred by (optional)">
+            <input
+              type="text"
+              readOnly
+              value={
+                resolvingReferrer && !referrerName
+                  ? 'Looking up referrer…'
+                  : referrerName || ''
+              }
+              placeholder="Fills automatically from a referral link or code"
+              className={`${fieldClass} bg-[#f8fafc] text-slate-700`}
+              aria-live="polite"
+            />
+          </Field>
+
           <Field label="Password" error={errors.password}>
             <div className="relative">
               <input
@@ -450,6 +525,27 @@ function SignupForm({ onSwitchToLogin, onSuccess, defaults = {} }) {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 hover:text-slate-800"
               >
                 {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </Field>
+
+          <Field label="Confirm password" error={errors.confirmPassword}>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                autoComplete="new-password"
+                placeholder="Re-enter your password"
+                value={form.confirmPassword}
+                onChange={updateField}
+                className={`${fieldClass} pr-16`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((value) => !value)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 hover:text-slate-800"
+              >
+                {showConfirmPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </Field>

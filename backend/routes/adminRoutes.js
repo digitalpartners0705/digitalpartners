@@ -67,6 +67,10 @@ const {
   deleteMilestone,
 } = require('../controllers/adminAchievementController')
 const { listKycSubmissions } = require('../controllers/adminKycController')
+const {
+  listLeaderboardVisibility,
+  updateLeaderboardVisibility,
+} = require('../controllers/adminLeaderboardController')
 const { requireAdmin } = require('../middleware/auth')
 
 const router = express.Router()
@@ -140,5 +144,8 @@ router.patch('/achievements/:id', updateMilestone)
 router.delete('/achievements/:id', deleteMilestone)
 
 router.get('/kyc', listKycSubmissions)
+
+router.get('/leaderboard-visibility', listLeaderboardVisibility)
+router.patch('/leaderboard-visibility/:userId', updateLeaderboardVisibility)
 
 module.exports = router

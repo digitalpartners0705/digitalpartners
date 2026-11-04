@@ -100,6 +100,15 @@ function NavIcon({ name }) {
     )
   }
 
+  if (name === 'leaderboard') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 19V10M12 19V5M19 19v-6" />
+        <path strokeLinecap="round" d="M4 19h16" />
+      </svg>
+    )
+  }
+
   return (
     <svg {...common}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10 7V5H5v14h5v-2" />
@@ -128,6 +137,7 @@ function pageCrumb(pathname) {
   if (pathname.startsWith('/announcements')) return 'Announcements'
   if (pathname.startsWith('/achievements')) return 'Achievements'
   if (pathname.startsWith('/kyc')) return 'KYC submissions'
+  if (pathname.startsWith('/leaderboard-visibility')) return 'Leaderboard visibility'
   if (pathname.startsWith('/courses')) return 'Courses'
   return 'Admin'
 }

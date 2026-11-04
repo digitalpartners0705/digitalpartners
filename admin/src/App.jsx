@@ -15,6 +15,7 @@ import ContactRequestsPage from './pages/ContactRequestsPage'
 import AnnouncementsPage from './pages/AnnouncementsPage'
 import AchievementsPage from './pages/AchievementsPage'
 import KycPage from './pages/KycPage'
+import LeaderboardVisibilityPage from './pages/LeaderboardVisibilityPage'
 import Login from './pages/Login'
 import { getToken } from './services/api'
 
@@ -54,6 +55,7 @@ function App() {
         <Route path="announcements" element={<AnnouncementsPage />} />
         <Route path="achievements" element={<AchievementsPage />} />
         <Route path="kyc" element={<KycPage />} />
+        <Route path="leaderboard-visibility" element={<LeaderboardVisibilityPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -106,7 +106,7 @@ const findSponsorByCode = async (rawCode) => {
   const referralCode = String(rawCode || '').trim()
   if (!referralCode) return null
   const result = await query(
-    `SELECT id, referral_code, knowledge_package
+    `SELECT id, referral_code, knowledge_package, full_name
      FROM users
      WHERE LOWER(referral_code) = LOWER($1)
      LIMIT 1`,
@@ -138,6 +138,7 @@ const verifyInviteCode = async (req, res) => {
         ok: true,
         type: 'referral',
         code: sponsor.referral_code,
+        referrerName: sponsor.full_name || null,
         message: 'Referral code applied — discounted package pricing unlocked',
       })
     }
