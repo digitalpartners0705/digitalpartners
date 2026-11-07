@@ -71,6 +71,19 @@ const {
   listLeaderboardVisibility,
   updateLeaderboardVisibility,
 } = require('../controllers/adminLeaderboardController')
+const { listUsers, updateUserStatus } = require('../controllers/adminUserController')
+const {
+  searchAffiliates,
+  listExternalEarnings,
+  createExternalEarning,
+  removeExternalEarning,
+} = require('../controllers/adminExternalEarningsController')
+const {
+  searchAffiliates: searchReferrerAffiliates,
+  getAffiliateReferrer,
+  listReferrerChanges,
+  changeReferrer,
+} = require('../controllers/adminReferrerController')
 const { requireAdmin } = require('../middleware/auth')
 
 const router = express.Router()
@@ -147,5 +160,18 @@ router.get('/kyc', listKycSubmissions)
 
 router.get('/leaderboard-visibility', listLeaderboardVisibility)
 router.patch('/leaderboard-visibility/:userId', updateLeaderboardVisibility)
+
+router.get('/users', listUsers)
+router.patch('/users/:id/status', updateUserStatus)
+
+router.get('/external-earnings', listExternalEarnings)
+router.get('/external-earnings/affiliates', searchAffiliates)
+router.post('/external-earnings', createExternalEarning)
+router.post('/external-earnings/:id/remove', removeExternalEarning)
+
+router.get('/referrer-changes', listReferrerChanges)
+router.get('/referrer-changes/affiliates', searchReferrerAffiliates)
+router.get('/referrer-changes/:userId', getAffiliateReferrer)
+router.post('/referrer-changes', changeReferrer)
 
 module.exports = router

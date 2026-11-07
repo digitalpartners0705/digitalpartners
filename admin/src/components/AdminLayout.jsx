@@ -100,6 +100,38 @@ function NavIcon({ name }) {
     )
   }
 
+  if (name === 'users') {
+    return (
+      <svg {...common}>
+        <circle cx="9" cy="8" r="3" />
+        <path strokeLinecap="round" d="M3.5 19c.6-2.6 2.8-4 5.5-4s4.9 1.4 5.5 4" />
+        <circle cx="17" cy="9" r="2.2" />
+        <path strokeLinecap="round" d="M16 15.2c1.8.3 3.2 1.4 3.8 3.3" />
+      </svg>
+    )
+  }
+
+  if (name === 'referrer') {
+    return (
+      <svg {...common}>
+        <circle cx="7.5" cy="8" r="2.5" />
+        <circle cx="16.5" cy="8" r="2.5" />
+        <circle cx="12" cy="16.5" r="2.5" />
+        <path strokeLinecap="round" d="M9.5 9.5 11 14M14.5 9.5 13 14" />
+      </svg>
+    )
+  }
+
+  if (name === 'external') {
+    return (
+      <svg {...common}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M12 9v6" />
+        <path strokeLinecap="round" d="M4 10h16" />
+      </svg>
+    )
+  }
+
   if (name === 'leaderboard') {
     return (
       <svg {...common}>
@@ -138,6 +170,9 @@ function pageCrumb(pathname) {
   if (pathname.startsWith('/achievements')) return 'Achievements'
   if (pathname.startsWith('/kyc')) return 'KYC submissions'
   if (pathname.startsWith('/leaderboard-visibility')) return 'Leaderboard visibility'
+  if (pathname.startsWith('/users')) return 'Users'
+  if (pathname.startsWith('/external-earnings')) return 'External earnings'
+  if (pathname.startsWith('/change-referrer')) return 'Change referrer'
   if (pathname.startsWith('/courses')) return 'Courses'
   return 'Admin'
 }

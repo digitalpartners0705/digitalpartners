@@ -15,9 +15,38 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+const isAccountDisabledError = (error) => {
+  const data = error.response?.data
+  if (!data) return false
+  if (data.code === 'ACCOUNT_DISABLED') return true
+  return (
+    error.response?.status === 403 &&
+    /deactivated/i.test(String(data.message || ''))
+  )
+}
+
+const forceLogoutToHome = () => {
+  clearSession()
+  try {
+    sessionStorage.setItem('de_account_disabled', '1')
+  } catch {
+    // Ignore storage failures.
+  }
+  if (window.location.pathname !== '/') {
+    window.location.assign('/')
+  } else {
+    window.dispatchEvent(new Event('de-account-disabled'))
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (isAccountDisabledError(error)) {
+      forceLogoutToHome()
+      return Promise.reject(error)
+    }
+
     const url = error.config?.url || ''
     const isAuthCall = url.includes('/api/auth/')
     if (error.response?.status === 401 && !isAuthCall) {

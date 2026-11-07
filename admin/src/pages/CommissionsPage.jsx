@@ -254,9 +254,15 @@ function CommissionsPage() {
 
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Credited balance"
+          label="Payable balance"
           value={totals ? money(totals.credited) : '—'}
-          hint={totals ? `${money(totals.creditedToday)} today` : null}
+          hint={
+            totals
+              ? stats?.external?.credited > 0
+                ? `${money(totals.creditedToday)} today · excludes ${money(stats.external.credited)} external`
+                : `${money(totals.creditedToday)} today`
+              : null
+          }
         />
         <StatCard
           label="Entries"

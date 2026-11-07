@@ -105,9 +105,12 @@ const initUsersTable = async () => {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_name TEXT`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_phone TEXT`)
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS leaderboard_hidden BOOLEAN NOT NULL DEFAULT FALSE`)
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE`)
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled_at TIMESTAMPTZ`)
   await query(`CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code_uidx ON users (referral_code) WHERE referral_code IS NOT NULL`)
   await query(`CREATE INDEX IF NOT EXISTS users_referred_by_idx ON users (referred_by)`)
   await query(`CREATE INDEX IF NOT EXISTS users_leaderboard_hidden_idx ON users (leaderboard_hidden) WHERE leaderboard_hidden = TRUE`)
+  await query(`CREATE INDEX IF NOT EXISTS users_is_active_idx ON users (is_active) WHERE is_active = FALSE`)
   await ensureReferralCodes()
 }
 
@@ -244,6 +247,21 @@ const initAffiliateTables = async () => {
     )
   `)
   await query(`CREATE INDEX IF NOT EXISTS user_kyc_user_idx ON user_kyc (user_id)`)
+
+  // Admin audit trail when an affiliate's parent (referred_by) is reassigned.
+  await query(`
+    CREATE TABLE IF NOT EXISTS referrer_changes (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      old_referrer_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      new_referrer_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      reason TEXT NOT NULL,
+      created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+  await query(`CREATE INDEX IF NOT EXISTS referrer_changes_user_idx ON referrer_changes (user_id, created_at DESC)`)
+  await query(`CREATE INDEX IF NOT EXISTS referrer_changes_created_at_idx ON referrer_changes (created_at DESC)`)
 }
 
 const initOrderTables = async () => {

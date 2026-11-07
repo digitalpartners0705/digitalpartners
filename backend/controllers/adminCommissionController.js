@@ -8,6 +8,10 @@ const INCOME_TYPES = [...INCOME_LEVELS.map((item) => item.incomeType), 'adjustme
 const ENTRY_STATUSES = ['credited', 'reversed']
 const ENTRY_SOURCES = ['sale', 'adjustment']
 
+// External (carried-forward) earnings live in a separate admin section and are never payable.
+// The Commissions ledger excludes them so every total here is money the company owes.
+const PAYABLE_SQL = `e.source <> 'external'`
+
 const trimmed = (value) => String(value ?? '').trim()
 
 const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed(value))
@@ -78,7 +82,7 @@ const mapEarning = (row) => ({
 
 const buildFilters = (reqQuery) => {
   const params = []
-  const clauses = []
+  const clauses = [PAYABLE_SQL]
 
   const push = (sql, value) => {
     params.push(value)
@@ -144,7 +148,7 @@ const buildFilters = (reqQuery) => {
   }
 
   return {
-    where: clauses.length ? `WHERE ${clauses.join(' AND ')}` : '',
+    where: `WHERE ${clauses.join(' AND ')}`,
     params,
   }
 }
@@ -247,7 +251,17 @@ const getCommissionStats = async (_req, res) => {
          COALESCE(SUM(amount) FILTER (
            WHERE status = 'credited' AND earned_at >= NOW() - INTERVAL '30 days'
          ), 0) AS credited_30d
-       FROM affiliate_earnings`,
+       FROM affiliate_earnings
+       WHERE source <> 'external'`,
+    )
+
+    const externalResult = await query(
+      `SELECT
+         COALESCE(SUM(amount) FILTER (WHERE status = 'credited'), 0) AS credited,
+         COUNT(*) FILTER (WHERE status = 'credited')::int AS credited_count,
+         COUNT(DISTINCT user_id) FILTER (WHERE status = 'credited')::int AS affiliates
+       FROM affiliate_earnings
+       WHERE source = 'external'`,
     )
 
     const byIncome = await query(
@@ -255,6 +269,7 @@ const getCommissionStats = async (_req, res) => {
               COUNT(*) FILTER (WHERE status = 'credited')::int AS entries,
               COALESCE(SUM(amount) FILTER (WHERE status = 'credited'), 0) AS amount
        FROM affiliate_earnings
+       WHERE source <> 'external'
        GROUP BY income_type`,
     )
 
@@ -263,7 +278,7 @@ const getCommissionStats = async (_req, res) => {
               COUNT(*) FILTER (WHERE status = 'credited')::int AS entries,
               COALESCE(SUM(amount) FILTER (WHERE status = 'credited'), 0) AS amount
        FROM affiliate_earnings
-       WHERE package_name IS NOT NULL
+       WHERE package_name IS NOT NULL AND source <> 'external'
        GROUP BY package_name`,
     )
 
@@ -273,6 +288,7 @@ const getCommissionStats = async (_req, res) => {
               COALESCE(SUM(e.amount) FILTER (WHERE e.status = 'credited'), 0) AS amount
        FROM affiliate_earnings e
        JOIN users u ON u.id = e.user_id
+       WHERE e.source <> 'external'
        GROUP BY e.user_id, u.full_name, u.email, u.referral_code
        HAVING COALESCE(SUM(e.amount) FILTER (WHERE e.status = 'credited'), 0) <> 0
        ORDER BY amount DESC
@@ -280,6 +296,7 @@ const getCommissionStats = async (_req, res) => {
     )
 
     const row = overall.rows[0]
+    const external = externalResult.rows[0] || {}
     const incomeMap = new Map(byIncome.rows.map((item) => [item.income_type, item]))
     const packageMap = new Map(byPackage.rows.map((item) => [item.package_name, item]))
 
@@ -294,6 +311,11 @@ const getCommissionStats = async (_req, res) => {
         creditedToday: Number(row.credited_today),
         entriesToday: row.entries_today,
         credited30d: Number(row.credited_30d),
+      },
+      external: {
+        credited: Number(external.credited || 0),
+        creditedCount: external.credited_count || 0,
+        affiliates: external.affiliates || 0,
       },
       byIncomeType: INCOME_TYPES.map((type) => ({
         incomeType: type,
@@ -328,7 +350,10 @@ const getCommissionMeta = async (_req, res) => {
       statuses: ENTRY_STATUSES,
       sources: ENTRY_SOURCES,
       incomeLabels: Object.fromEntries(
-        INCOME_LEVELS.map((item) => [item.incomeType, item.label]).concat([['adjustment', 'Adjustment']]),
+        INCOME_LEVELS.map((item) => [item.incomeType, item.label]).concat([
+          ['adjustment', 'Adjustment'],
+          ['external', 'External (not payable)'],
+        ]),
       ),
     })
   } catch (error) {
@@ -374,15 +399,19 @@ const getEarnerCommissions = async (req, res) => {
       clauses.push(`e.status = $${params.length}`)
     }
 
+    // History shows every row (external ones are flagged) so admin can see exactly
+    // what the affiliate sees. Totals below split payable vs external.
     const where = `WHERE ${clauses.join(' AND ')}`
 
     const totals = await query(
       `SELECT
-         COUNT(*)::int AS entries,
-         COALESCE(SUM(e.amount) FILTER (WHERE e.status = 'credited'), 0) AS credited,
-         COALESCE(SUM(e.amount) FILTER (WHERE e.status = 'reversed'), 0) AS reversed,
-         COUNT(*) FILTER (WHERE e.status = 'credited')::int AS credited_count,
-         COUNT(*) FILTER (WHERE e.status = 'reversed')::int AS reversed_count
+         COUNT(*) FILTER (WHERE ${PAYABLE_SQL})::int AS entries,
+         COALESCE(SUM(e.amount) FILTER (WHERE e.status = 'credited' AND ${PAYABLE_SQL}), 0) AS credited,
+         COALESCE(SUM(e.amount) FILTER (WHERE e.status = 'reversed' AND ${PAYABLE_SQL}), 0) AS reversed,
+         COUNT(*) FILTER (WHERE e.status = 'credited' AND ${PAYABLE_SQL})::int AS credited_count,
+         COUNT(*) FILTER (WHERE e.status = 'reversed' AND ${PAYABLE_SQL})::int AS reversed_count,
+         COALESCE(SUM(e.amount) FILTER (WHERE e.status = 'credited' AND e.source = 'external'), 0) AS external,
+         COUNT(*) FILTER (WHERE e.status = 'credited' AND e.source = 'external')::int AS external_count
        FROM affiliate_earnings e
        WHERE e.user_id = $1`,
       [earner.id],
@@ -393,7 +422,7 @@ const getEarnerCommissions = async (req, res) => {
               COALESCE(SUM(amount) FILTER (WHERE status = 'credited'), 0) AS amount,
               COUNT(*) FILTER (WHERE status = 'credited')::int AS entries
        FROM affiliate_earnings
-       WHERE user_id = $1
+       WHERE user_id = $1 AND source <> 'external'
        GROUP BY income_type`,
       [earner.id],
     )
@@ -433,6 +462,9 @@ const getEarnerCommissions = async (req, res) => {
         reversed: Number(summary.reversed),
         creditedCount: summary.credited_count,
         reversedCount: summary.reversed_count,
+        external: Number(summary.external),
+        externalCount: summary.external_count,
+        shownToAffiliate: Number(summary.credited) + Number(summary.external),
       },
       byIncomeType: INCOME_TYPES.map((type) => ({
         incomeType: type,
@@ -461,11 +493,14 @@ const reverseCommission = async (req, res) => {
     }
 
     const existing = await query(
-      `SELECT id, status, order_id, amount FROM affiliate_earnings WHERE id = $1`,
+      `SELECT id, status, order_id, amount, source FROM affiliate_earnings WHERE id = $1`,
       [req.params.id],
     )
     const current = existing.rows[0]
     if (!current) return res.status(404).json({ message: 'Commission entry not found' })
+    if (current.source === 'external') {
+      return res.status(400).json({ message: 'Remove external earnings from the External earnings section' })
+    }
     if (current.status === 'reversed') {
       return res.status(400).json({ message: 'This commission entry is already reversed' })
     }

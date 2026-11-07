@@ -200,19 +200,42 @@ function EarnerDetail() {
 
       {notice ? <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{notice}</p> : null}
 
+      {totals.external > 0 ? (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">Pay only the payable balance: {moneyExact(totals.credited)}</p>
+          <p className="mt-0.5 text-xs leading-5">
+            This affiliate sees {moneyExact(totals.shownToAffiliate)} on their dashboard. {moneyExact(totals.external)} of
+            that is external earnings added by admin for display and ranking only — it is not owed.{' '}
+            <Link to="/external-earnings" className="font-semibold underline">
+              Manage external earnings
+            </Link>
+          </p>
+        </div>
+      ) : null}
+
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Credited balance" value={moneyExact(totals.credited)} hint={`${totals.creditedCount} credited entries`} />
+        <StatCard
+          label="Payable balance"
+          value={moneyExact(totals.credited)}
+          hint={`${totals.creditedCount} credited entries · what you owe`}
+        />
+        <StatCard
+          label="External · not payable"
+          value={moneyExact(totals.external || 0)}
+          hint={
+            totals.externalCount
+              ? `${totals.externalCount} ${totals.externalCount === 1 ? 'entry' : 'entries'} · shown to affiliate: ${moneyExact(totals.shownToAffiliate)}`
+              : 'None added'
+          }
+        />
         <StatCard label="All entries" value={totals.entries} hint={`${totals.reversedCount} reversed`} />
         <StatCard
           label="Active income"
           value={moneyExact(byIncomeType.find((item) => item.incomeType === 'active')?.amount || 0)}
-        />
-        <StatCard
-          label="Passive + second"
-          value={moneyExact(
+          hint={`Passive + second: ${moneyExact(
             (byIncomeType.find((item) => item.incomeType === 'passive')?.amount || 0) +
               (byIncomeType.find((item) => item.incomeType === 'second')?.amount || 0),
-          )}
+          )}`}
         />
       </div>
 
@@ -282,8 +305,9 @@ function EarnerDetail() {
                   ))
                 : commissions.map((entry) => {
                     const reversed = entry.status === 'reversed'
+                    const external = entry.source === 'external'
                     return (
-                      <tr key={entry.id} className="align-top">
+                      <tr key={entry.id} className={`align-top ${external ? 'bg-amber-50/40' : ''}`}>
                         <td className="px-4 py-3 text-xs text-slate-500">
                           {dateTime(entry.earnedAt)}
                           {reversed && entry.reversedAt ? (
@@ -291,7 +315,9 @@ function EarnerDetail() {
                           ) : null}
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-semibold text-slate-900">{entry.buyer?.name || '—'}</p>
+                          <p className="font-semibold text-slate-900">
+                            {external ? 'External earnings' : entry.buyer?.name || '—'}
+                          </p>
                           <p className="mt-0.5 text-xs text-slate-500">
                             {entry.orderId ? (
                               <Link to={`/orders/${entry.orderId}`} className="text-brand-700 hover:underline">
@@ -324,6 +350,11 @@ function EarnerDetail() {
                         </td>
                         <td className="px-4 py-3">
                           <Badge value={entry.status} styles={COMMISSION_STATUS_STYLE} />
+                          {external && !reversed ? (
+                            <span className="mt-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-100">
+                              Not payable
+                            </span>
+                          ) : null}
                         </td>
                         <td className="px-4 py-3 text-xs text-slate-500">
                           {entry.notes || entry.reverseReason || '—'}
@@ -332,7 +363,14 @@ function EarnerDetail() {
                           ) : null}
                         </td>
                         <td className="px-4 py-3">
-                          {!reversed ? (
+                          {!reversed && external ? (
+                            <Link
+                              to="/external-earnings"
+                              className="text-xs font-semibold text-amber-700 hover:underline"
+                            >
+                              Manage
+                            </Link>
+                          ) : !reversed ? (
                             <button
                               type="button"
                               onClick={() => setReversing(entry)}

@@ -17,6 +17,14 @@ export const adminNav = [
     ],
   },
   {
+    label: 'Accounts',
+    items: [
+      { to: '/users', label: 'Users', icon: 'users' },
+      { to: '/external-earnings', label: 'External earnings', icon: 'external' },
+      { to: '/change-referrer', label: 'Change referrer', icon: 'referrer' },
+    ],
+  },
+  {
     label: 'Support',
     items: [
       { to: '/kyc', label: 'KYC', icon: 'kyc' },

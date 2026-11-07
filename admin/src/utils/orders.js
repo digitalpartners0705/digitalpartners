@@ -66,6 +66,7 @@ export const INCOME_LABEL = {
   passive: 'Level 2 · Passive',
   second: 'Level 3 · Second',
   adjustment: 'Adjustment',
+  external: 'External · not payable',
 }
 
 export const COMMISSION_STATUS_STYLE = {
@@ -76,6 +77,7 @@ export const COMMISSION_STATUS_STYLE = {
 export const COMMISSION_SOURCE_LABEL = {
   sale: 'Sale',
   adjustment: 'Adjustment',
+  external: 'External earnings',
 }
 
 export const titleCase = (value) => {

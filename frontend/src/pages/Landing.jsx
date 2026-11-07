@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import AuthModal from '../components/AuthModal'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
@@ -11,6 +11,22 @@ import Home from './Home'
 function Landing() {
   const { user, authOpen, authMode, signupDefaults, openAuth, setAuthMode, closeAuth, handleAuthSuccess } =
     useAuth()
+  const [disabledNotice, setDisabledNotice] = useState(false)
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('de_account_disabled') === '1') {
+        sessionStorage.removeItem('de_account_disabled')
+        setDisabledNotice(true)
+      }
+    } catch {
+      // Ignore storage failures.
+    }
+
+    const onDisabled = () => setDisabledNotice(true)
+    window.addEventListener('de-account-disabled', onDisabled)
+    return () => window.removeEventListener('de-account-disabled', onDisabled)
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -37,6 +53,11 @@ function Landing() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased">
       <Navbar />
+      {disabledNotice ? (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-950">
+          This account has been deactivated. Contact support if you need access restored.
+        </div>
+      ) : null}
       <Home />
       <AuthModal
         isOpen={authOpen}

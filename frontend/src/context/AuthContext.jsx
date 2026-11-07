@@ -39,12 +39,43 @@ function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    const refreshOnFocus = () => {
-      if (!getStoredToken()) return
-      getCurrentUser().then(setUser).catch(() => {})
+    const dropLocalSession = () => {
+      clearSession()
+      setUser(null)
+      setPendingCheckout(null)
+      setReceivedOrder(null)
     }
+
+    const refreshSession = () => {
+      if (!getStoredToken()) {
+        setUser(null)
+        return
+      }
+      getCurrentUser()
+        .then(setUser)
+        .catch((error) => {
+          const disabled =
+            error.response?.data?.code === 'ACCOUNT_DISABLED' ||
+            (error.response?.status === 403 &&
+              /deactivated/i.test(String(error.response?.data?.message || '')))
+          if (disabled || error.response?.status === 401) {
+            dropLocalSession()
+          }
+        })
+    }
+
+    const refreshOnFocus = () => refreshSession()
+    const onDisabled = () => dropLocalSession()
+
     window.addEventListener('focus', refreshOnFocus)
-    return () => window.removeEventListener('focus', refreshOnFocus)
+    window.addEventListener('de-account-disabled', onDisabled)
+    const timer = window.setInterval(refreshSession, 30000)
+
+    return () => {
+      window.removeEventListener('focus', refreshOnFocus)
+      window.removeEventListener('de-account-disabled', onDisabled)
+      window.clearInterval(timer)
+    }
   }, [])
 
   const openAuth = useCallback((mode, defaults = {}) => {

@@ -5,12 +5,14 @@ const { query, createReferralCode } = require('../config/db')
 const { PACKAGE_NAMES, canPurchasePackage } = require('../data/commissions')
 const { OFFLINE_PROVIDER, createOrder, mapOrder } = require('../services/orders')
 const storage = require('../services/storage')
+const { accountDisabledPayload } = require('../middleware/auth')
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const VALID_PROMO_CODES = new Set(['WELCOME10', 'DIGITAL25', 'VIDHYA'])
 
 const USER_FIELDS = `id, full_name, email, phone, country, state, pin_code, manager_name, manager_phone,
-  knowledge_package, promo_code, coupon_code, has_gst, role, avatar_key, referral_code, referred_by, created_at`
+  knowledge_package, promo_code, coupon_code, has_gst, role, avatar_key, referral_code, referred_by,
+  COALESCE(is_active, TRUE) AS is_active, disabled_at, created_at`
 
 const publicUser = async (row) => {
   let referredByLabel = null
@@ -273,6 +275,10 @@ const login = async (req, res) => {
     const matches = await bcrypt.compare(password, row.password_hash)
     if (!matches) {
       return res.status(401).json({ message: 'Invalid email or password' })
+    }
+
+    if (row.is_active === false) {
+      return res.status(403).json(accountDisabledPayload())
     }
 
     if (!row.referral_code) {

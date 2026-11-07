@@ -16,6 +16,9 @@ import AnnouncementsPage from './pages/AnnouncementsPage'
 import AchievementsPage from './pages/AchievementsPage'
 import KycPage from './pages/KycPage'
 import LeaderboardVisibilityPage from './pages/LeaderboardVisibilityPage'
+import UsersPage from './pages/UsersPage'
+import ExternalEarningsPage from './pages/ExternalEarningsPage'
+import ChangeReferrerPage from './pages/ChangeReferrerPage'
 import Login from './pages/Login'
 import { getToken } from './services/api'
 
@@ -56,6 +59,9 @@ function App() {
         <Route path="achievements" element={<AchievementsPage />} />
         <Route path="kyc" element={<KycPage />} />
         <Route path="leaderboard-visibility" element={<LeaderboardVisibilityPage />} />
+        <Route path="users" element={<UsersPage />} />
+        <Route path="external-earnings" element={<ExternalEarningsPage />} />
+        <Route path="change-referrer" element={<ChangeReferrerPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -109,6 +109,21 @@ const linkKit = async (req, res) => {
 
 const sumAmount = (rows) => rows.reduce((total, row) => total + Number(row.amount || 0), 0)
 
+const mapEarningRow = (row) => ({
+  id: row.id,
+  amount: Number(row.amount),
+  packageName: row.package_name,
+  incomeType: row.income_type,
+  source: row.source || 'sale',
+  note: row.source === 'external' ? row.notes || null : null,
+  commissionPercent: row.commission_percent != null ? Number(row.commission_percent) : null,
+  netAmount: row.net_amount != null ? Number(row.net_amount) : null,
+  country: row.country,
+  buyerName: row.buyer_name,
+  buyerState: row.buyer_state,
+  earnedAt: row.earned_at,
+})
+
 const myEarnings = async (req, res) => {
   try {
     const result = await query(
@@ -121,6 +136,8 @@ const myEarnings = async (req, res) => {
          e.net_amount,
          e.country,
          e.earned_at,
+         e.source,
+         e.notes,
          u.full_name AS buyer_name,
          u.state AS buyer_state
        FROM affiliate_earnings e
@@ -130,7 +147,13 @@ const myEarnings = async (req, res) => {
       [req.user.id],
     )
 
+    // External rows are earnings carried forward from another platform. They count in
+    // every total and on the leaderboard, but they are not sales, so they stay out of
+    // sale-based breakdowns (states, package shares, commission counts).
     const rows = result.rows
+    const isExternal = (row) => row.source === 'external'
+    const saleRows = rows.filter((row) => !isExternal(row))
+    const externalRows = rows.filter(isExternal)
     const now = new Date()
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const sevenDaysAgo = new Date(startOfToday)
@@ -158,7 +181,7 @@ const myEarnings = async (req, res) => {
     const totalPackageAmount = packageTotals.reduce((total, item) => total + item.amount, 0)
 
     const stateMap = new Map()
-    rows.forEach((row) => {
+    saleRows.forEach((row) => {
       const state = row.buyer_state || row.country || 'Unknown'
       const current = stateMap.get(state) || { name: state, sales: 0, amount: 0 }
       current.sales += 1
@@ -184,7 +207,9 @@ const myEarnings = async (req, res) => {
         last7Days: sumAmount(weekRows),
         last30Days: sumAmount(monthRows),
         allTime: sumAmount(rows),
-        commissionCount: rows.length,
+        commissionCount: saleRows.length,
+        external: sumAmount(externalRows),
+        externalCount: externalRows.length,
       },
       byIncomeType,
       packages: packageTotals.map((item) => ({
@@ -192,30 +217,8 @@ const myEarnings = async (req, res) => {
         share: totalPackageAmount ? Math.round((item.amount / totalPackageAmount) * 100) : 0,
       })),
       byState,
-      recent: rows.slice(0, 20).map((row) => ({
-        id: row.id,
-        amount: Number(row.amount),
-        packageName: row.package_name,
-        incomeType: row.income_type,
-        commissionPercent: row.commission_percent != null ? Number(row.commission_percent) : null,
-        netAmount: row.net_amount != null ? Number(row.net_amount) : null,
-        country: row.country,
-        buyerName: row.buyer_name,
-        buyerState: row.buyer_state,
-        earnedAt: row.earned_at,
-      })),
-      commissions: rows.map((row) => ({
-        id: row.id,
-        amount: Number(row.amount),
-        packageName: row.package_name,
-        incomeType: row.income_type,
-        commissionPercent: row.commission_percent != null ? Number(row.commission_percent) : null,
-        netAmount: row.net_amount != null ? Number(row.net_amount) : null,
-        country: row.country,
-        buyerName: row.buyer_name,
-        buyerState: row.buyer_state,
-        earnedAt: row.earned_at,
-      })),
+      recent: rows.slice(0, 20).map(mapEarningRow),
+      commissions: rows.map(mapEarningRow),
     })
   } catch (error) {
     console.error('Earnings error:', error.message)

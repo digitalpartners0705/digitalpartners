@@ -41,7 +41,16 @@ const LEVEL_META = {
     badge: 'bg-violet-400/15 text-violet-200 ring-violet-300/25',
     bar: 'bg-violet-400',
   },
+  external: {
+    label: 'Carried forward',
+    note: 'Earnings brought over from your earlier platform',
+    tone: 'text-amber-200',
+    badge: 'bg-amber-400/15 text-amber-200 ring-amber-300/25',
+    bar: 'bg-amber-400',
+  },
 }
+
+const isExternalRow = (row) => row.source === 'external' || row.incomeType === 'external'
 
 const PACKAGE_TONE = {
   'Social Expert': 'bg-sky-400',
@@ -121,7 +130,15 @@ function AffiliateEarnings() {
     }
   }, [])
 
-  const totals = data?.totals || { today: 0, last7Days: 0, last30Days: 0, allTime: 0, commissionCount: 0 }
+  const totals = data?.totals || {
+    today: 0,
+    last7Days: 0,
+    last30Days: 0,
+    allTime: 0,
+    commissionCount: 0,
+    external: 0,
+    externalCount: 0,
+  }
   const commissions = data?.commissions || data?.recent || []
 
   const filtered = useMemo(() => {
@@ -158,7 +175,7 @@ function AffiliateEarnings() {
 
   const byState = useMemo(() => {
     const map = new Map()
-    filtered.forEach((row) => {
+    filtered.filter((row) => !isExternalRow(row)).forEach((row) => {
       const name = row.buyerState || row.country || 'Unknown'
       const current = map.get(name) || { name, sales: 0, amount: 0 }
       current.sales += 1
@@ -410,12 +427,17 @@ function AffiliateEarnings() {
             <tbody>
               {!loading && recent.length > 0
                 ? recent.map((row) => {
-                  const meta = LEVEL_META[row.incomeType] || LEVEL_META.active
+                  const external = isExternalRow(row)
+                  const meta = external ? LEVEL_META.external : LEVEL_META[row.incomeType] || LEVEL_META.active
                   return (
                     <tr key={row.id} className="border-b border-white/5 transition last:border-0 hover:bg-white/[0.03]">
                       <td className="px-4 py-4 text-slate-300 sm:px-5">{formatDay(row.earnedAt)}</td>
-                      <td className="px-3 py-4 font-medium">{row.buyerName || '—'}</td>
-                      <td className="px-3 py-4 text-slate-300">{row.packageName || '—'}</td>
+                      <td className="px-3 py-4 font-medium">
+                        {external ? <span className="text-amber-100">Earlier platform</span> : row.buyerName || '—'}
+                      </td>
+                      <td className="px-3 py-4 text-slate-300">
+                        {external ? <span className="text-slate-400">{row.note || 'Carried forward'}</span> : row.packageName || '—'}
+                      </td>
                       <td className="px-3 py-4">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${meta.badge}`}>
                           {meta.label}
